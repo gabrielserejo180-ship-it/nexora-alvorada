@@ -3691,16 +3691,22 @@ async function doLogin(){
     }
   }
 
-  // Fallback: login local (demo ou arquivo local)
+  // Fallback: login local
   if(!loggedIn){
-    const found = USERS.find(u=>u.user===user&&u.pin===pin&&u.role===profile);
+    // Verificar também no USR_DB (localStorage) que é onde os usuários reais ficam
+    const allUsers = [...USERS, ...(USR_DB||[])];
+    const found = allUsers.find(u=>
+      String(u.user).toLowerCase()===user &&
+      String(u.pin)===pin &&
+      u.role===profile
+    );
     if(!found){
       if(btn){ btn.disabled=false; btn.textContent='Entrar'; }
       showAlert('Usuário ou senha incorretos.');
       clearPin(); document.getElementById('inp-pin').focus();
       return;
     }
-    if(found.status!=='active'){
+    if(found.status==='inactive'){
       if(btn){ btn.disabled=false; btn.textContent='Entrar'; }
       showAlert('Usuário inativo. Fale com o administrador.');
       return;
