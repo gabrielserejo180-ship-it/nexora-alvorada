@@ -3694,4 +3694,74 @@ function doLogin(){
   launchApp();
 }
 
->
+/* ═══════════════════════════════════
+   DADOS DEMO
+═══════════════════════════════════ */
+const CLI_DEMO = [
+  {nome:'Moto Shop São Luís Ltda',fantasia:'Moto Shop',cnpj:'12.345.678/0001-90',status:'Ativo',cidade:'São Luís',uf:'MA',endereco:'Av. dos Holandeses, 123, Ponta do Farol',origem:'Pesquisa CNPJ',cnae:'4541206',representante:'Carlos Silva',telefone:'(98) 98765-4321',email:'motoshop@gmail.com',responsavel:'João Silva',horario:'Manhã',pref_contato:'WhatsApp',ultimo_contato:'2025-06-01',obs:'Cliente fiel, compra todo mês.',microle:'Cadastrado',spc:'Aprovado',limite_sugerido:'15000',limite_aprovado:'12000',forma_pgto:'Boleto 30 dias',criado_em:'10/03/2025',historico:[{tipo:'ligacao',data:'01/06/2025',hora:'09:00',obs:'Pedido mensal confirmado.',por:'Carlos Silva'},{tipo:'visita',data:'15/05/2025',hora:'10:00',obs:'Visita de relacionamento.',por:'Carlos Silva'}]},
+  {nome:'Peças & Cia Comércio de Acessórios Ltda',fantasia:'',cnpj:'23.456.789/0001-12',status:'Negociação',cidade:'Imperatriz',uf:'MA',endereco:'Rua das Flores, 456, Centro',origem:'Indicação',cnae:'4530704',representante:'Carlos Silva',telefone:'(99) 98888-1122',email:'pecasecia@hotmail.com',responsavel:'Maria Santos',horario:'Tarde',pref_contato:'Telefone',ultimo_contato:'2025-06-05',obs:'Interessada na linha de capacetes.',microle:'Não cadastrado',spc:'Não realizada',limite_sugerido:'8000',limite_aprovado:'',forma_pgto:'',criado_em:'15/04/2025',historico:[]},
+  {nome:'Auto Peças Maranhão ME',fantasia:'',cnpj:'34.567.890/0001-34',status:'Aguardando Retorno',cidade:'Timon',uf:'MA',endereco:'Av. JP, 789, Parque Piauí',origem:'WhatsApp',cnae:'4530704',representante:'Ana Ferreira',telefone:'(99) 97777-3344',email:'',responsavel:'José Oliveira',horario:'Qualquer horário',pref_contato:'WhatsApp',ultimo_contato:'2025-05-28',obs:'Demonstrou interesse mas sumiu.',microle:'Não cadastrado',spc:'Não realizada',limite_sugerido:'',limite_aprovado:'',forma_pgto:'',criado_em:'20/04/2025',historico:[]},
+];
+
+const VND_DEMO = [
+  {id:'VND-001',cliente:'Moto Shop São Luís Ltda',representante:'Carlos Silva',data:'2025-06-01',valor:4800,pgto:'Boleto parcelado',obs:'Pedido mensal fixo',parcelas:[{num:1,venc:'2025-06-15',valor:1600,status:'pago'},{num:2,venc:'2025-07-15',valor:1600,status:'pendente'},{num:3,venc:'2025-08-15',valor:1600,status:'pendente'}]},
+  {id:'VND-002',cliente:'Peças & Cia',representante:'Carlos Silva',data:'2025-06-05',valor:2200,pgto:'PIX',obs:'',parcelas:[{num:1,venc:'2025-06-05',valor:2200,status:'pago'}]},
+];
+
+const RET_DEMO = [
+  {cliente:'Peças & Cia',representante:'Carlos Silva',data:'2025-06-12',hora:'10:00',motivo:'Fechar pedido',obs:'Ligar hoje',status:'pendente'},
+  {cliente:'Auto Peças Maranhão',representante:'Ana Ferreira',data:'2025-06-12',hora:'14:30',motivo:'Retorno de proposta',obs:'',status:'pendente'},
+];
+
+const AUD_DEMO = [
+  {tipo:'login',descricao:'Login realizado',detalhe:'Perfil: Administrador',usuario:'Administrador',userRole:'adm',data:'09/06/2025',hora:'08:00:01',ts:1749463201000},
+  {tipo:'cadastro',descricao:'Novo cliente cadastrado',detalhe:'Moto Shop São Luís',usuario:'Carlos Silva',userRole:'rep',data:'09/06/2025',hora:'08:15:30',ts:1749464130000},
+];
+
+let CLI_DB = JSON.parse(localStorage.getItem('nexora_clientes')||'[]');
+if(CLI_DB.length===0){ CLI_DB=[...CLI_DEMO]; try{localStorage.setItem('nexora_clientes',JSON.stringify(CLI_DB));}catch(e){} }
+function cliSalvarDB(){ try{localStorage.setItem('nexora_clientes',JSON.stringify(CLI_DB));}catch(e){} }
+
+let VND_DB = JSON.parse(localStorage.getItem('nexora_vendas')||'[]');
+if(VND_DB.length===0){ VND_DB=[...VND_DEMO]; try{localStorage.setItem('nexora_vendas',JSON.stringify(VND_DB));}catch(e){} }
+function vndSalvarDB(){ try{localStorage.setItem('nexora_vendas',JSON.stringify(VND_DB));}catch(e){} }
+
+let RET_DB = JSON.parse(localStorage.getItem('nexora_retornos')||'[]');
+if(RET_DB.length===0){ RET_DB=[...RET_DEMO]; try{localStorage.setItem('nexora_retornos',JSON.stringify(RET_DB));}catch(e){} }
+function retSalvarDB(){ try{localStorage.setItem('nexora_retornos',JSON.stringify(RET_DB));}catch(e){} }
+
+let AUD_DB = JSON.parse(localStorage.getItem('nexora_auditoria')||'[]');
+if(AUD_DB.length===0){ AUD_DB=[...AUD_DEMO]; try{localStorage.setItem('nexora_auditoria',JSON.stringify(AUD_DB));}catch(e){} }
+let REL_HISTORICO = [];
+
+let MET_DB = JSON.parse(localStorage.getItem('nexora_metas')||'{}');
+let MET_DEMOS = {'2025-06':{'Carlos Silva':{fat:20000},'Ana Ferreira':{fat:15000}},'2025-05':{'Carlos Silva':{fat:18000},'Ana Ferreira':{fat:14000}}};
+Object.keys(MET_DEMOS).forEach(k=>{ if(!MET_DB[k]) MET_DB[k]=MET_DEMOS[k]; });
+
+let CFG = JSON.parse(localStorage.getItem('nexora_config')||'{}');
+if(!CFG.sheetsUrl) CFG.sheetsUrl='https://script.google.com/macros/s/AKfycbz_ZurGlqJ8V7FxTXxHMqg5YG-S0X6xvjfCMTnZnvVnbbPPhkmFQuxCBuZfG1aR9TZg/exec';
+if(!CFG.empresa) CFG.empresa='Alvorada Motocicletas';
+
+/* funções stub para módulos faltantes */
+function audLog(tipo,desc,det){ if(!me) return; AUD_DB.unshift({tipo,descricao:desc,detalhe:det||'',usuario:me.name,userRole:me.role,data:new Date().toLocaleDateString('pt-BR'),hora:new Date().toLocaleTimeString('pt-BR'),ts:Date.now()}); if(AUD_DB.length>500) AUD_DB=AUD_DB.slice(0,500); try{localStorage.setItem('nexora_auditoria',JSON.stringify(AUD_DB));}catch(e){} }
+function relAtualizarHistorico(){ const el=document.getElementById('rel-historico-lista'); if(!el) return; if(!REL_HISTORICO.length){ el.innerHTML='<div style="padding:24px;text-align:center;color:var(--txt2);font-size:13px">Nenhum relatório gerado nesta sessão ainda.</div>'; return; } el.innerHTML=REL_HISTORICO.slice().reverse().map(h=>`<div class="rel-hist-item"><div class="rel-hist-ico">📄</div><div style="flex:1"><div class="rel-hist-nome">${h.nome}</div><div class="rel-hist-data">${h.abas} · ${h.data}</div></div><span style="font-size:11px;padding:3px 8px;border-radius:5px;background:rgba(16,185,129,.1);color:#34D399;font-weight:600">✓ Gerado</span></div>`).join(''); }
+function relInicializar(){ document.querySelectorAll('.rel-check').forEach(c=>c.addEventListener('change',relAtualizarContador)); relAtualizarContador(); relAtualizarHistorico(); }
+function relAtualizarContador(){ const t=[...document.querySelectorAll('.rel-check')].filter(c=>c.checked).length; const el=document.getElementById('rel-resumo-selecionado'); if(el) el.textContent=t+' seção(ões) selecionada(s)'; }
+function cfgCarregar(){ if(CFG.sheetsUrl){const el=document.getElementById('cfg-sheets-url');if(el)el.value=CFG.sheetsUrl;} if(CFG.empresa){const el=document.getElementById('cfg-empresa');if(el)el.value=CFG.empresa;} const st=document.getElementById('cfg-sheets-status'); if(st&&CFG.sheetsUrl) st.innerHTML='<span class="cfg-status ok"><span class="cfg-dot ok"></span>URL configurada</span>'; }
+function cfgSalvarEmpresa(){ CFG.empresa=document.getElementById('cfg-empresa')?.value||''; try{localStorage.setItem('nexora_config',JSON.stringify(CFG));}catch(e){} const el=document.getElementById('cfg-emp-saved'); if(el){el.style.display='inline';setTimeout(()=>el.style.display='none',2500);} }
+function cfgSalvarSheets(){ CFG.sheetsUrl=document.getElementById('cfg-sheets-url')?.value.trim()||''; try{localStorage.setItem('nexora_config',JSON.stringify(CFG));}catch(e){} const el=document.getElementById('cfg-sheets-saved'); if(el){el.style.display='inline';setTimeout(()=>el.style.display='none',2500);} }
+async function cfgTestarSheets(){ const url=document.getElementById('cfg-sheets-url')?.value.trim(); const st=document.getElementById('cfg-sheets-status'); if(!url){alert('Informe a URL.');return;} if(st) st.innerHTML='<span class="cfg-status idle">Testando…</span>'; try{ const r=await fetch(url+'?action=ping',{signal:AbortSignal.timeout(6000)}); if(r.ok){if(st) st.innerHTML='<span class="cfg-status ok"><span class="cfg-dot ok"></span>Conectado ✓</span>';} else throw new Error(r.status); }catch(e){ if(st) st.innerHTML='<span class="cfg-status err"><span class="cfg-dot err"></span>Falha na conexão</span>'; } }
+function cfgSalvarPrefs(){ try{localStorage.setItem('nexora_config',JSON.stringify(CFG));}catch(e){} const el=document.getElementById('cfg-pref-saved'); if(el){el.style.display='inline';setTimeout(()=>el.style.display='none',2500);} }
+function cfgExportarDados(){ const b=JSON.stringify({clientes:CLI_DB,vendas:VND_DB,retornos:RET_DB,auditoria:AUD_DB,config:CFG,exportado:new Date().toLocaleString('pt-BR')}); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([b],{type:'application/json'})); a.download='nexora-backup-'+new Date().toISOString().slice(0,10)+'.json'; a.click(); }
+function cfgResetarDemo(){ if(!confirm('Restaurar dados demo?')) return; CLI_DB=[...CLI_DEMO]; VND_DB=[...VND_DEMO]; RET_DB=[...RET_DEMO]; AUD_DB=[...AUD_DEMO]; cliSalvarDB(); vndSalvarDB(); retSalvarDB(); try{localStorage.setItem('nexora_auditoria',JSON.stringify(AUD_DB));}catch(e){} alert('Dados demo restaurados!'); }
+function cfgLimparTudo(){ if(!confirm('Apagar TODOS os dados?')) return; if(!confirm('Confirma?')) return; CLI_DB=[]; VND_DB=[]; RET_DB=[]; AUD_DB=[]; cliSalvarDB(); vndSalvarDB(); retSalvarDB(); alert('Dados limpos.'); }
+async function gerarRelatorioExcel(){ alert('Relatório disponível após publicação completa no GitHub Pages.'); }
+function abrirSobre(){ document.getElementById('modal-sobre').style.display='flex'; sobreTab('mim',document.getElementById('stab-mim')); }
+function fecharSobre(e){ if(e.target.id==='modal-sobre') document.getElementById('modal-sobre').style.display='none'; }
+function sobreTab(aba,el){ document.querySelectorAll('.sobre-tab').forEach(t=>t.classList.remove('on')); if(el)el.classList.add('on'); document.getElementById('sobre-mim').style.display=aba==='mim'?'':'none'; document.getElementById('sobre-sistema').style.display=aba==='sistema'?'':'none'; }
+function criarParticulas(){ const wrap=document.getElementById('moto-particles'); if(!wrap) return; wrap.innerHTML=''; for(let i=0;i<18;i++){const p=document.createElement('div'); p.className='moto-particle'; p.style.cssText=`left:${Math.random()*100}%;animation-duration:${2.5+Math.random()*3}s;animation-delay:${Math.random()*3}s;width:${2+Math.random()*3}px;height:${2+Math.random()*3}px;`; wrap.appendChild(p);} }
+document.addEventListener('DOMContentLoaded',()=>{ criarParticulas(); setInterval(criarParticulas,6000); });
+
+</script>
+</body>
+</html>
