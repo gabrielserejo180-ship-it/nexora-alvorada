@@ -6735,6 +6735,10 @@ function usrRender(){
               onclick="usrToggleStatus(${idx})">
               ${u.status==='active'?'Inativar':'Ativar'}
             </button>
+            <button class="usr-btn danger" onclick="usrExcluir(${idx})"
+              style="border-color:rgba(239,68,68,.3);color:var(--red)">
+              🗑️
+            </button>
           `:''}
         `:'<span style="font-size:11px;color:var(--txt3)">—</span>'}
       </div>
@@ -7697,6 +7701,16 @@ function capAbrirCnpjBiz(){
 
   // Abrir em nova aba
   window.open(url, '_blank');
+}
+
+
+function usrExcluir(idx){
+  const u = USR_DB[idx];
+  if(!u) return;
+  if(!confirm(`Deseja excluir o usuário "${u.name}"?\n\nEsta ação não pode ser desfeita.`)) return;
+  USR_DB.splice(idx, 1);
+  usrSalvarDB();
+  usrRender();
 }
 
 </script>
