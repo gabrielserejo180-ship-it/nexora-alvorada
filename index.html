@@ -453,9 +453,9 @@ const USERS_BASE = [
 
 let USR_DB = JSON.parse(localStorage.getItem('nexora_usuarios')||'[]');
 if(USR_DB.length===0){ USR_DB=[...USERS_BASE]; salvarUSR(); }
-function salvarUSR(){ 
-  try{localStorage.setItem('nexora_usuarios',JSON.stringify(USR_DB));}catch(e){} 
-  syncSheets('saveUsuarios', USR_DB);
+async function salvarUSR(){ 
+  try{localStorage.setItem('nexora_usuarios',JSON.stringify(USR_DB));}catch(e){}
+  await syncSheets('saveUsuarios', USR_DB);
 }
 
 let CLI_DB = JSON.parse(localStorage.getItem('nexora_clientes')||'[]');
@@ -1147,7 +1147,7 @@ function usrAbrirEditar(idx){
   document.getElementById('usr-modal').style.display='flex';
 }
 
-function usrSalvar(){
+async function usrSalvar(){
   const nome=document.getElementById('um-nome')?.value.trim();
   const user=document.getElementById('um-user')?.value.trim().toLowerCase();
   const pin=document.getElementById('um-pin')?.value.trim();
@@ -1165,7 +1165,7 @@ function usrSalvar(){
     u.name=nome;u.user=user;u.role=role;u.status=status;
     if(pin&&pin.length===6) u.pin=pin;
   }
-  salvarUSR();
+  await salvarUSR();
   document.getElementById('usr-modal').style.display='none';
   audLog(usrEditIdx===null?'cadastro':'edicao',usrEditIdx===null?'Novo usuário':'Usuário editado',nome);
   usrRender();
@@ -1266,18 +1266,34 @@ function sobreTab(aba,el){
 const APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbzMJ7c-60_PhDz0Dy1QQE1R_e6ONbp3UvxD8DdzdW2y9weT7oFneHK_ukPLqZn5-AlQ/exec';
 
 async function syncSheets(action, data){
-  const url = (CFG && CFG.sheetsUrl) || APPS_SCRIPT;
-  if(!url) return;
+  const url = (typeof CFG!=='undefined' && CFG.sheetsUrl) || APPS_SCRIPT;
+  if(!url){ console.warn('URL do Sheets não configurada'); return false; }
+  
+  const statusEl = document.getElementById('sync-status');
+  if(statusEl) statusEl.textContent = '🔄 Salvando…';
+  
   try {
-    await fetch(url, {
+    const resp = await fetch(url, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({action, data}),
-      signal: AbortSignal.timeout(8000)
+      signal: AbortSignal.timeout(10000)
     });
+    
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    const result = await resp.json();
+    
+    if(result.ok){
+      if(statusEl){ statusEl.textContent='✅ Sincronizado'; setTimeout(()=>statusEl.textContent='',3000); }
+      console.log('✅ Sync OK:', action, result);
+      return true;
+    } else {
+      throw new Error(result.msg||'Erro desconhecido');
+    }
   } catch(e) {
-    // Falha silenciosa — dados já salvos no localStorage
-    console.warn('Sync Sheets falhou:', e.message);
+    if(statusEl){ statusEl.textContent='⚠️ Offline'; setTimeout(()=>statusEl.textContent='',5000); }
+    console.warn('❌ Sync falhou:', action, e.message);
+    return false;
   }
 }
 
