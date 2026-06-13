@@ -1004,6 +1004,14 @@ function buildAdmin(){
         ${isAdm?'<option value="ger">Gerente</option><option value="adm">ADM</option>':''}
       </select>
       <button class="btn-novo-cli" onclick="usrAbrirNovo()">+ Novo Usuário</button>
+      <button onclick="usrSincronizarAgora()" 
+        style="height:40px;padding:0 14px;background:none;border:1px solid var(--green);
+        color:var(--green);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;
+        font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;transition:background .2s"
+        onmouseover="this.style.background='rgba(16,185,129,.1)'" 
+        onmouseout="this.style.background='none'">
+        ☁️ Salvar na Planilha
+      </button>
     </div>
     <div class="usr-stats" id="usr-stats"></div>
     <div class="usr-table">
@@ -1357,6 +1365,31 @@ function criarParticulas(){
   }
 }
 document.addEventListener('DOMContentLoaded',()=>{ criarParticulas(); setInterval(criarParticulas,6000); });
+
+
+async function usrSincronizarAgora(){
+  const btn = event.target.closest('button');
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Salvando…';
+  
+  try {
+    const ok = await syncSheets('saveUsuarios', USR_DB);
+    if(ok){
+      btn.innerHTML = '✅ Salvo!';
+      btn.style.borderColor = 'var(--green)';
+      btn.style.color = 'var(--green)';
+    } else {
+      btn.innerHTML = '❌ Falhou';
+      btn.style.borderColor = 'var(--red)';
+      btn.style.color = 'var(--red)';
+    }
+  } catch(e) {
+    btn.innerHTML = '❌ Erro';
+  }
+  
+  setTimeout(()=>{ btn.disabled=false; btn.innerHTML=orig; btn.style.borderColor='var(--green)'; btn.style.color='var(--green)'; }, 3000);
+}
 
 </script>
 </body>
