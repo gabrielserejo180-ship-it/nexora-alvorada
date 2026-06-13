@@ -167,6 +167,71 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--line2);border-radius:99px}
 @media(max-width:700px){.home-left{display:none}.sidebar{display:none}.tb-brand{width:auto;border:none}.tb-mid{display:none}}
+
+/* ══ HOVER ANIMATIONS ══════════════════════════════ */
+.pcard{ transition:transform .25s cubic-bezier(.22,1,.36,1),border-color .25s,box-shadow .25s; }
+.pcard:hover{ transform:translateY(-4px) scale(1.02); box-shadow:0 12px 32px rgba(37,99,235,.2); }
+.rep:hover{ box-shadow:0 12px 32px rgba(16,185,129,.2)!important; }
+.ger:hover{ box-shadow:0 12px 32px rgba(37,99,235,.22)!important; }
+.adm:hover{ box-shadow:0 12px 32px rgba(99,102,241,.22)!important; }
+.sb-item{ transition:color .15s,background .15s,padding-left .2s; }
+.sb-item:hover{ padding-left:22px; }
+.sc{ transition:transform .2s,box-shadow .2s; }
+.sc:hover{ transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.25); }
+.btn-novo-cli{ transition:transform .15s,opacity .2s,box-shadow .2s; }
+.btn-novo-cli:hover{ transform:translateY(-2px); box-shadow:0 6px 18px rgba(37,99,235,.3); }
+
+/* ══ ANIMAÇÃO RODA DE MOTO ══════════════════════════ */
+.moto-wrap{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;padding:20px;position:relative;overflow:hidden;
+  width:200px;flex-shrink:0;border-left:1px solid var(--line);
+  pointer-events:none;
+}
+.moto-particles{ position:absolute;inset:0;pointer-events:none; }
+.moto-particle{
+  position:absolute;width:3px;height:3px;border-radius:50%;
+  background:rgba(37,99,235,.4);
+  animation:float-part linear infinite;
+}
+@keyframes float-part{
+  0%{transform:translateY(100%) scale(0);opacity:0}
+  10%{opacity:1}90%{opacity:.5}
+  100%{transform:translateY(-120%) scale(1);opacity:0}
+}
+.moto-roda{ animation:girar 4s linear infinite; transform-origin:center; }
+@keyframes girar{ from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+.moto-eng{ animation:girar-inv 3s linear infinite; transform-origin:center; }
+@keyframes girar-inv{ from{transform:rotate(0deg)} to{transform:rotate(-360deg)} }
+.moto-pistao{ animation:pistao 1.2s ease-in-out infinite alternate; }
+@keyframes pistao{ from{transform:translateY(0)} to{transform:translateY(-8px)} }
+.moto-centro{ animation:pulso 2s ease-in-out infinite; }
+@keyframes pulso{ 0%,100%{opacity:.7;transform:scale(1)} 50%{opacity:1;transform:scale(1.08)} }
+.moto-speed-bar{
+  width:6px;border-radius:3px;background:rgba(37,99,235,.2);
+  animation:speed-bar .8s ease-in-out infinite alternate;
+}
+.moto-speed-bar:nth-child(1){height:10px;animation-delay:0s}
+.moto-speed-bar:nth-child(2){height:16px;animation-delay:.1s}
+.moto-speed-bar:nth-child(3){height:22px;animation-delay:.2s}
+.moto-speed-bar:nth-child(4){height:30px;animation-delay:.3s}
+.moto-speed-bar:nth-child(5){height:22px;animation-delay:.4s}
+.moto-speed-bar:nth-child(6){height:16px;animation-delay:.5s}
+.moto-speed-bar:nth-child(7){height:10px;animation-delay:.6s}
+@keyframes speed-bar{
+  from{background:rgba(37,99,235,.15);transform:scaleY(.8)}
+  to{background:rgba(37,99,235,.7);transform:scaleY(1)}
+}
+.moto-tagline{
+  font-size:12px;color:#4A5878;text-align:center;line-height:1.6;
+  animation:fade-slide 3s ease-in-out infinite;
+}
+@keyframes fade-slide{
+  0%,100%{opacity:.5;transform:translateY(2px)}
+  50%{opacity:1;transform:translateY(0)}
+}
+@media(max-width:700px){ .moto-wrap{display:none} }
+
 </style>
 </head>
 <body>
@@ -191,7 +256,8 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
         </span>
       </div>
     </div>
-    <div class="home-right">
+    <div class="home-right" style="display:flex;flex-direction:row;padding:0;flex:1">
+      <div style="flex:1;padding:32px 28px;display:flex;flex-direction:column;justify-content:center">
       <div class="home-right-label">Selecione seu perfil de acesso</div>
       <div class="profile-list">
         <div class="pcard rep" onclick="goLogin('rep')">
@@ -210,6 +276,72 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
           <div class="pcard-chevron">›</div>
         </div>
       </div>
+      </div><!-- fim cards -->
+
+      <!-- ANIMAÇÃO RODA DE MOTO -->
+      <div class="moto-wrap">
+        <div class="moto-particles" id="moto-particles"></div>
+
+        <!-- Roda SVG -->
+        <div style="position:relative;width:130px;height:130px;filter:drop-shadow(0 0 16px rgba(37,99,235,.3))">
+          <svg viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg" width="130" height="130">
+            <circle cx="70" cy="70" r="64" fill="none" stroke="#1E3A5F" stroke-width="6"/>
+            <circle cx="70" cy="70" r="68" fill="none" stroke="#0D1628" stroke-width="4"/>
+            <circle cx="70" cy="70" r="52" fill="none" stroke="#1A2847" stroke-width="3"/>
+            <g class="moto-roda" style="transform-origin:70px 70px">
+              <line x1="70" y1="18" x2="70" y2="70" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
+              <line x1="70" y1="122" x2="70" y2="70" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
+              <line x1="18" y1="70" x2="70" y2="70" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" opacity=".8"/>
+              <line x1="122" y1="70" x2="70" y2="70" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" opacity=".8"/>
+              <line x1="27.5" y1="27.5" x2="70" y2="70" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+              <line x1="112.5" y1="112.5" x2="70" y2="70" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+              <line x1="112.5" y1="27.5" x2="70" y2="70" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+              <line x1="27.5" y1="112.5" x2="70" y2="70" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+              <circle cx="70" cy="30" r="3" fill="#3B82F6" opacity=".8"/>
+              <circle cx="70" cy="110" r="3" fill="#3B82F6" opacity=".8"/>
+              <circle cx="30" cy="70" r="3" fill="#3B82F6" opacity=".8"/>
+              <circle cx="110" cy="70" r="3" fill="#3B82F6" opacity=".8"/>
+              <circle cx="33" cy="33" r="2.5" fill="#60A5FA" opacity=".7"/>
+              <circle cx="107" cy="107" r="2.5" fill="#60A5FA" opacity=".7"/>
+              <circle cx="107" cy="33" r="2.5" fill="#60A5FA" opacity=".7"/>
+              <circle cx="33" cy="107" r="2.5" fill="#60A5FA" opacity=".7"/>
+            </g>
+            <circle cx="70" cy="70" r="14" fill="#0D1628" stroke="#2563EB" stroke-width="2.5"/>
+            <circle cx="70" cy="70" r="7" fill="#2563EB" class="moto-centro"/>
+            <circle cx="70" cy="70" r="3" fill="#60A5FA"/>
+          </svg>
+
+          <!-- Engrenagem -->
+          <svg width="32" height="32" viewBox="0 0 36 36" style="position:absolute;top:0;right:-8px;opacity:.4">
+            <g class="moto-eng" style="transform-origin:18px 18px">
+              <path d="M18 8L20 4L22 8L26 6L26 10L30 10L28 14L32 16L28 18L30 22L26 22L26 26L22 24L20 28L18 24L14 26L14 22L10 22L12 18L8 16L12 14L10 10L14 10L14 6Z" fill="none" stroke="#2563EB" stroke-width="1.5"/>
+              <circle cx="18" cy="18" r="5" fill="none" stroke="#2563EB" stroke-width="1.5"/>
+            </g>
+          </svg>
+
+          <!-- Pistão -->
+          <svg width="24" height="24" viewBox="0 0 28 28" style="position:absolute;bottom:0;left:-4px;opacity:.3">
+            <g class="moto-pistao">
+              <rect x="8" y="2" width="12" height="8" rx="2" fill="#3B82F6"/>
+              <rect x="10" y="10" width="8" height="14" rx="1" fill="#2563EB"/>
+              <line x1="14" y1="24" x2="14" y2="28" stroke="#2563EB" stroke-width="2"/>
+            </g>
+          </svg>
+        </div>
+
+        <!-- Barras de velocidade -->
+        <div style="display:flex;gap:4px;align-items:flex-end">
+          <div class="moto-speed-bar"></div><div class="moto-speed-bar"></div>
+          <div class="moto-speed-bar"></div><div class="moto-speed-bar"></div>
+          <div class="moto-speed-bar"></div><div class="moto-speed-bar"></div>
+          <div class="moto-speed-bar"></div>
+        </div>
+
+        <div class="moto-tagline">Peças &amp; Acessórios<br>
+          <span style="font-size:10px;color:#2D3A58">Gestão inteligente</span>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -258,7 +390,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     <div class="tb-mid">
       <div class="tb-breadcrumb" id="tb-breadcrumb"><strong>Dashboard</strong></div>
     </div>
-    <div class="tb-right">
+    <div class="tb-right"><span id="sync-status" style="font-size:11px;color:var(--txt3);margin-right:6px"></span>
       <div class="tb-user">
         <div class="tb-avatar" id="tb-avatar">?</div>
         <span class="tb-uname" id="tb-uname">—</span>
@@ -321,7 +453,10 @@ const USERS_BASE = [
 
 let USR_DB = JSON.parse(localStorage.getItem('nexora_usuarios')||'[]');
 if(USR_DB.length===0){ USR_DB=[...USERS_BASE]; salvarUSR(); }
-function salvarUSR(){ try{localStorage.setItem('nexora_usuarios',JSON.stringify(USR_DB));}catch(e){} }
+function salvarUSR(){ 
+  try{localStorage.setItem('nexora_usuarios',JSON.stringify(USR_DB));}catch(e){} 
+  syncSheets('saveUsuarios', USR_DB);
+}
 
 let CLI_DB = JSON.parse(localStorage.getItem('nexora_clientes')||'[]');
 let VND_DB = JSON.parse(localStorage.getItem('nexora_vendas')||'[]');
@@ -331,9 +466,18 @@ let CFG    = JSON.parse(localStorage.getItem('nexora_config')||'{}');
 let MET_DB = JSON.parse(localStorage.getItem('nexora_metas')||'{}');
 let REL_HISTORICO = [];
 
-function salvarCLI(){ try{localStorage.setItem('nexora_clientes',JSON.stringify(CLI_DB));}catch(e){} }
-function salvarVND(){ try{localStorage.setItem('nexora_vendas',JSON.stringify(VND_DB));}catch(e){} }
-function salvarRET(){ try{localStorage.setItem('nexora_retornos',JSON.stringify(RET_DB));}catch(e){} }
+function salvarCLI(){ 
+  try{localStorage.setItem('nexora_clientes',JSON.stringify(CLI_DB));}catch(e){} 
+  syncSheets('saveClientes', CLI_DB);
+}
+function salvarVND(){ 
+  try{localStorage.setItem('nexora_vendas',JSON.stringify(VND_DB));}catch(e){} 
+  syncSheets('saveVendas', VND_DB);
+}
+function salvarRET(){ 
+  try{localStorage.setItem('nexora_retornos',JSON.stringify(RET_DB));}catch(e){} 
+  syncSheets('saveRetornos', RET_DB);
+}
 
 let me = null, profile = null;
 
@@ -625,12 +769,7 @@ function buildConsultas(){
       <div style="font-size:12px;color:var(--txt2);margin-bottom:10px">Portal oficial de consulta de CNPJ.</div>
       <span style="font-size:12px;color:var(--blue-h);font-weight:500">Abrir →</span>
     </div>
-    <div onclick="window.open('https://www.cnpj.biz/','_blank')" style="background:var(--s1);border:1px solid var(--line2);border-radius:12px;padding:22px;cursor:pointer;transition:border-color .2s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line2)'">
-      <div style="font-size:24px;margin-bottom:10px">🔗</div>
-      <div style="font-size:14px;font-weight:600;margin-bottom:6px">CNPJ.biz</div>
-      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px">Busque empresas por cidade e segmento.</div>
-      <span style="font-size:12px;color:var(--blue-h);font-weight:500">Abrir →</span>
-    </div>
+
     <div onclick="window.open('https://consultaie.com.br/','_blank')" style="background:var(--s1);border:1px solid var(--line2);border-radius:12px;padding:22px;cursor:pointer;transition:border-color .2s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line2)'">
       <div style="font-size:24px;margin-bottom:10px">📄</div>
       <div style="font-size:14px;font-weight:600;margin-bottom:6px">Inscrição Estadual</div>
@@ -908,6 +1047,89 @@ function sobreTab(aba,el){
   document.getElementById('sobre-mim').style.display=aba==='mim'?'block':'none';
   document.getElementById('sobre-sistema').style.display=aba==='sistema'?'block':'none';
 }
+
+
+/* ═══════════════════════════════════
+   SINCRONIZAÇÃO COM GOOGLE SHEETS
+═══════════════════════════════════ */
+const APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbz_ZurGlqJ8V7FxTXxHMqg5YG-S0X6xvjfCMTnZnvVnbbPPhkmFQuxCBuZfG1aR9TZg/exec';
+
+async function syncSheets(action, data){
+  const url = (CFG && CFG.sheetsUrl) || APPS_SCRIPT;
+  if(!url) return;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({action, data}),
+      signal: AbortSignal.timeout(8000)
+    });
+  } catch(e) {
+    // Falha silenciosa — dados já salvos no localStorage
+    console.warn('Sync Sheets falhou:', e.message);
+  }
+}
+
+async function carregarDoSheets(){
+  const url = (CFG && CFG.sheetsUrl) || APPS_SCRIPT;
+  if(!url) return;
+  
+  const statusEl = document.getElementById('sync-status');
+  if(statusEl) statusEl.textContent = '🔄 Sincronizando…';
+  
+  try {
+    // Carregar usuários do Sheets
+    const r = await fetch(url + '?action=getUsuarios', {signal: AbortSignal.timeout(8000)});
+    if(r.ok){
+      const d = await r.json();
+      if(d.ok && d.data && d.data.length > 0){
+        // Mesclar: Sheets tem prioridade sobre localStorage
+        USR_DB = d.data;
+        try{localStorage.setItem('nexora_usuarios', JSON.stringify(USR_DB));}catch(e){}
+        console.log('✅ Usuários carregados do Sheets:', USR_DB.length);
+      }
+    }
+
+    // Carregar clientes
+    const r2 = await fetch(url + '?action=getClientes', {signal: AbortSignal.timeout(8000)});
+    if(r2.ok){
+      const d2 = await r2.json();
+      if(d2.ok && d2.data && d2.data.length > 0){
+        CLI_DB = d2.data;
+        try{localStorage.setItem('nexora_clientes', JSON.stringify(CLI_DB));}catch(e){}
+      }
+    }
+
+    if(statusEl) statusEl.textContent = '✅ Sincronizado';
+    setTimeout(()=>{ if(statusEl) statusEl.textContent = ''; }, 3000);
+
+  } catch(e){
+    if(statusEl) statusEl.textContent = '⚠️ Offline';
+    console.warn('Sheets offline:', e.message);
+  }
+}
+
+// Carregar dados do Sheets ao iniciar o app
+const _origLaunchApp = launchApp;
+launchApp = function(){
+  _origLaunchApp();
+  // Tentar carregar dados do Sheets em background
+  setTimeout(carregarDoSheets, 1000);
+};
+
+
+function criarParticulas(){
+  const wrap=document.getElementById('moto-particles');
+  if(!wrap) return;
+  wrap.innerHTML='';
+  for(let i=0;i<16;i++){
+    const p=document.createElement('div');
+    p.className='moto-particle';
+    p.style.cssText=`left:${Math.random()*100}%;animation-duration:${2.5+Math.random()*3}s;animation-delay:${Math.random()*3}s;width:${2+Math.random()*3}px;height:${2+Math.random()*3}px;background:rgba(${Math.random()>.5?'37,99,235':'99,102,241'},${.3+Math.random()*.4});`;
+    wrap.appendChild(p);
+  }
+}
+document.addEventListener('DOMContentLoaded',()=>{ criarParticulas(); setInterval(criarParticulas,6000); });
 
 </script>
 </body>
