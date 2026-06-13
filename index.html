@@ -714,12 +714,7 @@ function buildCaptacao(){
           cursor:pointer;font-family:'DM Sans',sans-serif">
           🔍 Pesquisar
         </button>
-        <button onclick="capBuscarIA()"
-          style="height:40px;padding:0 20px;background:linear-gradient(135deg,#6D28D9,#4F46E5);
-          color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;
-          cursor:pointer;font-family:'DM Sans',sans-serif">
-          🤖 Pesquisar via IA
-        </button>
+
         <a href="https://www.cnpj.biz/" target="_blank"
           style="height:40px;padding:0 16px;background:none;border:1px solid var(--line2);
           color:var(--txt2);border-radius:9px;font-size:13px;cursor:pointer;
@@ -780,14 +775,33 @@ async function capBuscarNome(){
     }catch(e){}
   }
   if(!lista.length){
-    const cidadeUrl=cidade.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-');
-    const nomeUrl=nome.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-');
+    // Montar URL do CNPJ.biz com os filtros
+    const cidadeUrl=(cidade||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-');
+    const nomeUrl  =(nome||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-');
     let urlBiz='https://www.cnpj.biz/';
-    if(uf&&cidade) urlBiz=`https://www.cnpj.biz/empresas/${uf}/${cidadeUrl}${nome?'/'+nomeUrl:''}`;
-    res.innerHTML=`<div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:16px">
-      <p style="color:var(--amber);font-size:13px;margin-bottom:10px">⚠ Nenhuma empresa encontrada pelas APIs.<br>Tente no CNPJ.biz ou via IA.</p>
-      <a href="${urlBiz}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#0F4C81;color:#fff;border-radius:8px;text-decoration:none;font-size:12px;font-weight:600">🔗 Buscar no CNPJ.biz →</a>
-    </div>`;
+    if(uf&&cidade&&nome) urlBiz=`https://www.cnpj.biz/empresas/${uf}/${cidadeUrl}/${nomeUrl}`;
+    else if(uf&&cidade)  urlBiz=`https://www.cnpj.biz/empresas/${uf}/${cidadeUrl}`;
+    else if(uf)          urlBiz=`https://www.cnpj.biz/empresas/${uf}`;
+
+    res.innerHTML=`
+      <div style="background:rgba(15,76,129,.08);border:1px solid rgba(15,76,129,.2);border-radius:12px;padding:20px">
+        <div style="font-size:14px;font-weight:600;color:var(--txt);margin-bottom:8px">
+          🔗 Buscar no CNPJ.biz
+        </div>
+        <div style="font-size:13px;color:var(--txt2);line-height:1.6;margin-bottom:14px">
+          As APIs públicas não retornaram resultados para <strong>${nome||cidade}</strong>.<br>
+          O CNPJ.biz tem uma base completa de empresas por cidade e segmento.<br>
+          Após encontrar a empresa lá, copie o CNPJ e pesquise na aba <strong>Por CNPJ</strong>.
+        </div>
+        <a href="${urlBiz}" target="_blank"
+          style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;
+          background:#0F4C81;color:#fff;border-radius:9px;text-decoration:none;
+          font-size:13px;font-weight:600">
+          🔗 Abrir CNPJ.biz com filtros aplicados →
+        </a>
+      </div>`;
+    // Abrir automaticamente
+    window.open(urlBiz, '_blank');
     return;
   }
   res.innerHTML=`<div style="font-size:12px;color:var(--txt2);margin-bottom:10px">${lista.length} empresa(s) encontrada(s)</div>`+
