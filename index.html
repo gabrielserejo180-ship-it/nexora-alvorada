@@ -642,14 +642,211 @@ function buildDashboard(){
 }
 
 function buildCaptacao(){
-  return `<div style="background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:16px">
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-      <input id="cap-cnpj" placeholder="CNPJ (00.000.000/0001-00)" style="flex:1;min-width:200px;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:DM Sans,sans-serif;outline:none">
-      <button onclick="capBuscarCNPJ()" style="height:40px;padding:0 20px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif">🔍 Buscar CNPJ</button>
-      <a href="https://www.cnpj.biz/" target="_blank" style="height:40px;padding:0 16px;background:none;border:1px solid var(--line2);color:var(--txt2);border-radius:9px;font-size:13px;cursor:pointer;font-family:DM Sans,sans-serif;display:flex;align-items:center;text-decoration:none">🔗 CNPJ.biz</a>
+  return `
+  <!-- Abas -->
+  <div style="display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:20px">
+    <button id="cap-tab-cnpj" onclick="capSetTab('cnpj')"
+      style="padding:10px 20px;font-size:13px;font-weight:600;color:var(--blue-h);
+      border:none;background:none;border-bottom:2px solid var(--blue);cursor:pointer;
+      font-family:'DM Sans',sans-serif">Por CNPJ</button>
+    <button id="cap-tab-nome" onclick="capSetTab('nome')"
+      style="padding:10px 20px;font-size:13px;font-weight:500;color:var(--txt2);
+      border:none;background:none;border-bottom:2px solid transparent;cursor:pointer;
+      font-family:'DM Sans',sans-serif">Por Nome/Cidade</button>
+  </div>
+
+  <!-- ABA CNPJ -->
+  <div id="cap-painel-cnpj">
+    <div style="background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:16px">
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">
+        Digite o CNPJ para consultar dados completos da empresa em 4 fontes simultâneas.
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <input id="cap-cnpj" placeholder="00.000.000/0001-00"
+          style="flex:1;min-width:200px;background:var(--s3);border:1px solid var(--line2);
+          border-radius:9px;padding:10px 13px;color:var(--txt);font-size:14px;
+          font-family:'DM Sans',sans-serif;outline:none;letter-spacing:.5px"
+          onkeydown="if(event.key==='Enter')capBuscarCNPJ()">
+        <button onclick="capBuscarCNPJ()"
+          style="height:42px;padding:0 22px;background:var(--blue);color:#fff;
+          border:none;border-radius:9px;font-size:13px;font-weight:600;
+          cursor:pointer;font-family:'DM Sans',sans-serif">
+          🔍 Buscar CNPJ
+        </button>
+      </div>
+      <div id="cap-resultado" style="margin-top:14px"></div>
     </div>
-    <div id="cap-resultado"></div>
+  </div>
+
+  <!-- ABA NOME/CIDADE -->
+  <div id="cap-painel-nome" style="display:none">
+    <div style="background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:16px">
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:14px">
+        Pesquise empresas por segmento e cidade. Use termos genéricos como <strong>MOTO</strong>, <strong>PECAS</strong>, <strong>OFICINA</strong>.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <input id="cap-nome" placeholder="Ex: MOTO, PECAS, OFICINA..."
+          style="background:var(--s3);border:1px solid var(--line2);border-radius:9px;
+          padding:10px 13px;color:var(--txt);font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
+        <input id="cap-cidade" placeholder="Município (Ex: Sao Luis)"
+          style="background:var(--s3);border:1px solid var(--line2);border-radius:9px;
+          padding:10px 13px;color:var(--txt);font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
+        <select id="cap-uf"
+          style="background:var(--s3);border:1px solid var(--line2);border-radius:9px;
+          padding:10px 13px;color:var(--txt);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer">
+          <option value="">UF</option>
+          <option value="MA" selected>MA</option>
+          <option value="AC">AC</option><option value="AL">AL</option><option value="AM">AM</option>
+          <option value="AP">AP</option><option value="BA">BA</option><option value="CE">CE</option>
+          <option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option>
+          <option value="MG">MG</option><option value="MS">MS</option><option value="MT">MT</option>
+          <option value="PA">PA</option><option value="PB">PB</option><option value="PE">PE</option>
+          <option value="PI">PI</option><option value="PR">PR</option><option value="RJ">RJ</option>
+          <option value="RN">RN</option><option value="RO">RO</option><option value="RR">RR</option>
+          <option value="RS">RS</option><option value="SC">SC</option><option value="SE">SE</option>
+          <option value="SP">SP</option><option value="TO">TO</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="capBuscarNome()"
+          style="height:40px;padding:0 20px;background:var(--blue);color:#fff;
+          border:none;border-radius:9px;font-size:13px;font-weight:600;
+          cursor:pointer;font-family:'DM Sans',sans-serif">
+          🔍 Pesquisar
+        </button>
+        <button onclick="capBuscarIA()"
+          style="height:40px;padding:0 20px;background:linear-gradient(135deg,#6D28D9,#4F46E5);
+          color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;
+          cursor:pointer;font-family:'DM Sans',sans-serif">
+          🤖 Pesquisar via IA
+        </button>
+        <a href="https://www.cnpj.biz/" target="_blank"
+          style="height:40px;padding:0 16px;background:none;border:1px solid var(--line2);
+          color:var(--txt2);border-radius:9px;font-size:13px;cursor:pointer;
+          font-family:'DM Sans',sans-serif;display:flex;align-items:center;text-decoration:none">
+          🔗 CNPJ.biz
+        </a>
+      </div>
+      <div id="cap-resultado-nome" style="margin-top:14px"></div>
+    </div>
   </div>`;
+}
+
+function capSetTab(aba){
+  const isCnpj = aba==='cnpj';
+  // Painéis
+  document.getElementById('cap-painel-cnpj').style.display = isCnpj?'block':'none';
+  document.getElementById('cap-painel-nome').style.display = isCnpj?'none':'block';
+  // Abas
+  const tabCnpj = document.getElementById('cap-tab-cnpj');
+  const tabNome = document.getElementById('cap-tab-nome');
+  if(tabCnpj){
+    tabCnpj.style.color      = isCnpj?'var(--blue-h)':'var(--txt2)';
+    tabCnpj.style.fontWeight = isCnpj?'600':'500';
+    tabCnpj.style.borderBottomColor = isCnpj?'var(--blue)':'transparent';
+  }
+  if(tabNome){
+    tabNome.style.color      = !isCnpj?'var(--blue-h)':'var(--txt2)';
+    tabNome.style.fontWeight = !isCnpj?'600':'500';
+    tabNome.style.borderBottomColor = !isCnpj?'var(--blue)':'transparent';
+  }
+}
+
+async function capBuscarNome(){
+  const nome  = (document.getElementById('cap-nome')?.value||'').trim().toUpperCase();
+  const cidade= (document.getElementById('cap-cidade')?.value||'').trim().toUpperCase();
+  const uf    = (document.getElementById('cap-uf')?.value||'').trim().toUpperCase();
+  const res   = document.getElementById('cap-resultado-nome');
+  if(!nome && !cidade){ res.innerHTML='<p style="color:var(--amber);font-size:13px">⚠ Informe ao menos o nome/segmento ou município.</p>'; return; }
+  res.innerHTML='<p style="color:var(--txt2);font-size:13px">🔍 Buscando empresas…</p>';
+  let lista=[];
+  // Tentar Casa dos Dados
+  try{
+    const r=await fetch('https://api.casadosdados.com.br/v2/public/cnpj/search',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({query:{razao_social:nome||undefined,municipio:cidade?[cidade]:undefined,uf:uf?[uf]:undefined,situacao_cadastral:'ATIVA'},page:1}),
+      signal:AbortSignal.timeout(8000)
+    });
+    if(r.ok){const d=await r.json();lista=d?.data?.cnpj||[];}
+  }catch(e){}
+  // Tentar BrasilAPI
+  if(!lista.length && nome){
+    try{
+      let url=`https://brasilapi.com.br/api/cnpj/v1/search?search=${encodeURIComponent(nome)}`;
+      if(uf) url+=`&uf=${uf}`;
+      if(cidade) url+=`&municipio=${encodeURIComponent(cidade)}`;
+      const r=await fetch(url,{signal:AbortSignal.timeout(8000)});
+      if(r.ok){const d=await r.json();lista=Array.isArray(d)?d:(d.data||[]);}
+    }catch(e){}
+  }
+  if(!lista.length){
+    const cidadeUrl=cidade.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-');
+    const nomeUrl=nome.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-');
+    let urlBiz='https://www.cnpj.biz/';
+    if(uf&&cidade) urlBiz=`https://www.cnpj.biz/empresas/${uf}/${cidadeUrl}${nome?'/'+nomeUrl:''}`;
+    res.innerHTML=`<div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:16px">
+      <p style="color:var(--amber);font-size:13px;margin-bottom:10px">⚠ Nenhuma empresa encontrada pelas APIs.<br>Tente no CNPJ.biz ou via IA.</p>
+      <a href="${urlBiz}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#0F4C81;color:#fff;border-radius:8px;text-decoration:none;font-size:12px;font-weight:600">🔗 Buscar no CNPJ.biz →</a>
+    </div>`;
+    return;
+  }
+  res.innerHTML=`<div style="font-size:12px;color:var(--txt2);margin-bottom:10px">${lista.length} empresa(s) encontrada(s)</div>`+
+  lista.slice(0,15).map(e=>`
+    <div style="background:var(--s2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:3px">${e.razao_social||e.nome||'—'}</div>
+        <div style="font-size:11px;color:var(--txt2)">${e.cnpj||''} · ${e.municipio||cidade} · ${e.uf||uf}</div>
+      </div>
+      <button onclick="capAdicionarCliente('${(e.razao_social||e.nome||'').replace(/'/g,"\\'")}','${(e.cnpj||'').replace(/\D/g,'')}','${e.municipio||cidade}','${e.uf||uf}','','')"
+        style="height:30px;padding:0 12px;background:var(--blue);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">
+        ➕ Adicionar
+      </button>
+    </div>`).join('');
+}
+
+async function capBuscarIA(){
+  const nome  = (document.getElementById('cap-nome')?.value||'').trim();
+  const cidade= (document.getElementById('cap-cidade')?.value||'').trim();
+  const uf    = (document.getElementById('cap-uf')?.value||'').trim();
+  const res   = document.getElementById('cap-resultado-nome');
+  if(!nome && !cidade){ res.innerHTML='<p style="color:var(--amber);font-size:13px">⚠ Informe ao menos um filtro.</p>'; return; }
+  res.innerHTML=`<div style="display:flex;align-items:center;gap:10px;color:var(--txt2);font-size:13px;padding:12px">
+    <div style="width:18px;height:18px;border:2px solid var(--blue);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite"></div>
+    Pesquisando com IA: <em>${nome||''}${cidade?' em '+cidade:''}</em>…
+  </div>
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+  try{
+    const prompt=`Pesquise empresas do segmento "${nome}" ${cidade?'em '+cidade:''} ${uf?'- '+uf:''} Brasil. Retorne SOMENTE JSON válido sem markdown:
+{"empresas":[{"razao_social":"nome da empresa","cnpj":"00.000.000/0001-00","cidade":"cidade","uf":"UF","telefone":"","email":"","descricao":"atividade"}]}
+Até 10 empresas reais. CNPJ pode ser vazio se não encontrar.`;
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:[{role:'user',content:prompt}]})
+    });
+    if(!r.ok) throw new Error('API '+r.status);
+    const data=await r.json();
+    const txt=(data.content?.find(b=>b.type==='text')?.text||'').replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(txt);
+    const empresas=parsed.empresas||[];
+    if(!empresas.length){res.innerHTML='<p style="color:var(--amber);font-size:13px">Nenhuma empresa encontrada.</p>';return;}
+    res.innerHTML=`<div style="font-size:12px;color:var(--txt2);margin-bottom:10px">🤖 ${empresas.length} empresa(s) encontrada(s) via IA</div>`+
+    empresas.map(e=>`
+      <div style="background:var(--s2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:3px">${e.razao_social||'—'}</div>
+          <div style="font-size:11px;color:var(--txt2)">${e.cnpj?e.cnpj+' · ':''}${e.cidade||cidade} · ${e.uf||uf}</div>
+          ${e.descricao?`<div style="font-size:11px;color:var(--txt3);margin-top:2px">${e.descricao}</div>`:''}
+        </div>
+        <button onclick="capAdicionarCliente('${(e.razao_social||'').replace(/'/g,"\\'")}','${(e.cnpj||'').replace(/\D/g,'')}','${e.cidade||cidade}','${e.uf||uf}','${e.telefone||''}','${e.email||''}')"
+          style="height:30px;padding:0 12px;background:var(--blue);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">
+          ➕ Adicionar
+        </button>
+      </div>`).join('');
+  }catch(e){
+    res.innerHTML=`<p style="color:var(--red);font-size:13px">⚠ Erro: ${e.message}</p>`;
+  }
 }
 
 async function capBuscarCNPJ(){
