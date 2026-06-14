@@ -441,6 +441,8 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 </div>
 
 <script>
+const APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbz5OKxXDWpF_YeZ5JpE3jUsXqSQzMwpwmGV1-Rat7SzIqyEPZ-VAEX8r4jH8RQzImmb/exec';
+
 /* ═══ DADOS ═══════════════════════════════════════════════════════════ */
 const APPS_URL = 'https://script.google.com/macros/s/AKfycbz5OKxXDWpF_YeZ5JpE3jUsXqSQzMwpwmGV1-Rat7SzIqyEPZ-VAEX8r4jH8RQzImmb/exec';
 
@@ -1195,7 +1197,6 @@ function sobreTab(aba,el){
 /* ═══════════════════════════════════
    SINCRONIZAÇÃO COM GOOGLE SHEETS
 ═══════════════════════════════════ */
-const APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbz5OKxXDWpF_YeZ5JpE3jUsXqSQzMwpwmGV1-Rat7SzIqyEPZ-VAEX8r4jH8RQzImmb/exec';
 
 async function syncSheets(action, data){
   const url = (typeof CFG!=='undefined' && CFG.sheetsUrl) || APPS_SCRIPT;
@@ -1620,4 +1621,4 @@ function buildConfig(){
     +'<span style="font-size:18px">💾</span><div><div style="font-size:14px;font-weight:600">Dados e Backup</div></div>'
     +'</div>'
     +'<div style="padding:20px;display:flex;gap:10px;flex-wrap:wrap">'
-    +'<button onclick="cfgExportarDados()" style="height:38px;padding:0 16px;background:var(--green);color:#fff;border:none;border-radius:9px;font-siz
+    +'<button onclick="cfgExportarDados()" style="height:38px;padding:0 16px;background:var(--green);color:#fff;border:none;border-radius:9px;font-si
