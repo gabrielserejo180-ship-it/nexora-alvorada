@@ -23,7 +23,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .home-desc{font-size:12px;color:var(--txt2);line-height:1.6}
 .home-footer{margin-top:auto;padding-top:28px;font-size:11px;color:var(--txt3)}
 .home-footer span{color:var(--blue-h)}
-.home-right{flex:1;padding:32px 28px;display:flex;flex-direction:column;justify-content:center}
+.home-right{flex:1;display:flex;flex-direction:row;}
 .home-right-label{font-size:11px;font-weight:600;letter-spacing:.8px;color:var(--txt3);text-transform:uppercase;margin-bottom:20px}
 .profile-list{display:flex;flex-direction:column;gap:12px}
 .pcard{display:flex;align-items:center;gap:16px;padding:18px 20px;border:1px solid var(--line2);border-radius:14px;cursor:pointer;transition:background .2s,border-color .2s,box-shadow .2s,transform .2s}
@@ -256,88 +256,68 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
         </span>
       </div>
     </div>
-    <div class="home-right" style="display:flex;flex-direction:row;padding:0;flex:1">
+    <div class="home-right">
       <div style="flex:1;padding:32px 28px;display:flex;flex-direction:column;justify-content:center">
       <div class="home-right-label">Selecione seu perfil de acesso</div>
       <div class="profile-list">
-        <div class="pcard rep" onclick="console.log('REP CLICADO'); goLogin('rep')">
-          <div class="pcard-dot">🧑‍💼</div>
+
+        <button class="pcard rep" onclick="goLogin('rep')" style="width:100%;text-align:left;background:none;border:1px solid var(--line2);cursor:pointer;font-family:inherit">
+          <div class="pcard-dot" style="background:rgba(16,185,129,.12)">🧑‍💼</div>
           <div class="pcard-info"><div class="pcard-title">Representante</div><div class="pcard-desc">Carteira de clientes, captação e vendas</div></div>
           <div class="pcard-chevron">›</div>
-        </div>
-        <div class="pcard ger" onclick="goLogin('ger')">
-          <div class="pcard-dot">📊</div>
+        </button>
+
+        <button class="pcard ger" onclick="goLogin('ger')" style="width:100%;text-align:left;background:none;border:1px solid var(--line2);cursor:pointer;font-family:inherit">
+          <div class="pcard-dot" style="background:rgba(37,99,235,.12)">📊</div>
           <div class="pcard-info"><div class="pcard-title">Gerente</div><div class="pcard-desc">Equipes, metas e indicadores gerenciais</div></div>
           <div class="pcard-chevron">›</div>
-        </div>
-        <div class="pcard adm" onclick="console.log('ADM CLICADO'); goLogin('adm')">
-          <div class="pcard-dot">⚙️</div>
+        </button>
+
+        <button class="pcard adm" onclick="goLogin('adm')" style="width:100%;text-align:left;background:none;border:1px solid var(--line2);cursor:pointer;font-family:inherit">
+          <div class="pcard-dot" style="background:rgba(99,102,241,.12)">⚙️</div>
           <div class="pcard-info"><div class="pcard-title">Administrador</div><div class="pcard-desc">Usuários, permissões e configurações</div></div>
           <div class="pcard-chevron">›</div>
-        </div>
+        </button>
+
       </div>
-      </div><!-- fim cards -->
+      </div>
 
-      <!-- ANIMAÇÃO RODA DE MOTO -->
-      <div class="moto-wrap">
-        <div class="moto-particles" id="moto-particles"></div>
+      <!-- ANIMAÇÃO RODA -->
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+        gap:14px;padding:20px;width:200px;flex-shrink:0;border-left:1px solid var(--line);
+        pointer-events:none;user-select:none">
 
-        <!-- Roda SVG -->
         <div style="position:relative;width:130px;height:130px;filter:drop-shadow(0 0 16px rgba(37,99,235,.3))">
-          <svg viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg" width="130" height="130">
+          <svg viewBox="0 0 140 140" width="130" height="130">
             <circle cx="70" cy="70" r="64" fill="none" stroke="#1E3A5F" stroke-width="6"/>
-            <circle cx="70" cy="70" r="68" fill="none" stroke="#0D1628" stroke-width="4"/>
             <circle cx="70" cy="70" r="52" fill="none" stroke="#1A2847" stroke-width="3"/>
-            <g class="moto-roda" style="transform-origin:70px 70px">
-              <line x1="70" y1="18" x2="70" y2="70" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
-              <line x1="70" y1="122" x2="70" y2="70" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
-              <line x1="18" y1="70" x2="70" y2="70" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" opacity=".8"/>
-              <line x1="122" y1="70" x2="70" y2="70" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round" opacity=".8"/>
-              <line x1="27.5" y1="27.5" x2="70" y2="70" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" opacity=".7"/>
-              <line x1="112.5" y1="112.5" x2="70" y2="70" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" opacity=".7"/>
-              <line x1="112.5" y1="27.5" x2="70" y2="70" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" opacity=".7"/>
-              <line x1="27.5" y1="112.5" x2="70" y2="70" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" opacity=".7"/>
-              <circle cx="70" cy="30" r="3" fill="#3B82F6" opacity=".8"/>
-              <circle cx="70" cy="110" r="3" fill="#3B82F6" opacity=".8"/>
-              <circle cx="30" cy="70" r="3" fill="#3B82F6" opacity=".8"/>
-              <circle cx="110" cy="70" r="3" fill="#3B82F6" opacity=".8"/>
-              <circle cx="33" cy="33" r="2.5" fill="#60A5FA" opacity=".7"/>
-              <circle cx="107" cy="107" r="2.5" fill="#60A5FA" opacity=".7"/>
-              <circle cx="107" cy="33" r="2.5" fill="#60A5FA" opacity=".7"/>
-              <circle cx="33" cy="107" r="2.5" fill="#60A5FA" opacity=".7"/>
+            <g style="animation:girar 4s linear infinite;transform-origin:70px 70px">
+              <line x1="70" y1="18" x2="70" y2="70" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="70" y1="122" x2="70" y2="70" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="18" y1="70" x2="70" y2="70" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="122" y1="70" x2="70" y2="70" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/>
+              <line x1="27.5" y1="27.5" x2="70" y2="70" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"/>
+              <line x1="112.5" y1="112.5" x2="70" y2="70" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"/>
+              <line x1="112.5" y1="27.5" x2="70" y2="70" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"/>
+              <line x1="27.5" y1="112.5" x2="70" y2="70" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"/>
             </g>
-            <circle cx="70" cy="70" r="14" fill="#0D1628" stroke="#2563EB" stroke-width="2.5"/>
-            <circle cx="70" cy="70" r="7" fill="#2563EB" class="moto-centro"/>
-            <circle cx="70" cy="70" r="3" fill="#60A5FA"/>
-          </svg>
-
-          <!-- Engrenagem -->
-          <svg width="32" height="32" viewBox="0 0 36 36" style="position:absolute;top:0;right:-8px;opacity:.4">
-            <g class="moto-eng" style="transform-origin:18px 18px">
-              <path d="M18 8L20 4L22 8L26 6L26 10L30 10L28 14L32 16L28 18L30 22L26 22L26 26L22 24L20 28L18 24L14 26L14 22L10 22L12 18L8 16L12 14L10 10L14 10L14 6Z" fill="none" stroke="#2563EB" stroke-width="1.5"/>
-              <circle cx="18" cy="18" r="5" fill="none" stroke="#2563EB" stroke-width="1.5"/>
-            </g>
-          </svg>
-
-          <!-- Pistão -->
-          <svg width="24" height="24" viewBox="0 0 28 28" style="position:absolute;bottom:0;left:-4px;opacity:.3">
-            <g class="moto-pistao">
-              <rect x="8" y="2" width="12" height="8" rx="2" fill="#3B82F6"/>
-              <rect x="10" y="10" width="8" height="14" rx="1" fill="#2563EB"/>
-              <line x1="14" y1="24" x2="14" y2="28" stroke="#2563EB" stroke-width="2"/>
-            </g>
+            <circle cx="70" cy="70" r="12" fill="#0D1628" stroke="#2563EB" stroke-width="2.5"/>
+            <circle cx="70" cy="70" r="6" fill="#2563EB" style="animation:pulso 2s ease-in-out infinite"/>
           </svg>
         </div>
 
-        <!-- Barras de velocidade -->
         <div style="display:flex;gap:4px;align-items:flex-end">
-          <div class="moto-speed-bar"></div><div class="moto-speed-bar"></div>
-          <div class="moto-speed-bar"></div><div class="moto-speed-bar"></div>
-          <div class="moto-speed-bar"></div><div class="moto-speed-bar"></div>
-          <div class="moto-speed-bar"></div>
+          <div style="width:6px;border-radius:3px;height:10px;background:rgba(37,99,235,.5);animation:speed-bar .8s ease-in-out infinite alternate"></div>
+          <div style="width:6px;border-radius:3px;height:16px;background:rgba(37,99,235,.5);animation:speed-bar .8s ease-in-out infinite alternate;animation-delay:.1s"></div>
+          <div style="width:6px;border-radius:3px;height:22px;background:rgba(37,99,235,.5);animation:speed-bar .8s ease-in-out infinite alternate;animation-delay:.2s"></div>
+          <div style="width:6px;border-radius:3px;height:30px;background:rgba(37,99,235,.7);animation:speed-bar .8s ease-in-out infinite alternate;animation-delay:.3s"></div>
+          <div style="width:6px;border-radius:3px;height:22px;background:rgba(37,99,235,.5);animation:speed-bar .8s ease-in-out infinite alternate;animation-delay:.4s"></div>
+          <div style="width:6px;border-radius:3px;height:16px;background:rgba(37,99,235,.5);animation:speed-bar .8s ease-in-out infinite alternate;animation-delay:.5s"></div>
+          <div style="width:6px;border-radius:3px;height:10px;background:rgba(37,99,235,.5);animation:speed-bar .8s ease-in-out infinite alternate;animation-delay:.6s"></div>
         </div>
 
-        <div class="moto-tagline">Peças &amp; Acessórios<br>
+        <div style="font-size:12px;color:#4A5878;text-align:center;line-height:1.6">
+          Peças &amp; Acessórios<br>
           <span style="font-size:10px;color:#2D3A58">Gestão inteligente</span>
         </div>
       </div>
@@ -1618,4 +1598,9 @@ function buildConfig(){
     +'<button onclick="cfgSalvarSheets()" style="height:38px;padding:0 20px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif">💾 Salvar</button>'
     +'<span id="cfg-sheets-saved" style="font-size:12px;color:var(--green);display:none">✓ Salvo!</span>'
     +'</div></div>'
-    +'<div style="background:var(--s1);border:
+    +'<div style="background:var(--s1);border:1px solid var(--line);border-radius:14px;overflow:hidden">'
+    +'<div style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);background:var(--s2)">'
+    +'<span style="font-size:18px">💾</span><div><div style="font-size:14px;font-weight:600">Dados e Backup</div></div>'
+    +'</div>'
+    +'<div style="padding:20px;display:flex;gap:10px;flex-wrap:wrap">'
+    +'<button onclick="cfgExportarDados()" style="height:38px;padding:0 16px;background:var
