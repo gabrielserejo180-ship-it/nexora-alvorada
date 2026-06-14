@@ -453,24 +453,24 @@ const USERS_BASE = [
   {user:'adm001',pin:'000000',name:'Administrador',  role:'adm',status:'active'},
 ];
 
-let USR_DB = JSON.parse(localStorage.getItem('nexora_usuarios')||'[]');
-if(USR_DB.length===0){ USR_DB=[...USERS_BASE]; salvarUSR(); }
-async function salvarUSR(){ 
-  try{localStorage.setItem('nexora_usuarios',JSON.stringify(USR_DB));}catch(e){}
-  await syncSheets('saveUsuarios', USR_DB);
-}
-
 let CLI_DB = JSON.parse(localStorage.getItem('nexora_clientes')||'[]');
 let VND_DB = JSON.parse(localStorage.getItem('nexora_vendas')||'[]');
 let RET_DB = JSON.parse(localStorage.getItem('nexora_retornos')||'[]');
 let AUD_DB = JSON.parse(localStorage.getItem('nexora_auditoria')||'[]');
 let CFG    = JSON.parse(localStorage.getItem('nexora_config')||'{}');
-// Forçar URL correta sempre
 CFG.sheetsUrl = 'https://script.google.com/macros/s/AKfycbz5OKxXDWpF_YeZ5JpE3jUsXqSQzMwpwmGV1-Rat7SzIqyEPZ-VAEX8r4jH8RQzImmb/exec';
 try{localStorage.setItem('nexora_config',JSON.stringify(CFG));}catch(e){}
 let MET_DB = JSON.parse(localStorage.getItem('nexora_metas')||'{}');
 let REL_HISTORICO = [];
 
+// USR_DB inicializado DEPOIS do CFG para evitar erro de referência
+let USR_DB = JSON.parse(localStorage.getItem('nexora_usuarios')||'[]');
+if(USR_DB.length===0){ USR_DB=[...USERS_BASE]; try{localStorage.setItem('nexora_usuarios',JSON.stringify(USR_DB));}catch(e){} }
+
+async function salvarUSR(){ 
+  try{localStorage.setItem('nexora_usuarios',JSON.stringify(USR_DB));}catch(e){}
+  await syncSheets('saveUsuarios', USR_DB);
+}
 function salvarCLI(){ 
   try{localStorage.setItem('nexora_clientes',JSON.stringify(CLI_DB));}catch(e){} 
   syncSheets('saveClientes', CLI_DB);
@@ -566,6 +566,8 @@ function launchApp(){
   document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
   const shell=document.getElementById('app-shell');
   shell.classList.add('on');
+  // Carregar dados do Sheets em background
+  setTimeout(function(){ try{ carregarDoSheets(); }catch(e){} }, 1000);
   const ini=me.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('tb-avatar').textContent=ini;
   document.getElementById('tb-uname').textContent=me.name;
@@ -1274,13 +1276,7 @@ async function carregarDoSheets(){
   }
 }
 
-// Carregar dados do Sheets ao iniciar o app
-const _origLaunchApp = launchApp;
-launchApp = function(){
-  _origLaunchApp();
-  // Tentar carregar dados do Sheets em background
-  setTimeout(carregarDoSheets, 1000);
-};
+// carregarDoSheets é chamado dentro do launchApp original
 
 
 function criarParticulas(){
@@ -1620,5 +1616,4 @@ function buildConfig(){
     +'<div style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);background:var(--s2)">'
     +'<span style="font-size:18px">💾</span><div><div style="font-size:14px;font-weight:600">Dados e Backup</div></div>'
     +'</div>'
-    +'<div style="padding:20px;display:flex;gap:10px;flex-wrap:wrap">'
-    +'<button onclick="cfgExportarDados()"
+    +'<div style="padding:20px;display:flex;gap:
