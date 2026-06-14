@@ -536,7 +536,7 @@ async function doLogin(){
   // Carregar usuários da planilha antes de lançar o app
   try {
     const url = CFG.sheetsUrl || APPS_SCRIPT;
-    const r = await fetch(url+'?action=getUsuarios', {signal:AbortSignal.timeout(5000), cache:'no-cache'});
+    const r = await fetch(url+'?action=getUsuarios', {cache:'no-cache'});
     if(r.ok){
       const d = await r.json();
       if(d.ok && d.data && d.data.length > 0){
@@ -919,7 +919,7 @@ async function capBuscarCNPJ(){
     `https://minhareceita.org/${cnpj}`,
   ]){
     try{
-      const r=await fetch(url,{signal:AbortSignal.timeout(8000)});
+      const r=await fetch(url,{});
       if(r.ok){const d=await r.json(); if(d&&(d.cnpj||d.razao_social||d.nome)){raw=d;break;}}
     }catch(e){}
   }
@@ -951,10 +951,7 @@ async function capBuscarNome(){
 
   try {
     // Usar Apps Script como proxy — ele não tem bloqueio de CORS
-    const r = await fetch(url+'?action=buscarEmpresas&params='+params, {
-      signal: AbortSignal.timeout(30000),
-      cache: 'no-cache'
-    });
+    const r = await fetch(url+'?action=buscarEmpresas&params='+params);
     if(r.ok){
       const d = await r.json();
       if(d.ok && d.data) lista = d.data;
@@ -1163,7 +1160,7 @@ async function cfgTestarSheets(){
   if(!url){alert('Informe a URL.');return;}
   if(st) st.innerHTML='<span style="font-size:12px;padding:5px 12px;border-radius:99px;background:var(--s3);color:var(--txt2)">Testando…</span>';
   try{
-    const r=await fetch(url+'?action=ping',{signal:AbortSignal.timeout(6000)});
+    const r=await fetch(url+'?action=ping',{});
     if(r.ok){if(st) st.innerHTML='<span style="font-size:12px;padding:5px 12px;border-radius:99px;background:rgba(16,185,129,.1);color:#34D399;border:1px solid rgba(16,185,129,.2)">✅ Conectado</span>';}
     else throw new Error(r.status);
   }catch(e){if(st) st.innerHTML='<span style="font-size:12px;padding:5px 12px;border-radius:99px;background:rgba(239,68,68,.1);color:#FCA5A5;border:1px solid rgba(239,68,68,.2)">❌ Falha na conexão</span>';}
@@ -1210,7 +1207,7 @@ async function syncSheets(action, data){
     
     // Passo 1: limpar
     const urlLimpar = `${url}?action=limpar&sheet=${sheetName}`;
-    const r1 = await fetch(urlLimpar, {signal:AbortSignal.timeout(15000), cache:'no-cache'});
+    const r1 = await fetch(urlLimpar, {cache:'no-cache'});
     if(!r1.ok) throw new Error('Erro ao limpar: '+r1.status);
     
     // Passo 2: inserir cada linha
@@ -1218,7 +1215,7 @@ async function syncSheets(action, data){
       for(let i=0; i<data.length; i++){
         const row = encodeURIComponent(JSON.stringify(data[i]));
         const urlRow = `${url}?action=inserirLinha&sheet=${sheetName}&row=${row}`;
-        const r2 = await fetch(urlRow, {signal:AbortSignal.timeout(15000), cache:'no-cache'});
+        const r2 = await fetch(urlRow, {cache:'no-cache'});
         if(!r2.ok) throw new Error('Erro linha '+i+': '+r2.status);
       }
     }
@@ -1242,7 +1239,7 @@ async function carregarDoSheets(){
   
   try {
     // Carregar usuários do Sheets
-    const r = await fetch(url + '?action=getUsuarios', {signal: AbortSignal.timeout(8000)});
+    const r = await fetch(url + '?action=getUsuarios', {});
     if(r.ok){
       const d = await r.json();
       if(d.ok && d.data && d.data.length > 0){
@@ -1254,7 +1251,7 @@ async function carregarDoSheets(){
     }
 
     // Carregar clientes
-    const r2 = await fetch(url + '?action=getClientes', {signal: AbortSignal.timeout(8000)});
+    const r2 = await fetch(url + '?action=getClientes', {});
     if(r2.ok){
       const d2 = await r2.json();
       if(d2.ok && d2.data && d2.data.length > 0){
@@ -1405,7 +1402,7 @@ function retRender(){
     const idx = RET_DB.indexOf(r);
     const conc = r.status==='concluido';
     const telNum = (r.telefone||'').replace(/\D/g,'');
-    return '<div style="background:var(--s1);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;opacity:'+(conc?.6:1)+'">'
+    return '<div style="background:var(--s1);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;opacity:'+(conc ? '0.6' : '1')+'">'
       +'<div style="flex:1;min-width:0">'
       +'<div style="font-size:13px;font-weight:600;margin-bottom:3px">'+(r.cliente||'—')+'</div>'
       +'<div style="font-size:11px;color:var(--txt2)">📅 '+(r.data||'')+(r.hora?' às '+r.hora:'')+' · '+(r.motivo||'')+'</div>'
@@ -1609,4 +1606,7 @@ function buildConfig(){
     +'<span id="cfg-sheets-saved" style="font-size:12px;color:var(--green);display:none">✓ Salvo!</span>'
     +'</div></div>'
     +'<div style="background:var(--s1);border:1px solid var(--line);border-radius:14px;overflow:hidden">'
-    +'<div
+    +'<div style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);background:var(--s2)">'
+    +'<span style="font-size:18px">💾</span><div><div style="font-size:14px;font-weight:600">Dados e Backup</div></div>'
+    +'</div>'
+    +'<div style="padding:20px;display:
