@@ -260,7 +260,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <div style="flex:1;padding:32px 28px;display:flex;flex-direction:column;justify-content:center">
       <div class="home-right-label">Selecione seu perfil de acesso</div>
       <div class="profile-list">
-        <div class="pcard rep" onclick="goLogin('rep')">
+        <div class="pcard rep" onclick="console.log('REP CLICADO'); goLogin('rep')">
           <div class="pcard-dot">🧑‍💼</div>
           <div class="pcard-info"><div class="pcard-title">Representante</div><div class="pcard-desc">Carteira de clientes, captação e vendas</div></div>
           <div class="pcard-chevron">›</div>
@@ -270,7 +270,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
           <div class="pcard-info"><div class="pcard-title">Gerente</div><div class="pcard-desc">Equipes, metas e indicadores gerenciais</div></div>
           <div class="pcard-chevron">›</div>
         </div>
-        <div class="pcard adm" onclick="goLogin('adm')">
+        <div class="pcard adm" onclick="console.log('ADM CLICADO'); goLogin('adm')">
           <div class="pcard-dot">⚙️</div>
           <div class="pcard-info"><div class="pcard-title">Administrador</div><div class="pcard-desc">Usuários, permissões e configurações</div></div>
           <div class="pcard-chevron">›</div>
@@ -441,6 +441,12 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 </div>
 
 <script>
+window.onerror = function(msg, src, line){
+  var d = document.createElement('div');
+  d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:10px;z-index:9999;font-size:12px;font-family:monospace';
+  d.textContent = 'ERRO JS linha ' + line + ': ' + msg;
+  document.body.appendChild(d);
+};
 const APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbz5OKxXDWpF_YeZ5JpE3jUsXqSQzMwpwmGV1-Rat7SzIqyEPZ-VAEX8r4jH8RQzImmb/exec';
 
 /* ═══ DADOS ═══════════════════════════════════════════════════════════ */
@@ -1612,8 +1618,4 @@ function buildConfig(){
     +'<button onclick="cfgSalvarSheets()" style="height:38px;padding:0 20px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif">💾 Salvar</button>'
     +'<span id="cfg-sheets-saved" style="font-size:12px;color:var(--green);display:none">✓ Salvo!</span>'
     +'</div></div>'
-    +'<div style="background:var(--s1);border:1px solid var(--line);border-radius:14px;overflow:hidden">'
-    +'<div style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);background:var(--s2)">'
-    +'<span style="font-size:18px">💾</span><div><div style="font-size:14px;font-weight:600">Dados e Backup</div></div>'
-    +'</div>'
-    +'<div style="padding:20px;display:flex;gap:
+    +'<div style="background:var(--s1);border:
