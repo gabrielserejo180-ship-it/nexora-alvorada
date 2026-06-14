@@ -442,7 +442,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 
 <script>
 /* ═══ DADOS ═══════════════════════════════════════════════════════════ */
-const APPS_URL = 'https://script.google.com/macros/s/AKfycbyKQ8SbHeb62q3JTtemdsekD1aHE4SAQ_2iemMC7bwwkHzQli35GWRfEELne57sS4uq/exec';
+const APPS_URL = 'https://script.google.com/macros/s/AKfycbx0lARsV-4Zd8YErm9i7pvQvHWkfwzFHGemHFXYSHYCdT1T5Z_kdH1uMxJRkM5cCnIR/exec';
 
 const USERS_BASE = [
   {user:'rep001',pin:'123456',name:'Carlos Silva',   role:'rep',status:'active'},
@@ -1271,7 +1271,7 @@ function sobreTab(aba,el){
 /* ═══════════════════════════════════
    SINCRONIZAÇÃO COM GOOGLE SHEETS
 ═══════════════════════════════════ */
-const APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbyKQ8SbHeb62q3JTtemdsekD1aHE4SAQ_2iemMC7bwwkHzQli35GWRfEELne57sS4uq/exec';
+const APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbx0lARsV-4Zd8YErm9i7pvQvHWkfwzFHGemHFXYSHYCdT1T5Z_kdH1uMxJRkM5cCnIR/exec';
 
 async function syncSheets(action, data){
   const url = (typeof CFG!=='undefined' && CFG.sheetsUrl) || APPS_SCRIPT;
@@ -1281,11 +1281,11 @@ async function syncSheets(action, data){
   if(statusEl) statusEl.textContent = '🔄 Salvando…';
   
   try {
-    const resp = await fetch(url, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({action, data}),
-      signal: AbortSignal.timeout(10000)
+    // Usar GET com payload codificado — resolve CORS do Apps Script
+    const payload = encodeURIComponent(JSON.stringify({action, data}));
+    const resp = await fetch(`${url}?action=${action}&payload=${payload}`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(15000)
     });
     
     if(!resp.ok) throw new Error('HTTP '+resp.status);
