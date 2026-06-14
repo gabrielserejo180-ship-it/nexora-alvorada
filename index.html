@@ -514,7 +514,7 @@ function goLogin(p){
   setTimeout(()=>document.getElementById('inp-user').focus(),300);
 }
 
-function doLogin(){
+async function doLogin(){
   const user = document.getElementById('inp-user').value.trim().toLowerCase();
   const pin  = document.getElementById('inp-pin').value.trim();
   const alertEl = document.getElementById('login-alert');
@@ -534,6 +534,29 @@ function doLogin(){
   if(found.status==='inactive'){ alertEl.textContent='Usuário inativo.'; alertEl.classList.add('show'); return; }
 
   me=found;
+
+  // Carregar usuários da planilha antes de lançar o app
+  try {
+    const url = CFG.sheetsUrl || APPS_SCRIPT;
+    const r = await fetch(url+'?action=getUsuarios', {signal:AbortSignal.timeout(5000), cache:'no-cache'});
+    if(r.ok){
+      const d = await r.json();
+      if(d.ok && d.data && d.data.length > 0){
+        // Mesclar: planilha tem prioridade
+        USR_DB = d.data.map(u=>({
+          user:   String(u.user||'').trim(),
+          pin:    String(u.pin||'').trim(),
+          name:   String(u.name||'').trim(),
+          role:   String(u.role||'rep').trim(),
+          status: String(u.status||'active').trim(),
+          codigo: String(u.codigo||'').trim(),
+          criado: String(u.criado||'').trim(),
+        }));
+        try{localStorage.setItem('nexora_usuarios',JSON.stringify(USR_DB));}catch(e){}
+      }
+    }
+  } catch(e){ /* usar localStorage */ }
+
   launchApp();
 }
 
