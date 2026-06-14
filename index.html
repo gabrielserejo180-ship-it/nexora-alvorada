@@ -1285,7 +1285,9 @@ async function syncSheets(action, data){
     const payload = encodeURIComponent(JSON.stringify({action, data}));
     const resp = await fetch(`${url}?action=${action}&payload=${payload}`, {
       method: 'GET',
-      signal: AbortSignal.timeout(15000)
+      signal: AbortSignal.timeout(30000),
+      mode: 'cors',
+      cache: 'no-cache'
     });
     
     if(!resp.ok) throw new Error('HTTP '+resp.status);
@@ -1299,8 +1301,16 @@ async function syncSheets(action, data){
       throw new Error(result.msg||'Erro desconhecido');
     }
   } catch(e) {
-    if(statusEl){ statusEl.textContent='⚠️ Offline'; setTimeout(()=>statusEl.textContent='',5000); }
-    console.warn('❌ Sync falhou:', action, e.message);
+    const isTimeout = e.name==='TimeoutError' || e.message.includes('timeout') || e.message.includes('abort');
+    if(statusEl){ 
+      statusEl.textContent = isTimeout ? '⚠️ Lento' : '⚠️ Offline'; 
+      setTimeout(()=>statusEl.textContent='',8000); 
+    }
+    console.warn('❌ Sync falhou:', action, e.name, e.message);
+    // Se for timeout, pode ter salvado mesmo assim — verificar na planilha
+    if(isTimeout && action.startsWith('save')){
+      console.log('⚠️ Timeout — verifique na planilha se os dados foram salvos');
+    }
     return false;
   }
 }
