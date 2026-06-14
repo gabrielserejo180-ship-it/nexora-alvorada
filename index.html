@@ -669,456 +669,269 @@ function buildDashboard(){
 
 function buildCaptacao(){
   return `
-  <!-- Abas -->
-  <div style="display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:20px">
-    <button id="cap-tab-cnpj" onclick="capSetTab('cnpj')"
-      style="padding:10px 20px;font-size:13px;font-weight:600;color:var(--blue-h);
-      border:none;background:none;border-bottom:2px solid var(--blue);cursor:pointer;
-      font-family:'DM Sans',sans-serif">Por CNPJ</button>
-    <button id="cap-tab-nome" onclick="capSetTab('nome')"
-      style="padding:10px 20px;font-size:13px;font-weight:500;color:var(--txt2);
-      border:none;background:none;border-bottom:2px solid transparent;cursor:pointer;
-      font-family:'DM Sans',sans-serif">Por Nome/Cidade</button>
+  <!-- BUSCA POR CNPJ -->
+  <div style="background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:16px">
+    <div style="font-size:13px;font-weight:600;color:var(--txt);margin-bottom:6px">🔍 Buscar por CNPJ</div>
+    <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Digite o CNPJ para consultar dados completos da empresa.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <input id="cap-cnpj" placeholder="00.000.000/0001-00"
+        style="flex:1;min-width:200px;background:var(--s3);border:1px solid var(--line2);
+        border-radius:9px;padding:10px 13px;color:var(--txt);font-size:14px;
+        font-family:'DM Sans',sans-serif;outline:none;letter-spacing:.5px"
+        onkeydown="if(event.key==='Enter')capBuscarCNPJ()">
+      <button onclick="capBuscarCNPJ()" id="btn-cap-cnpj"
+        style="height:42px;padding:0 22px;background:var(--blue);color:#fff;
+        border:none;border-radius:9px;font-size:13px;font-weight:600;
+        cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">
+        🔍 Buscar
+      </button>
+    </div>
+    <div id="cap-resultado" style="margin-top:14px"></div>
   </div>
 
-  <!-- ABA CNPJ -->
-  <div id="cap-painel-cnpj">
-    <div style="background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:16px">
-      <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">
-        Digite o CNPJ para consultar dados completos da empresa em 4 fontes simultâneas.
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <input id="cap-cnpj" placeholder="00.000.000/0001-00"
-          style="flex:1;min-width:200px;background:var(--s3);border:1px solid var(--line2);
-          border-radius:9px;padding:10px 13px;color:var(--txt);font-size:14px;
-          font-family:'DM Sans',sans-serif;outline:none;letter-spacing:.5px"
-          onkeydown="if(event.key==='Enter')capBuscarCNPJ()">
-        <button onclick="capBuscarCNPJ()"
-          style="height:42px;padding:0 22px;background:var(--blue);color:#fff;
-          border:none;border-radius:9px;font-size:13px;font-weight:600;
-          cursor:pointer;font-family:'DM Sans',sans-serif">
-          🔍 Buscar CNPJ
-        </button>
-      </div>
-      <div id="cap-resultado" style="margin-top:14px"></div>
+  <!-- BUSCA POR NOME/CIDADE -->
+  <div style="background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:22px">
+    <div style="font-size:13px;font-weight:600;color:var(--txt);margin-bottom:6px">🏢 Buscar por Segmento/Cidade</div>
+    <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">
+      Use termos genéricos como <strong>MOTO</strong>, <strong>PECAS</strong>, <strong>OFICINA</strong>. Consulta automaticamente 4 APIs.
     </div>
-  </div>
-
-  <!-- ABA NOME/CIDADE -->
-  <div id="cap-painel-nome" style="display:none">
-    <div style="background:var(--s1);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:16px">
-      <div style="font-size:12px;color:var(--txt2);margin-bottom:14px">
-        Pesquise empresas por segmento e cidade. Use termos genéricos como <strong>MOTO</strong>, <strong>PECAS</strong>, <strong>OFICINA</strong>.
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-        <input id="cap-nome" placeholder="Ex: MOTO, PECAS, OFICINA..."
-          style="background:var(--s3);border:1px solid var(--line2);border-radius:9px;
-          padding:10px 13px;color:var(--txt);font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
-        <input id="cap-cidade" placeholder="Município (Ex: Sao Luis)"
-          style="background:var(--s3);border:1px solid var(--line2);border-radius:9px;
-          padding:10px 13px;color:var(--txt);font-size:13px;font-family:'DM Sans',sans-serif;outline:none">
-        <select id="cap-uf"
-          style="background:var(--s3);border:1px solid var(--line2);border-radius:9px;
-          padding:10px 13px;color:var(--txt);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer">
-          <option value="">UF</option>
-          <option value="MA" selected>MA</option>
-          <option value="AC">AC</option><option value="AL">AL</option><option value="AM">AM</option>
-          <option value="AP">AP</option><option value="BA">BA</option><option value="CE">CE</option>
-          <option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option>
-          <option value="MG">MG</option><option value="MS">MS</option><option value="MT">MT</option>
-          <option value="PA">PA</option><option value="PB">PB</option><option value="PE">PE</option>
-          <option value="PI">PI</option><option value="PR">PR</option><option value="RJ">RJ</option>
-          <option value="RN">RN</option><option value="RO">RO</option><option value="RR">RR</option>
-          <option value="RS">RS</option><option value="SC">SC</option><option value="SE">SE</option>
-          <option value="SP">SP</option><option value="TO">TO</option>
-        </select>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="capBuscarNome()"
-          style="height:40px;padding:0 20px;background:var(--blue);color:#fff;
-          border:none;border-radius:9px;font-size:13px;font-weight:600;
-          cursor:pointer;font-family:'DM Sans',sans-serif">
-          🔍 Pesquisar
-        </button>
-
-        <a href="https://www.cnpj.biz/" target="_blank"
-          style="height:40px;padding:0 16px;background:none;border:1px solid var(--line2);
-          color:var(--txt2);border-radius:9px;font-size:13px;cursor:pointer;
-          font-family:'DM Sans',sans-serif;display:flex;align-items:center;text-decoration:none">
-          🔗 CNPJ.biz
-        </a>
-      </div>
-      <div id="cap-resultado-nome" style="margin-top:14px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 80px;gap:8px;margin-bottom:10px">
+      <input id="cap-nome" placeholder="Ex: MOTO, PECAS, OFICINA..."
+        style="background:var(--s3);border:1px solid var(--line2);border-radius:9px;
+        padding:10px 13px;color:var(--txt);font-size:13px;font-family:'DM Sans',sans-serif;outline:none"
+        onkeydown="if(event.key==='Enter')capBuscarNome()">
+      <input id="cap-cidade" placeholder="Município (Ex: Sao Luis)"
+        style="background:var(--s3);border:1px solid var(--line2);border-radius:9px;
+        padding:10px 13px;color:var(--txt);font-size:13px;font-family:'DM Sans',sans-serif;outline:none"
+        onkeydown="if(event.key==='Enter')capBuscarNome()">
+      <select id="cap-uf"
+        style="background:var(--s3);border:1px solid var(--line2);border-radius:9px;
+        padding:10px 8px;color:var(--txt);font-size:13px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer">
+        <option value="">UF</option>
+        <option value="MA" selected>MA</option>
+        <option value="AC">AC</option><option value="AL">AL</option><option value="AM">AM</option>
+        <option value="AP">AP</option><option value="BA">BA</option><option value="CE">CE</option>
+        <option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option>
+        <option value="MG">MG</option><option value="MS">MS</option><option value="MT">MT</option>
+        <option value="PA">PA</option><option value="PB">PB</option><option value="PE">PE</option>
+        <option value="PI">PI</option><option value="PR">PR</option><option value="RJ">RJ</option>
+        <option value="RN">RN</option><option value="RO">RO</option><option value="RR">RR</option>
+        <option value="RS">RS</option><option value="SC">SC</option><option value="SE">SE</option>
+        <option value="SP">SP</option><option value="TO">TO</option>
+      </select>
     </div>
+    <button onclick="capBuscarNome()" id="btn-cap-nome"
+      style="height:40px;padding:0 22px;background:var(--blue);color:#fff;
+      border:none;border-radius:9px;font-size:13px;font-weight:600;
+      cursor:pointer;font-family:'DM Sans',sans-serif">
+      🔍 Pesquisar nas APIs
+    </button>
+    <div id="cap-resultado-nome" style="margin-top:14px"></div>
   </div>`;
 }
 
-function capSetTab(aba){
-  const isCnpj = aba==='cnpj';
-  // Painéis
-  document.getElementById('cap-painel-cnpj').style.display = isCnpj?'block':'none';
-  document.getElementById('cap-painel-nome').style.display = isCnpj?'none':'block';
-  // Abas
-  const tabCnpj = document.getElementById('cap-tab-cnpj');
-  const tabNome = document.getElementById('cap-tab-nome');
-  if(tabCnpj){
-    tabCnpj.style.color      = isCnpj?'var(--blue-h)':'var(--txt2)';
-    tabCnpj.style.fontWeight = isCnpj?'600':'500';
-    tabCnpj.style.borderBottomColor = isCnpj?'var(--blue)':'transparent';
+/* ── Buscar por CNPJ ── */
+async function capBuscarCNPJ(){
+  const cnpj = document.getElementById('cap-cnpj').value.replace(/\D/g,'');
+  const res  = document.getElementById('cap-resultado');
+  const btn  = document.getElementById('btn-cap-cnpj');
+  if(cnpj.length !== 14){ res.innerHTML='<p style="color:var(--red);font-size:13px">⚠ CNPJ inválido. Digite 14 números.</p>'; return; }
+  btn.disabled=true; btn.textContent='Buscando…';
+  res.innerHTML='<p style="color:var(--txt2);font-size:13px">🔍 Consultando 4 fontes…</p>';
+
+  let d = null;
+  const apis = [
+    `https://brasilapi.com.br/api/cnpj/v1/${cnpj}`,
+    `https://receitaws.com.br/v1/cnpj/${cnpj}`,
+    `https://publica.cnpj.ws/cnpj/${cnpj}`,
+  ];
+  for(const url of apis){
+    try{
+      const r = await fetch(url, {signal:AbortSignal.timeout(8000)});
+      if(r.ok){ d = await r.json(); if(d && (d.cnpj||d.razao_social||d.nome)) break; }
+    }catch(e){}
   }
-  if(tabNome){
-    tabNome.style.color      = !isCnpj?'var(--blue-h)':'var(--txt2)';
-    tabNome.style.fontWeight = !isCnpj?'600':'500';
-    tabNome.style.borderBottomColor = !isCnpj?'var(--blue)':'transparent';
-  }
+
+  btn.disabled=false; btn.textContent='🔍 Buscar';
+
+  if(!d){ res.innerHTML='<p style="color:var(--amber);font-size:13px">⚠ CNPJ não encontrado nas APIs. Verifique o número.</p>'; return; }
+
+  const nome   = d.razao_social||d.nome||'—';
+  const fantas = d.nome_fantasia||d.fantasia||'';
+  const sit    = d.descricao_situacao_cadastral||d.situacao||'';
+  const end    = [d.logradouro||d.tipo_logradouro,d.numero,d.complemento,d.bairro].filter(Boolean).join(', ');
+  const cid    = d.municipio||d.municipio_nome||'';
+  const uf2    = d.uf||d.uf||'';
+  const tel    = d.ddd_telefone_1 ? `(${d.ddd_telefone_1}) ${d.telefone_1||d.telefone||''}`.trim() : (d.telefone||d.ddd1||'');
+  const email  = d.email||'';
+  const cnae   = d.cnae_fiscal_descricao||d.atividade_principal?.[0]?.text||d.cnae_descricao||'';
+  const capital= d.capital_social ? 'R$ '+Number(d.capital_social).toLocaleString('pt-BR') : '';
+
+  res.innerHTML=`
+    <div style="background:var(--s2);border:1px solid var(--line);border-radius:12px;padding:20px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+        <div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:4px">${nome}</div>
+          ${fantas?`<div style="font-size:12px;color:var(--txt2);margin-bottom:2px">Fantasia: ${fantas}</div>`:''}
+          <div style="font-size:12px;color:var(--txt3);font-family:'DM Mono',monospace">${cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5')}</div>
+        </div>
+        <span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;
+          background:${sit.toLowerCase().includes('ativa')?'rgba(16,185,129,.1)':'rgba(239,68,68,.1)'};
+          color:${sit.toLowerCase().includes('ativa')?'#34D399':'#FCA5A5'};white-space:nowrap">
+          ${sit||'—'}
+        </span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        ${end?`<div><div style="font-size:10px;color:var(--txt3);font-weight:600;letter-spacing:.5px;margin-bottom:3px">ENDEREÇO</div><div style="font-size:12px;color:var(--txt2)">${end}</div></div>`:''}
+        ${cid?`<div><div style="font-size:10px;color:var(--txt3);font-weight:600;letter-spacing:.5px;margin-bottom:3px">CIDADE/UF</div><div style="font-size:12px;color:var(--txt2)">${cid}${uf2?' - '+uf2:''}</div></div>`:''}
+        ${tel?`<div><div style="font-size:10px;color:var(--txt3);font-weight:600;letter-spacing:.5px;margin-bottom:3px">TELEFONE</div><div style="font-size:12px;color:var(--txt2)">${tel}</div></div>`:''}
+        ${email?`<div><div style="font-size:10px;color:var(--txt3);font-weight:600;letter-spacing:.5px;margin-bottom:3px">E-MAIL</div><div style="font-size:12px;color:var(--txt2)">${email}</div></div>`:''}
+        ${cnae?`<div style="grid-column:1/-1"><div style="font-size:10px;color:var(--txt3);font-weight:600;letter-spacing:.5px;margin-bottom:3px">ATIVIDADE PRINCIPAL</div><div style="font-size:12px;color:var(--txt2)">${cnae}</div></div>`:''}
+        ${capital?`<div><div style="font-size:10px;color:var(--txt3);font-weight:600;letter-spacing:.5px;margin-bottom:3px">CAPITAL SOCIAL</div><div style="font-size:12px;color:var(--txt2)">${capital}</div></div>`:''}
+      </div>
+      <button onclick="capAdicionarCliente('${nome.replace(/'/g,"\\'")}','${cnpj}','${cid}','${uf2}','${tel}','${email}')"
+        style="height:36px;padding:0 18px;background:var(--blue);color:#fff;border:none;border-radius:8px;
+        font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">
+        ➕ Adicionar à carteira
+      </button>
+    </div>`;
 }
 
+/* ── Buscar por Nome/Cidade ── */
 async function capBuscarNome(){
   const nome  = (document.getElementById('cap-nome')?.value||'').trim().toUpperCase();
   const cidade= (document.getElementById('cap-cidade')?.value||'').trim().toUpperCase();
   const uf    = (document.getElementById('cap-uf')?.value||'').trim().toUpperCase();
   const res   = document.getElementById('cap-resultado-nome');
+  const btn   = document.getElementById('btn-cap-nome');
+
   if(!nome && !cidade){ res.innerHTML='<p style="color:var(--amber);font-size:13px">⚠ Informe ao menos o nome/segmento ou município.</p>'; return; }
-  res.innerHTML='<p style="color:var(--txt2);font-size:13px">🔍 Buscando empresas…</p>';
-  let lista=[];
-  // Tentar Casa dos Dados
-  try{
-    const r=await fetch('https://api.casadosdados.com.br/v2/public/cnpj/search',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({query:{razao_social:nome||undefined,municipio:cidade?[cidade]:undefined,uf:uf?[uf]:undefined,situacao_cadastral:'ATIVA'},page:1}),
-      signal:AbortSignal.timeout(8000)
-    });
-    if(r.ok){const d=await r.json();lista=d?.data?.cnpj||[];}
-  }catch(e){}
-  // Tentar BrasilAPI
-  if(!lista.length && nome){
-    try{
-      let url=`https://brasilapi.com.br/api/cnpj/v1/search?search=${encodeURIComponent(nome)}`;
-      if(uf) url+=`&uf=${uf}`;
-      if(cidade) url+=`&municipio=${encodeURIComponent(cidade)}`;
-      const r=await fetch(url,{signal:AbortSignal.timeout(8000)});
-      if(r.ok){const d=await r.json();lista=Array.isArray(d)?d:(d.data||[]);}
-    }catch(e){}
-  }
-  if(!lista.length){
-    // Montar URL do CNPJ.biz com os filtros
-    const cidadeUrl=(cidade||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-');
-    const nomeUrl  =(nome||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-');
-    let urlBiz='https://www.cnpj.biz/';
-    if(uf&&cidade&&nome) urlBiz=`https://www.cnpj.biz/empresas/${uf}/${cidadeUrl}/${nomeUrl}`;
-    else if(uf&&cidade)  urlBiz=`https://www.cnpj.biz/empresas/${uf}/${cidadeUrl}`;
-    else if(uf)          urlBiz=`https://www.cnpj.biz/empresas/${uf}`;
 
-    res.innerHTML=`
-      <div style="background:rgba(15,76,129,.08);border:1px solid rgba(15,76,129,.2);border-radius:12px;padding:20px">
-        <div style="font-size:14px;font-weight:600;color:var(--txt);margin-bottom:8px">
-          🔗 Buscar no CNPJ.biz
-        </div>
-        <div style="font-size:13px;color:var(--txt2);line-height:1.6;margin-bottom:14px">
-          As APIs públicas não retornaram resultados para <strong>${nome||cidade}</strong>.<br>
-          O CNPJ.biz tem uma base completa de empresas por cidade e segmento.<br>
-          Após encontrar a empresa lá, copie o CNPJ e pesquise na aba <strong>Por CNPJ</strong>.
-        </div>
-        <a href="${urlBiz}" target="_blank"
-          style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;
-          background:#0F4C81;color:#fff;border-radius:9px;text-decoration:none;
-          font-size:13px;font-weight:600">
-          🔗 Abrir CNPJ.biz com filtros aplicados →
-        </a>
-      </div>`;
-    // Abrir automaticamente
-    window.open(urlBiz, '_blank');
-    return;
-  }
-  res.innerHTML=`<div style="font-size:12px;color:var(--txt2);margin-bottom:10px">${lista.length} empresa(s) encontrada(s)</div>`+
-  lista.slice(0,15).map(e=>`
-    <div style="background:var(--s2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-      <div>
-        <div style="font-size:13px;font-weight:600;margin-bottom:3px">${e.razao_social||e.nome||'—'}</div>
-        <div style="font-size:11px;color:var(--txt2)">${e.cnpj||''} · ${e.municipio||cidade} · ${e.uf||uf}</div>
-      </div>
-      <button onclick="capAdicionarCliente('${(e.razao_social||e.nome||'').replace(/'/g,"\\'")}','${(e.cnpj||'').replace(/\D/g,'')}','${e.municipio||cidade}','${e.uf||uf}','','')"
-        style="height:30px;padding:0 12px;background:var(--blue);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">
-        ➕ Adicionar
-      </button>
-    </div>`).join('');
-}
-
-async function capBuscarIA(){
-  const nome  = (document.getElementById('cap-nome')?.value||'').trim();
-  const cidade= (document.getElementById('cap-cidade')?.value||'').trim();
-  const uf    = (document.getElementById('cap-uf')?.value||'').trim();
-  const res   = document.getElementById('cap-resultado-nome');
-  if(!nome && !cidade){ res.innerHTML='<p style="color:var(--amber);font-size:13px">⚠ Informe ao menos um filtro.</p>'; return; }
-  res.innerHTML=`<div style="display:flex;align-items:center;gap:10px;color:var(--txt2);font-size:13px;padding:12px">
-    <div style="width:18px;height:18px;border:2px solid var(--blue);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite"></div>
-    Pesquisando com IA: <em>${nome||''}${cidade?' em '+cidade:''}</em>…
+  btn.disabled=true; btn.textContent='Buscando…';
+  res.innerHTML=`<div style="display:flex;align-items:center;gap:10px;color:var(--txt2);font-size:13px;padding:8px 0">
+    <div style="width:16px;height:16px;border:2px solid var(--blue);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;flex-shrink:0"></div>
+    Consultando APIs: Brasil API · ReceitaWS · CNPJ.ws · Casa dos Dados…
   </div>
   <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`;
+
+  let lista = [];
+
+  // API 1: Casa dos Dados
   try{
-    const prompt=`Pesquise empresas do segmento "${nome}" ${cidade?'em '+cidade:''} ${uf?'- '+uf:''} Brasil. Retorne SOMENTE JSON válido sem markdown:
-{"empresas":[{"razao_social":"nome da empresa","cnpj":"00.000.000/0001-00","cidade":"cidade","uf":"UF","telefone":"","email":"","descricao":"atividade"}]}
-Até 10 empresas reais. CNPJ pode ser vazio se não encontrar.`;
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,
-        tools:[{type:'web_search_20250305',name:'web_search'}],
-        messages:[{role:'user',content:prompt}]})
+    const body = {query:{situacao_cadastral:'ATIVA'},page:1};
+    if(nome)   body.query.razao_social = nome;
+    if(uf)     body.query.uf           = [uf];
+    if(cidade) body.query.municipio    = [cidade.normalize('NFD').replace(/[\u0300-\u036f]/g,'')];
+    const r = await fetch('https://api.casadosdados.com.br/v2/public/cnpj/search',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body), signal:AbortSignal.timeout(8000)
     });
-    if(!r.ok) throw new Error('API '+r.status);
-    const data=await r.json();
-    const txt=(data.content?.find(b=>b.type==='text')?.text||'').replace(/```json|```/g,'').trim();
-    const parsed=JSON.parse(txt);
-    const empresas=parsed.empresas||[];
-    if(!empresas.length){res.innerHTML='<p style="color:var(--amber);font-size:13px">Nenhuma empresa encontrada.</p>';return;}
-    res.innerHTML=`<div style="font-size:12px;color:var(--txt2);margin-bottom:10px">🤖 ${empresas.length} empresa(s) encontrada(s) via IA</div>`+
-    empresas.map(e=>`
-      <div style="background:var(--s2);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-        <div>
-          <div style="font-size:13px;font-weight:600;margin-bottom:3px">${e.razao_social||'—'}</div>
-          <div style="font-size:11px;color:var(--txt2)">${e.cnpj?e.cnpj+' · ':''}${e.cidade||cidade} · ${e.uf||uf}</div>
-          ${e.descricao?`<div style="font-size:11px;color:var(--txt3);margin-top:2px">${e.descricao}</div>`:''}
+    if(r.ok){ const d=await r.json(); lista=[...(d?.data?.cnpj||[])]; }
+  }catch(e){}
+
+  // API 2: BrasilAPI
+  if(lista.length < 5 && nome){
+    try{
+      let url = `https://brasilapi.com.br/api/cnpj/v1/search?search=${encodeURIComponent(nome)}`;
+      if(uf)     url += `&uf=${uf}`;
+      if(cidade) url += `&municipio=${encodeURIComponent(cidade)}`;
+      const r = await fetch(url,{signal:AbortSignal.timeout(8000)});
+      if(r.ok){
+        const d = await r.json();
+        const novos = (Array.isArray(d)?d:(d.data||[])).filter(e=>!lista.find(x=>(x.cnpj||'').replace(/\D/g,'')===(e.cnpj||'').replace(/\D/g,'')));
+        lista = [...lista, ...novos];
+      }
+    }catch(e){}
+  }
+
+  // API 3: ReceitaWS (busca por município)
+  if(lista.length < 5 && cidade){
+    try{
+      const url = `https://receitaws.com.br/v1/cnpj/search?query=${encodeURIComponent(nome||cidade)}&municipio=${encodeURIComponent(cidade)}`;
+      const r = await fetch(url,{signal:AbortSignal.timeout(8000)});
+      if(r.ok){
+        const d = await r.json();
+        const novos = (d.empresas||d.data||[]).filter(e=>!lista.find(x=>(x.cnpj||'').replace(/\D/g,'')===(e.cnpj||'').replace(/\D/g,'')));
+        lista = [...lista, ...novos];
+      }
+    }catch(e){}
+  }
+
+  btn.disabled=false; btn.textContent='🔍 Pesquisar nas APIs';
+
+  if(!lista.length){
+    res.innerHTML=`
+      <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:10px;padding:16px">
+        <div style="font-size:13px;color:var(--amber);margin-bottom:10px">
+          ⚠ Nenhuma empresa encontrada pelas APIs para "<strong>${nome||cidade}</strong>".<br>
+          <span style="font-size:12px;color:var(--txt2)">Dicas: use termos sem acento (PECAS, SAO LUIS), tente só o CNPJ na aba acima.</span>
         </div>
-        <button onclick="capAdicionarCliente('${(e.razao_social||'').replace(/'/g,"\\'")}','${(e.cnpj||'').replace(/\D/g,'')}','${e.cidade||cidade}','${e.uf||uf}','${e.telefone||''}','${e.email||''}')"
-          style="height:30px;padding:0 12px;background:var(--blue);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">
+      </div>`;
+    return;
+  }
+
+  // Normalizar e mostrar resultados
+  const empresas = lista.map(e=>({
+    cnpj:    (e.cnpj||'').replace(/\D/g,''),
+    nome:    e.razao_social||e.nome||'—',
+    fantas:  e.nome_fantasia||e.fantasia||'',
+    sit:     e.descricao_situacao_cadastral||e.situacao||'',
+    cidade2: e.municipio||e.municipio_nome||cidade||'',
+    uf2:     e.uf||uf||'',
+    tel:     e.ddd_telefone_1?(e.ddd_telefone_1+' '+( e.telefone_1||'')).trim():(e.telefone||''),
+    email:   e.email||'',
+    cnae:    e.cnae_fiscal_descricao||e.atividade||'',
+  }));
+
+  res.innerHTML=`
+    <div style="font-size:12px;color:var(--txt2);margin-bottom:10px;font-weight:500">
+      ${empresas.length} empresa(s) encontrada(s)
+    </div>
+    ${empresas.map(e=>`
+    <div style="background:var(--s2);border:1px solid var(--line);border-radius:10px;
+      padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;
+      justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.nome}</div>
+        ${e.fantas?`<div style="font-size:11px;color:var(--txt3);margin-bottom:2px">${e.fantas}</div>`:''}
+        <div style="font-size:11px;color:var(--txt2)">
+          ${e.cnpj?e.cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5')+' · ':''}
+          ${e.cidade2}${e.uf2?' - '+e.uf2:''}
+          ${e.tel?' · '+e.tel:''}
+        </div>
+        ${e.cnae?`<div style="font-size:10px;color:var(--txt3);margin-top:2px">${e.cnae}</div>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        ${e.sit?`<span style="font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px;
+          background:${e.sit.toLowerCase().includes('ativa')?'rgba(16,185,129,.1)':'rgba(239,68,68,.1)'};
+          color:${e.sit.toLowerCase().includes('ativa')?'#34D399':'#FCA5A5'}">${e.sit}</span>`:''}
+        <button onclick="capAdicionarCliente('${e.nome.replace(/'/g,"\\'")}','${e.cnpj}','${e.cidade2}','${e.uf2}','${e.tel}','${e.email}')"
+          style="height:30px;padding:0 12px;background:var(--blue);color:#fff;border:none;
+          border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;
+          font-family:'DM Sans',sans-serif;white-space:nowrap">
           ➕ Adicionar
         </button>
-      </div>`).join('');
-  }catch(e){
-    res.innerHTML=`<p style="color:var(--red);font-size:13px">⚠ Erro: ${e.message}</p>`;
+      </div>
+    </div>`).join('')}`;
+}
+
+/* ── Adicionar cliente à carteira ── */
+function capAdicionarCliente(nome, cnpj, cidade, uf, tel, email){
+  if(CLI_DB.find(c=>c.cnpj&&c.cnpj.replace(/\D/g,'')===cnpj&&cnpj)){
+    alert('Este cliente já está na sua carteira!'); return;
   }
-}
-
-async function capBuscarCNPJ(){
-  const cnpj=document.getElementById('cap-cnpj').value.replace(/\D/g,'');
-  const res=document.getElementById('cap-resultado');
-  if(cnpj.length!==14){res.innerHTML='<p style="color:var(--red);font-size:13px">CNPJ inválido.</p>';return;}
-  res.innerHTML='<p style="color:var(--txt2);font-size:13px">🔍 Buscando…</p>';
-  try{
-    const r=await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`,{signal:AbortSignal.timeout(8000)});
-    if(!r.ok) throw new Error('Não encontrado');
-    const d=await r.json();
-    res.innerHTML=`<div style="background:var(--s2);border:1px solid var(--line);border-radius:12px;padding:18px">
-      <div style="font-size:15px;font-weight:700;margin-bottom:8px">${d.razao_social||d.nome||'—'}</div>
-      <div style="font-size:12px;color:var(--txt2);margin-bottom:4px">CNPJ: ${d.cnpj||cnpj} · ${d.descricao_situacao_cadastral||''}</div>
-      <div style="font-size:12px;color:var(--txt2);margin-bottom:4px">${d.logradouro||''}, ${d.municipio||''} - ${d.uf||''}</div>
-      <div style="font-size:12px;color:var(--txt2);margin-bottom:12px">Tel: ${d.ddd_telefone_1||'—'} · Email: ${d.email||'—'}</div>
-      <button onclick="capAdicionarCliente('${(d.razao_social||'').replace(/'/g,"\\'")}','${cnpj}','${d.municipio||''}','${d.uf||''}','${d.ddd_telefone_1||''}','${d.email||''}')"
-        style="height:34px;padding:0 16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif">
-        ➕ Adicionar à carteira
-      </button>
-    </div>`;
-  }catch(e){res.innerHTML=`<p style="color:var(--amber);font-size:13px">⚠ ${e.message}. Tente pelo CNPJ.biz.</p>`;}
-}
-
-function capAdicionarCliente(nome,cnpj,cidade,uf,tel,email){
-  if(CLI_DB.find(c=>c.cnpj&&c.cnpj.replace(/\D/g,'')===cnpj)){alert('Cliente já cadastrado!');return;}
-  CLI_DB.push({nome,cnpj,status:'Novo',cidade,uf,telefone:tel,email,representante:me.name,criado_em:new Date().toLocaleDateString('pt-BR'),ultimo_contato:'',obs:''});
+  CLI_DB.push({
+    nome, cnpj, status:'Novo', cidade, uf,
+    telefone:tel, email,
+    representante:me.name,
+    criado_em:new Date().toLocaleDateString('pt-BR'),
+    ultimo_contato:'', obs:''
+  });
   salvarCLI();
-  audLog('cadastro','Novo cliente captado',nome);
-  alert('✅ Cliente adicionado à carteira!');
+  audLog('cadastro','Cliente captado',nome);
+  alert('✅ '+nome+' adicionado à carteira!');
 }
 
-function buildClientesSimples(){
-  const lista = me.role==='rep' ? CLI_DB.filter(c=>c.representante===me.name) : CLI_DB;
-  if(!lista.length) return `<div class="empty-state"><div class="es-icon">👥</div><div class="es-title">Nenhum cliente</div><div class="es-sub">Use a Captação para adicionar clientes.</div></div>`;
-  return `<div style="display:flex;flex-direction:column;gap:10px">
-    ${lista.map((c,i)=>`<div style="background:var(--s1);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;justify-content:space-between;flex-wrap:wrap">
-      <div><div style="font-size:14px;font-weight:600;margin-bottom:3px">${c.nome||'—'}</div>
-      <div style="font-size:12px;color:var(--txt2)">${c.cidade||''}${c.uf?' - '+c.uf:''} · ${c.telefone||'—'}</div></div>
-      <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:5px;background:rgba(16,185,129,.1);color:#34D399">${c.status||'Novo'}</span>
-    </div>`).join('')}
-  </div>`;
-}
-
-function buildRetornosSimples(){
-  const lista = me.role==='rep' ? RET_DB.filter(r=>r.representante===me.name) : RET_DB;
-  return `<div style="margin-bottom:12px">
-    <button onclick="retAgendar()" style="height:38px;padding:0 16px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif">+ Agendar retorno</button>
-  </div>
-  ${!lista.length?`<div class="empty-state"><div class="es-icon">🔔</div><div class="es-title">Sem retornos</div><div class="es-sub">Agende retornos para seus clientes.</div></div>`:
-  `<div style="display:flex;flex-direction:column;gap:10px">
-    ${lista.map((r,i)=>`<div style="background:var(--s1);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;justify-content:space-between;flex-wrap:wrap">
-      <div><div style="font-size:14px;font-weight:600;margin-bottom:3px">${r.cliente||'—'}</div>
-      <div style="font-size:12px;color:var(--txt2)">${r.data||''} às ${r.hora||''} · ${r.motivo||''}</div></div>
-      <div style="display:flex;gap:6px">
-        ${r.status!=='concluido'?`<button onclick="retConcluir(${RET_DB.indexOf(r)})" style="height:28px;padding:0 12px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);color:#34D399;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif">✓ Concluído</button>`:''}
-        <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:5px;background:${r.status==='concluido'?'rgba(16,185,129,.1)':'rgba(245,158,11,.1)'};color:${r.status==='concluido'?'#34D399':'#FCD34D'}">${r.status==='concluido'?'Concluído':'Pendente'}</span>
-      </div>
-    </div>`).join('')}
-  </div>`}`;
-}
-
-function retAgendar(){
-  const cliente=prompt('Nome do cliente:'); if(!cliente) return;
-  const data=prompt('Data (AAAA-MM-DD):'); if(!data) return;
-  const hora=prompt('Hora (HH:MM):','09:00'); if(!hora) return;
-  const motivo=prompt('Motivo:','Retorno de proposta'); if(!motivo) return;
-  RET_DB.push({cliente,representante:me.name,data,hora,motivo,obs:'',status:'pendente'});
-  salvarRET(); audLog('retorno','Retorno agendado',cliente); navigate('retornos');
-}
-
-function retConcluir(i){ if(!confirm('Marcar como concluído?')) return; RET_DB[i].status='concluido'; salvarRET(); navigate('retornos'); }
-
-function buildVendasSimples(){
-  const lista = me.role==='rep' ? VND_DB.filter(v=>v.representante===me.name) : VND_DB;
-  const fat = lista.reduce((s,v)=>s+Number(v.valor||0),0);
-  return `<div class="stat-grid" style="margin-bottom:16px">
-    <div class="sc green"><div class="sc-icon">💰</div><div class="sc-val">R$ ${fat.toLocaleString('pt-BR')}</div><div class="sc-label">Faturamento total</div></div>
-    <div class="sc blue"><div class="sc-icon">📦</div><div class="sc-val">${lista.length}</div><div class="sc-label">Total de vendas</div></div>
-  </div>
-  ${!lista.length?`<div class="empty-state"><div class="es-icon">💰</div><div class="es-title">Sem vendas</div><div class="es-sub">Nenhuma venda registrada ainda.</div></div>`:
-  `<div style="display:flex;flex-direction:column;gap:10px">
-    ${lista.map(v=>`<div style="background:var(--s1);border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;align-items:center;gap:14px;justify-content:space-between;flex-wrap:wrap">
-      <div><div style="font-size:14px;font-weight:600;margin-bottom:3px">${v.cliente||'—'}</div>
-      <div style="font-size:12px;color:var(--txt2)">${v.data||''} · ${v.pgto||''}</div></div>
-      <span style="font-size:15px;font-weight:700;color:var(--green)">R$ ${Number(v.valor||0).toLocaleString('pt-BR')}</span>
-    </div>`).join('')}
-  </div>`}`;
-}
-
-function buildComercialSimples(){
-  const fat = VND_DB.reduce((s,v)=>s+Number(v.valor||0),0);
-  const reps=[...new Set(VND_DB.map(v=>v.representante).filter(Boolean))];
-  return `<div class="stat-grid" style="margin-bottom:20px">
-    <div class="sc green"><div class="sc-icon">💰</div><div class="sc-val">R$ ${fat.toLocaleString('pt-BR')}</div><div class="sc-label">Faturamento total</div></div>
-    <div class="sc blue"><div class="sc-icon">👥</div><div class="sc-val">${CLI_DB.length}</div><div class="sc-label">Clientes</div></div>
-    <div class="sc amber"><div class="sc-icon">📦</div><div class="sc-val">${VND_DB.length}</div><div class="sc-label">Vendas</div></div>
-  </div>
-  <div style="background:var(--s1);border:1px solid var(--line);border-radius:14px;overflow:hidden">
-    <div style="padding:14px 18px;border-bottom:1px solid var(--line);font-size:13px;font-weight:600">Ranking de Representantes</div>
-    ${reps.sort((a,b)=>VND_DB.filter(v=>v.representante===b).reduce((s,v)=>s+Number(v.valor||0),0)-VND_DB.filter(v=>v.representante===a).reduce((s,v)=>s+Number(v.valor||0),0))
-      .map((rep,i)=>{const f=VND_DB.filter(v=>v.representante===rep).reduce((s,v)=>s+Number(v.valor||0),0);
-        return `<div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--line)">
-          <span style="font-size:20px">${['🥇','🥈','🥉'][i]||'📊'}</span>
-          <div style="flex:1"><div style="font-size:13px;font-weight:600;margin-bottom:2px">${rep}</div>
-          <div style="font-size:11px;color:var(--txt2)">${VND_DB.filter(v=>v.representante===rep).length} vendas</div></div>
-          <span style="font-size:15px;font-weight:700;color:var(--green)">R$ ${f.toLocaleString('pt-BR')}</span>
-        </div>`}).join('')||'<div style="padding:24px;text-align:center;color:var(--txt2);font-size:13px">Nenhuma venda registrada.</div>'}
-  </div>`;
-}
-
-function buildConsultas(){
-  return `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px">
-    <div onclick="window.open('https://brasilapi.com.br/api/cnpj/v1/','_blank')" style="background:var(--s1);border:1px solid var(--line2);border-radius:12px;padding:22px;cursor:pointer;transition:border-color .2s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line2)'">
-      <div style="font-size:24px;margin-bottom:10px">🏛️</div>
-      <div style="font-size:14px;font-weight:600;margin-bottom:6px">Consulta CNPJ — Receita Federal</div>
-      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px">Portal oficial de consulta de CNPJ.</div>
-      <span style="font-size:12px;color:var(--blue-h);font-weight:500">Abrir →</span>
-    </div>
-
-    <div onclick="window.open('https://consultaie.com.br/','_blank')" style="background:var(--s1);border:1px solid var(--line2);border-radius:12px;padding:22px;cursor:pointer;transition:border-color .2s" onmouseover="this.style.borderColor='var(--blue)'" onmouseout="this.style.borderColor='var(--line2)'">
-      <div style="font-size:24px;margin-bottom:10px">📄</div>
-      <div style="font-size:14px;font-weight:600;margin-bottom:6px">Inscrição Estadual</div>
-      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px">Consulte inscrição estadual por estado.</div>
-      <span style="font-size:12px;color:var(--blue-h);font-weight:500">Abrir →</span>
-    </div>
-  </div>`;
-}
-
-function buildAdmin(){
-  const isAdm=me&&me.role==='adm';
-  const body=`<div class="usr-layout">
-    <div class="usr-topbar">
-      <div class="usr-search-wrap">
-        <span class="usr-search-icon">🔍</span>
-        <input type="text" id="usr-busca" placeholder="Buscar por nome ou usuário…" oninput="usrRender()">
-      </div>
-      <select class="vnd-filtro" id="usr-filtro-role" onchange="usrRender()">
-        <option value="">Todos os perfis</option>
-        <option value="rep">Representante</option>
-        ${isAdm?'<option value="ger">Gerente</option><option value="adm">ADM</option>':''}
-      </select>
-      <button class="btn-novo-cli" onclick="usrAbrirNovo()">+ Novo Usuário</button>
-      <button onclick="usrSincronizarAgora()" 
-        style="height:40px;padding:0 14px;background:none;border:1px solid var(--green);
-        color:var(--green);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;
-        font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;transition:background .2s"
-        onmouseover="this.style.background='rgba(16,185,129,.1)'" 
-        onmouseout="this.style.background='none'">
-        ☁️ Salvar na Planilha
-      </button>
-    </div>
-    <div class="usr-stats" id="usr-stats"></div>
-    <div class="usr-table">
-      <div class="usr-head">
-        <span></span><span>Usuário</span><span>Login</span><span>Perfil</span><span>Status</span><span style="text-align:right">Ações</span>
-      </div>
-      <div id="usr-lista"></div>
-    </div>
-  </div>
-  <!-- MODAL USUÁRIO -->
-  <div class="usr-modal-overlay" id="usr-modal" style="display:none">
-    <div class="usr-modal-box">
-      <div class="modal-head">
-        <div style="font-size:24px">👤</div>
-        <div class="modal-head-info"><div class="modal-head-title" id="usr-modal-title">Novo Usuário</div><div class="modal-head-sub" id="usr-modal-sub">Preencha os dados</div></div>
-        <button class="modal-close" onclick="document.getElementById('usr-modal').style.display='none'">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="mform-grid">
-          <div class="mform-field mform-full"><label>Nome Completo *</label><input id="um-nome" placeholder="Ex: Carlos Silva"></div>
-          <div class="mform-field"><label>Usuário (login) *</label><input id="um-user" placeholder="Ex: rep003" autocomplete="off"></div>
-          <div class="mform-field"><label>Senha (6 dígitos) *</label><input id="um-pin" type="password" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="new-password"></div>
-          <div class="mform-field"><label>Perfil *</label><select id="um-role"><option value="rep">Representante</option>${isAdm?'<option value="ger">Gerente</option><option value="adm">ADM</option>':''}</select></div>
-          ${isAdm?`<div class="mform-field"><label>Status</label><select id="um-status"><option value="active">Ativo</option><option value="inactive">Inativo</option></select></div>`:'<input type="hidden" id="um-status" value="active">'}
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancelar" onclick="document.getElementById('usr-modal').style.display='none'">Cancelar</button>
-        <button class="btn-salvar" onclick="usrSalvar()">Salvar</button>
-      </div>
-    </div>
-  </div>`;
-  return {eye:'Administração',title:'Usuários',sub:isAdm?'Gerencie todos os usuários do sistema':'Gerencie os representantes da equipe',body};
-}
-
-function buildAuditoria(){
-  return `<div class="aud-layout">
-    <div class="usr-topbar">
-      <div class="usr-search-wrap"><span class="usr-search-icon">🔍</span><input type="text" id="aud-busca" placeholder="Buscar…" oninput="audRender()"></div>
-      <select class="vnd-filtro" id="aud-filtro-tipo" onchange="audRender()">
-        <option value="">Todos os tipos</option>
-        <option value="login">Login</option><option value="cadastro">Cadastro</option>
-        <option value="edicao">Edição</option><option value="venda">Venda</option>
-      </select>
-    </div>
-    <div class="usr-stats" id="aud-stats"></div>
-    <div class="usr-table"><div class="usr-head" style="grid-template-columns:1fr 1fr 1fr 1fr"><span>Data/Hora</span><span>Usuário</span><span>Tipo</span><span>Descrição</span></div>
-    <div id="aud-lista"></div></div>
-  </div>`;
-}
-
-function buildConfig(){
-  return `<div style="display:flex;flex-direction:column;gap:20px">
-    <div style="background:var(--s1);border:1px solid var(--line);border-radius:14px;overflow:hidden">
-      <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);background:var(--s2)">
-        <span style="font-size:18px">⚙️</span>
-        <div><div style="font-size:14px;font-weight:600">Google Sheets</div><div style="font-size:12px;color:var(--txt2)">URL do Apps Script</div></div>
-        <div style="margin-left:auto" id="cfg-sheets-status"><span style="font-size:12px;padding:5px 12px;border-radius:99px;background:rgba(16,185,129,.1);color:#34D399;border:1px solid rgba(16,185,129,.2)">✅ URL configurada</span></div>
-      </div>
-      <div style="padding:20px">
-        <div style="margin-bottom:14px"><label style="font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--txt3);display:block;margin-bottom:6px">URL do Apps Script</label>
-        <input id="cfg-sheets-url" style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:DM Sans,sans-serif;outline:none" placeholder="https://script.google.com/macros/s/.../exec"></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;padding:14px 20px;border-top:1px solid var(--line);background:var(--s2)">
-        <button onclick="cfgTestarSheets()" style="height:38px;padding:0 16px;background:none;border:1px solid var(--line2);color:var(--txt2);border-radius:9px;font-size:13px;cursor:pointer;font-family:DM Sans,sans-serif">🔌 Testar conexão</button>
-        <button onclick="cfgSalvarSheets()" style="height:38px;padding:0 20px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif">💾 Salvar</button>
-        <span id="cfg-sheets-saved" style="font-size:12px;color:var(--green);display:none">✓ Salvo!</span>
-      </div>
-    </div>
-    <div style="background:var(--s1);border:1px solid var(--line);border-radius:14px;overflow:hidden">
-      <div style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);background:var(--s2)">
-        <span style="font-size:18px">💾</span>
-        <div><div style="font-size:14px;font-weight:600">Dados e Backup</div></div>
-      </div>
-      <div style="padding:20px;display:flex;gap:10px;flex-wrap:wrap">
-        <button onclick="cfgExportarDados()" style="height:38px;padding:0 16px;background:var(--green);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif">📥 Exportar JSON</button>
-        <button onclick="cfgLimparTudo()" style="height:38px;padding:0 16px;background:none;border:1px solid rgba(239,68,68,.3);color:var(--red);border-radius:9px;font-size:13px;cursor:pointer;font-family:DM Sans,sans-serif">🗑️ Limpar todos os dados</button>
-      </div>
-    </div>
-  </div>`;
-}
 
 /* ═══ USUÁRIOS ═════════════════════════════════════════════════════════ */
 let usrEditIdx=null;
