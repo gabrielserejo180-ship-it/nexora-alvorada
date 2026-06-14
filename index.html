@@ -657,7 +657,7 @@ function buildPage(id){
     case 'vendas':    return {eye:'Vendas',title:'Minhas Vendas',sub:'Acompanhe suas vendas e parcelas',body:buildVendasSimples()};
     case 'comercial': return {eye:'Comercial',title:'Painel Comercial',sub:'Visão gerencial das vendas',body:buildComercialSimples()};
     case 'consultas': return {eye:'Consultas',title:'Consultas',sub:'Portais oficiais de consulta',body:buildConsultas()};
-    case 'admin':     return buildAdmin();
+    case 'admin':     return {eye:'Administração',title:'Usuários',sub:'Gerencie todos os usuários do sistema',body:buildAdmin()};
     case 'auditoria': return {eye:'Administração',title:'Auditoria',sub:'Log de ações do sistema',body:buildAuditoria()};
     case 'config':    return {eye:'Administração',title:'Configurações',sub:'Configurações do sistema',body:buildConfig()};
     default: return {eye:'Módulo',title:id,sub:'',body:`<div class="empty-state"><div class="es-icon">🔧</div><div class="es-title">${id}</div><div class="es-sub">Módulo em desenvolvimento.</div></div>`};
@@ -1199,7 +1199,7 @@ function sobreTab(aba,el){
 ═══════════════════════════════════ */
 
 async function syncSheets(action, data){
-  const url = (typeof CFG!=='undefined' && CFG.sheetsUrl) || APPS_SCRIPT;
+  let url; try{ url = (CFG && CFG.sheetsUrl) || APPS_SCRIPT; }catch(e){ url = APPS_SCRIPT; }
   if(!url) return false;
 
   const statusEl = document.getElementById('sync-status');
@@ -1621,4 +1621,4 @@ function buildConfig(){
     +'<span style="font-size:18px">💾</span><div><div style="font-size:14px;font-weight:600">Dados e Backup</div></div>'
     +'</div>'
     +'<div style="padding:20px;display:flex;gap:10px;flex-wrap:wrap">'
-    +'<button onclick="cfgExportarDados()" style="height:38px;padding:0 16px;background:var(--green);color:#fff;border:none;border-radius:9px;font-si
+    +'<button onclick="cfgExportarDados()"
