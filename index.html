@@ -442,7 +442,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 
 <script>
 /* ═══ DADOS ═══════════════════════════════════════════════════════════ */
-const APPS_URL = 'https://script.google.com/macros/s/AKfycbx0lARsV-4Zd8YErm9i7pvQvHWkfwzFHGemHFXYSHYCdT1T5Z_kdH1uMxJRkM5cCnIR/exec';
+const APPS_URL = 'https://script.google.com/macros/s/AKfycbz5OKxXDWpF_YeZ5JpE3jUsXqSQzMwpwmGV1-Rat7SzIqyEPZ-VAEX8r4jH8RQzImmb/exec';
 
 const USERS_BASE = [
   {user:'rep001',pin:'123456',name:'Carlos Silva',   role:'rep',status:'active'},
@@ -1271,46 +1271,41 @@ function sobreTab(aba,el){
 /* ═══════════════════════════════════
    SINCRONIZAÇÃO COM GOOGLE SHEETS
 ═══════════════════════════════════ */
-const APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbx0lARsV-4Zd8YErm9i7pvQvHWkfwzFHGemHFXYSHYCdT1T5Z_kdH1uMxJRkM5cCnIR/exec';
+const APPS_SCRIPT = 'https://script.google.com/macros/s/AKfycbz5OKxXDWpF_YeZ5JpE3jUsXqSQzMwpwmGV1-Rat7SzIqyEPZ-VAEX8r4jH8RQzImmb/exec';
 
 async function syncSheets(action, data){
   const url = (typeof CFG!=='undefined' && CFG.sheetsUrl) || APPS_SCRIPT;
-  if(!url){ console.warn('URL do Sheets não configurada'); return false; }
-  
+  if(!url) return false;
+
   const statusEl = document.getElementById('sync-status');
   if(statusEl) statusEl.textContent = '🔄 Salvando…';
-  
+
   try {
-    // Usar GET com payload codificado — resolve CORS do Apps Script
-    const payload = encodeURIComponent(JSON.stringify({action, data}));
-    const resp = await fetch(`${url}?action=${action}&payload=${payload}`, {
-      method: 'GET',
-      signal: AbortSignal.timeout(30000),
-      mode: 'cors',
-      cache: 'no-cache'
-    });
+    // Enviar como parâmetros simples via GET — sem payload grande
+    // Primeiro limpar a aba, depois inserir linha por linha
+    const sheetName = action.replace('save','').replace('get','');
     
-    if(!resp.ok) throw new Error('HTTP '+resp.status);
-    const result = await resp.json();
+    // Passo 1: limpar
+    const urlLimpar = `${url}?action=limpar&sheet=${sheetName}`;
+    const r1 = await fetch(urlLimpar, {signal:AbortSignal.timeout(15000), cache:'no-cache'});
+    if(!r1.ok) throw new Error('Erro ao limpar: '+r1.status);
     
-    if(result.ok){
-      if(statusEl){ statusEl.textContent='✅ Sincronizado'; setTimeout(()=>statusEl.textContent='',3000); }
-      console.log('✅ Sync OK:', action, result);
-      return true;
-    } else {
-      throw new Error(result.msg||'Erro desconhecido');
+    // Passo 2: inserir cada linha
+    if(Array.isArray(data)){
+      for(let i=0; i<data.length; i++){
+        const row = encodeURIComponent(JSON.stringify(data[i]));
+        const urlRow = `${url}?action=inserirLinha&sheet=${sheetName}&row=${row}`;
+        const r2 = await fetch(urlRow, {signal:AbortSignal.timeout(15000), cache:'no-cache'});
+        if(!r2.ok) throw new Error('Erro linha '+i+': '+r2.status);
+      }
     }
+
+    if(statusEl){ statusEl.textContent='✅ Sincronizado'; setTimeout(()=>statusEl.textContent='',3000); }
+    return true;
+
   } catch(e) {
-    const isTimeout = e.name==='TimeoutError' || e.message.includes('timeout') || e.message.includes('abort');
-    if(statusEl){ 
-      statusEl.textContent = isTimeout ? '⚠️ Lento' : '⚠️ Offline'; 
-      setTimeout(()=>statusEl.textContent='',8000); 
-    }
-    console.warn('❌ Sync falhou:', action, e.name, e.message);
-    // Se for timeout, pode ter salvado mesmo assim — verificar na planilha
-    if(isTimeout && action.startsWith('save')){
-      console.log('⚠️ Timeout — verifique na planilha se os dados foram salvos');
-    }
+    if(statusEl){ statusEl.textContent='⚠️ Offline'; setTimeout(()=>statusEl.textContent='',6000); }
+    console.warn('Sync falhou:', action, e.message);
     return false;
   }
 }
