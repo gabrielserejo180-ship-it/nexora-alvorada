@@ -790,123 +790,110 @@ function capNorm(d){
 
 /* ── Card completo de empresa ── */
 function capCard(e){
-  const cnpjFmt = e.cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5');
+  const cnpjFmt = (e.cnpj||'').replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5');
   const ativo   = (e.sit||'').toLowerCase().includes('ativa');
   const endFull = [e.logr,e.num,e.comp,e.bairro].filter(Boolean).join(', ');
-  const endMapa = [e.logr,e.num,e.bairro,e.cidade,e.uf].filter(Boolean).join(', ')+', Brasil';
-  const waLink  = e.telNum.length>=10 ? `https://wa.me/55${e.telNum}` : '';
-  const iframeQ = encodeURIComponent(endMapa);
+  const endCidade = (e.cidade||'') + (e.uf?' - '+e.uf:'') + (e.cep?' · CEP '+e.cep:'');
+  const endMapa = [e.logr,e.num,e.bairro,e.cidade,e.uf,'Brasil'].filter(Boolean).join(', ');
+  const telNum  = (e.telNum||e.tel||'').replace(/\D/g,'');
+  const waLink  = telNum.length>=10 ? 'https://wa.me/55'+telNum : '';
+  const mapaQ   = encodeURIComponent(endMapa);
+  const mapaEmbed = 'https://maps.google.com/maps?q='+mapaQ+'&t=&z=16&ie=UTF8&iwloc=&output=embed';
+  const mapaLink  = 'https://maps.google.com/?q='+mapaQ;
 
-  return `<div style="background:var(--s2);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:14px">
-    
-    <!-- Cabeçalho -->
-    <div style="padding:16px 18px 14px;border-bottom:1px solid var(--line)">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:15px;font-weight:700;margin-bottom:3px;line-height:1.3">${e.nome}</div>
-          ${e.fantas?`<div style="font-size:12px;color:var(--txt2);margin-bottom:3px">"${e.fantas}"</div>`:''}
-          <div style="font-size:11px;color:var(--txt3);font-family:'DM Mono',monospace">${cnpjFmt}</div>
-        </div>
-        <span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;flex-shrink:0;
-          background:${ativo?'rgba(16,185,129,.12)':'rgba(239,68,68,.12)'};
-          color:${ativo?'#34D399':'#FCA5A5'}">
-          ${ativo?'● ATIVA':'○ '+(e.sit||'INATIVA')}
-        </span>
-      </div>
-    </div>
+  let html = '<div style="background:var(--s2);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:14px">';
 
-    <!-- Mapa embutido via OSM -->
-    ${endFull||e.cidade ? `
-    <div style="position:relative;background:var(--s3);overflow:hidden">
-      <iframe
-        src="https://maps.google.com/maps?q=${encodeURIComponent(endMapa)}&t=&z=15&ie=UTF8&iwloc=&output=embed"
-        style="width:100%;height:190px;border:none;filter:grayscale(20%) contrast(1.1);pointer-events:none"
-        loading="lazy" referrerpolicy="no-referrer-when-downgrade">
-      </iframe>
-      <!-- Overlay clicável -->
-      <a href="https://maps.google.com/?q=${encodeURIComponent(endMapa)}" target="_blank" rel="noopener"
-        style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:flex-end;padding:10px;
-        background:linear-gradient(to top,rgba(7,8,13,.65) 0%,transparent 55%);text-decoration:none">
-        <span style="font-size:11px;padding:6px 12px;border-radius:7px;background:var(--blue);
-          color:#fff;font-weight:600;font-family:'DM Sans',sans-serif;
-          box-shadow:0 2px 10px rgba(0,0,0,.5)">
-          🗺️ Abrir no Google Maps
-        </span>
-      </a>
-    </div>` : ''}
+  // Header
+  html += '<div style="padding:16px 18px 14px;border-bottom:1px solid var(--line)">';
+  html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">';
+  html += '<div style="flex:1;min-width:0">';
+  html += '<div style="font-size:15px;font-weight:700;margin-bottom:3px;line-height:1.3">'+e.nome+'</div>';
+  if(e.fantas) html += '<div style="font-size:12px;color:var(--txt2);margin-bottom:3px">"'+e.fantas+'"</div>';
+  html += '<div style="font-size:11px;color:var(--txt3);font-family:DM Mono,monospace">'+cnpjFmt+'</div>';
+  html += '</div>';
+  html += '<span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;flex-shrink:0;background:'+(ativo?'rgba(16,185,129,.12)':'rgba(239,68,68,.12)')+';color:'+(ativo?'#34D399':'#FCA5A5')+'">'+( ativo?'● ATIVA':'○ '+(e.sit||'INATIVA'))+'</span>';
+  html += '</div></div>';
 
-    <!-- Informações -->
-    <div style="padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+  // Mapa embutido (só se tiver endereço)
+  if(endFull || e.cidade){
+    html += '<div style="position:relative;overflow:hidden;height:185px;background:#1a2030">';
+    html += '<iframe src="'+mapaEmbed+'" style="width:100%;height:250px;border:none;margin-top:-30px;filter:grayscale(15%)" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>';
+    html += '<a href="'+mapaLink+'" target="_blank" rel="noopener" style="position:absolute;bottom:8px;right:8px;font-size:11px;padding:5px 12px;border-radius:7px;background:var(--blue);color:#fff;text-decoration:none;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.5)">🗺️ Ver no Google Maps</a>';
+    html += '</div>';
+  }
 
-      ${endFull||e.cidade?`
-      <div style="grid-column:1/-1">
-        <div style="font-size:10px;font-weight:600;letter-spacing:.6px;color:var(--txt3);margin-bottom:4px">📍 ENDEREÇO</div>
-        <div style="font-size:12px;color:var(--txt2);line-height:1.6">${endFull||'—'}</div>
-        <div style="font-size:12px;color:var(--txt2)">${e.cidade}${e.uf?' - '+e.uf:''}${e.cep?' · CEP '+e.cep:''}</div>
-      </div>`:''}
+  // Infos
+  html += '<div style="padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:14px">';
 
-      ${e.tel?`
-      <div>
-        <div style="font-size:10px;font-weight:600;letter-spacing:.6px;color:var(--txt3);margin-bottom:4px">📞 TELEFONE</div>
-        <div style="font-size:13px;font-weight:600;color:var(--txt);margin-bottom:6px">${e.tel}</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <a href="tel:+55${e.telNum}" style="font-size:11px;padding:5px 12px;border-radius:6px;
-            background:rgba(37,99,235,.1);color:var(--blue-h);text-decoration:none;font-weight:600">📞 Ligar</a>
-          ${waLink?`<a href="${waLink}" target="_blank" rel="noopener" style="font-size:11px;padding:5px 12px;border-radius:6px;
-            background:rgba(37,211,102,.1);color:#25D366;text-decoration:none;font-weight:600">💬 WhatsApp</a>`:''}
-        </div>
-      </div>`:''}
+  if(endFull || e.cidade){
+    html += '<div style="grid-column:1/-1">';
+    html += '<div style="font-size:10px;font-weight:600;letter-spacing:.6px;color:var(--txt3);margin-bottom:4px">📍 ENDEREÇO</div>';
+    if(endFull) html += '<div style="font-size:12px;color:var(--txt2);line-height:1.5">'+endFull+'</div>';
+    html += '<div style="font-size:12px;color:var(--txt2)">'+endCidade+'</div>';
+    html += '</div>';
+  }
 
-      ${e.email?`
-      <div>
-        <div style="font-size:10px;font-weight:600;letter-spacing:.6px;color:var(--txt3);margin-bottom:4px">✉️ E-MAIL</div>
-        <div style="font-size:12px;color:var(--txt2);word-break:break-all;margin-bottom:6px">${e.email}</div>
-        <a href="mailto:${e.email}" style="font-size:11px;padding:5px 12px;border-radius:6px;
-          background:rgba(37,99,235,.1);color:var(--blue-h);text-decoration:none;font-weight:600">✉️ Enviar</a>
-      </div>`:''}
+  if(e.tel){
+    html += '<div>';
+    html += '<div style="font-size:10px;font-weight:600;letter-spacing:.6px;color:var(--txt3);margin-bottom:4px">📞 TELEFONE</div>';
+    html += '<div style="font-size:13px;font-weight:600;color:var(--txt);margin-bottom:6px">'+e.tel+'</div>';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    html += '<a href="tel:+55'+telNum+'" style="font-size:11px;padding:5px 12px;border-radius:6px;background:rgba(37,99,235,.1);color:var(--blue-h);text-decoration:none;font-weight:600">📞 Ligar</a>';
+    if(waLink) html += '<a href="'+waLink+'" target="_blank" rel="noopener" style="font-size:11px;padding:5px 12px;border-radius:6px;background:rgba(37,211,102,.1);color:#25D366;text-decoration:none;font-weight:600">💬 WhatsApp</a>';
+    html += '</div></div>';
+  }
 
-      ${e.cnae?`
-      <div style="grid-column:1/-1">
-        <div style="font-size:10px;font-weight:600;letter-spacing:.6px;color:var(--txt3);margin-bottom:4px">🏭 ATIVIDADE PRINCIPAL</div>
-        <div style="font-size:12px;color:var(--txt2)">${e.cnae}</div>
-      </div>`:''}
+  if(e.email){
+    html += '<div>';
+    html += '<div style="font-size:10px;font-weight:600;letter-spacing:.6px;color:var(--txt3);margin-bottom:4px">✉️ E-MAIL</div>';
+    html += '<div style="font-size:12px;color:var(--txt2);word-break:break-all;margin-bottom:6px">'+e.email+'</div>';
+    html += '<a href="mailto:'+e.email+'" style="font-size:11px;padding:5px 12px;border-radius:6px;background:rgba(37,99,235,.1);color:var(--blue-h);text-decoration:none;font-weight:600">✉️ Enviar</a>';
+    html += '</div>';
+  }
 
-      ${e.capital||e.porte||e.abertura?`
-      <div style="grid-column:1/-1;display:flex;gap:20px;flex-wrap:wrap">
-        ${e.capital?`<div><div style="font-size:10px;font-weight:600;letter-spacing:.6px;color:var(--txt3);margin-bottom:3px">💰 CAPITAL SOCIAL</div><div style="font-size:12px;color:var(--txt2)">${e.capital}</div></div>`:''}
-        ${e.porte?`<div><div style="font-size:10px;font-weight:600;letter-spacing:.6px;color:var(--txt3);margin-bottom:3px">🏢 PORTE</div><div style="font-size:12px;color:var(--txt2)">${e.porte}</div></div>`:''}
-        ${e.abertura?`<div><div style="font-size:10px;font-weight:600;letter-spacing:.6px;color:var(--txt3);margin-bottom:3px">📅 ABERTURA</div><div style="font-size:12px;color:var(--txt2)">${e.abertura}</div></div>`:''}
-      </div>`:''}
+  if(e.cnae){
+    html += '<div style="grid-column:1/-1">';
+    html += '<div style="font-size:10px;font-weight:600;letter-spacing:.6px;color:var(--txt3);margin-bottom:4px">🏭 ATIVIDADE PRINCIPAL</div>';
+    html += '<div style="font-size:12px;color:var(--txt2)">'+e.cnae+'</div>';
+    html += '</div>';
+  }
 
-      ${e.socios&&e.socios.length?`
-      <div style="grid-column:1/-1">
-        <div style="font-size:10px;font-weight:600;letter-spacing:.6px;color:var(--txt3);margin-bottom:6px">👤 QUADRO SOCIETÁRIO</div>
-        ${e.socios.slice(0,3).map(s=>`
-        <div style="display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)">
-          <div style="width:28px;height:28px;border-radius:50%;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--blue-h);flex-shrink:0">
-            ${(s.nome_socio||s.nome||s.name||'?')[0]}
-          </div>
-          <div>
-            <div style="font-size:12px;font-weight:500;color:var(--txt)">${s.nome_socio||s.nome||s.name||'—'}</div>
-            ${s.qualificacao_socio||s.qual?`<div style="font-size:10px;color:var(--txt3)">${s.qualificacao_socio||s.qual}</div>`:''}
-          </div>
-        </div>`).join('')}
-      </div>`:''}
+  if(e.capital || e.porte || e.abertura){
+    html += '<div style="grid-column:1/-1;display:flex;gap:20px;flex-wrap:wrap">';
+    if(e.capital) html += '<div><div style="font-size:10px;font-weight:600;letter-spacing:.6px;color:var(--txt3);margin-bottom:3px">💰 CAPITAL SOCIAL</div><div style="font-size:12px;color:var(--txt2)">'+e.capital+'</div></div>';
+    if(e.porte)   html += '<div><div style="font-size:10px;font-weight:600;letter-spacing:.6px;color:var(--txt3);margin-bottom:3px">🏢 PORTE</div><div style="font-size:12px;color:var(--txt2)">'+e.porte+'</div></div>';
+    if(e.abertura)html += '<div><div style="font-size:10px;font-weight:600;letter-spacing:.6px;color:var(--txt3);margin-bottom:3px">📅 ABERTURA</div><div style="font-size:12px;color:var(--txt2)">'+e.abertura+'</div></div>';
+    html += '</div>';
+  }
 
-    </div>
+  if(e.socios && e.socios.length){
+    html += '<div style="grid-column:1/-1">';
+    html += '<div style="font-size:10px;font-weight:600;letter-spacing:.6px;color:var(--txt3);margin-bottom:6px">👤 QUADRO SOCIETÁRIO</div>';
+    e.socios.slice(0,3).forEach(function(s){
+      const nm = s.nome_socio||s.nome||s.name||'?';
+      const ql = s.qualificacao_socio||s.qual||'';
+      html += '<div style="display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)">';
+      html += '<div style="width:28px;height:28px;border-radius:50%;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--blue-h);flex-shrink:0">'+nm[0]+'</div>';
+      html += '<div><div style="font-size:12px;font-weight:500;color:var(--txt)">'+nm+'</div>';
+      if(ql) html += '<div style="font-size:10px;color:var(--txt3)">'+ql+'</div>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+  }
 
-    <!-- Botão adicionar -->
-    <div style="padding:12px 18px;border-top:1px solid var(--line);background:rgba(0,0,0,.15);
-      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-      <span style="font-size:11px;color:var(--txt3)">Representante: ${(typeof me!=='undefined'&&me)?me.name:'—'}</span>
-      <button onclick="capAdicionar(${JSON.stringify(e).replace(/'/g,"\\'")})"
-        style="height:36px;padding:0 18px;background:var(--blue);color:#fff;border:none;border-radius:8px;
-        font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">
-        ➕ Adicionar à carteira
-      </button>
-    </div>
-  </div>`;
+  html += '</div>';
+
+  // Footer
+  const rep = (typeof me!=='undefined'&&me) ? me.name : '—';
+  const eJson = JSON.stringify(e).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  html += '<div style="padding:12px 18px;border-top:1px solid var(--line);background:rgba(0,0,0,.15);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">';
+  html += '<span style="font-size:11px;color:var(--txt3)">Representante: '+rep+'</span>';
+  html += '<button onclick=\'capAdicionar(this)\'  data-info=\''+eJson+'\' style="height:36px;padding:0 18px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif">➕ Adicionar à carteira</button>';
+  html += '</div></div>';
+
+  return html;
 }
+
 
 /* ── Buscar por CNPJ ── */
 async function capBuscarCNPJ(){
@@ -933,82 +920,60 @@ async function capBuscarCNPJ(){
   res.innerHTML = capCard(capNorm(raw));
 }
 
-/* ── Buscar por Nome/Cidade ── */
+/* ── Buscar por Nome/Cidade — via Apps Script proxy ── */
 async function capBuscarNome(){
-  const nome  = (document.getElementById('cap-nome')?.value||'').trim().toUpperCase();
-  const cidade= (document.getElementById('cap-cidade')?.value||'').trim().toUpperCase();
+  const nome  = (document.getElementById('cap-nome')?.value||'').trim();
+  const cidade= (document.getElementById('cap-cidade')?.value||'').trim();
   const uf    = (document.getElementById('cap-uf')?.value||'').trim().toUpperCase();
   const res   = document.getElementById('cap-resultado-nome');
   const btn   = document.getElementById('btn-cap-nome');
-  if(!nome&&!cidade){ res.innerHTML='<p style="color:var(--amber);font-size:13px">⚠ Informe ao menos o nome ou cidade.</p>'; return; }
-  btn.disabled=true; btn.textContent='Buscando…';
-  res.innerHTML=capLoading('Casa dos Dados · Brasil API · ReceitaWS · CNPJ.ws');
 
-  let lista=[];
-
-  // Casa dos Dados
-  try{
-    const q={situacao_cadastral:'ATIVA'};
-    if(nome) q.razao_social=nome;
-    if(uf)   q.uf=[uf];
-    if(cidade) q.municipio=[cidade.normalize('NFD').replace(/[\u0300-\u036f]/g,'')];
-    const r=await fetch('https://api.casadosdados.com.br/v2/public/cnpj/search',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({query:q,page:1}),signal:AbortSignal.timeout(9000)
-    });
-    if(r.ok){const d=await r.json();lista=[...(d?.data?.cnpj||[])];}
-  }catch(e){}
-
-  // BrasilAPI
-  if(lista.length<8&&nome){
-    try{
-      let url=`https://brasilapi.com.br/api/cnpj/v1/search?search=${encodeURIComponent(nome)}`;
-      if(uf) url+=`&uf=${uf}`;
-      if(cidade) url+=`&municipio=${encodeURIComponent(cidade)}`;
-      const r=await fetch(url,{signal:AbortSignal.timeout(9000)});
-      if(r.ok){
-        const arr=await r.json();
-        (Array.isArray(arr)?arr:(arr.data||[])).forEach(e=>{
-          if(!lista.find(x=>(x.cnpj||'').replace(/\D/g,'')===(e.cnpj||'').replace(/\D/g,'')))lista.push(e);
-        });
-      }
-    }catch(e){}
+  if(!nome&&!cidade){
+    res.innerHTML='<p style="color:var(--amber);font-size:13px">⚠ Informe ao menos o nome ou cidade.</p>';
+    return;
   }
 
-  // ReceitaWS
-  if(lista.length<8){
-    try{
-      const q2=nome||(cidade?`${cidade} ${uf}`:'');
-      const url=`https://receitaws.com.br/v1/cnpj/search?query=${encodeURIComponent(q2)}${uf?'&uf='+uf:''}${cidade?'&municipio='+encodeURIComponent(cidade):''}`;
-      const r=await fetch(url,{signal:AbortSignal.timeout(9000)});
-      if(r.ok){
-        const d=await r.json();
-        (d.empresas||d.data||[]).forEach(e=>{
-          if(!lista.find(x=>(x.cnpj||'').replace(/\D/g,'')===(e.cnpj||'').replace(/\D/g,'')))lista.push(e);
-        });
-      }
-    }catch(e){}
+  btn.disabled=true; btn.textContent='Buscando…';
+  res.innerHTML=capLoading('Consultando 4 APIs via servidor…');
+
+  const url = (typeof CFG!=='undefined'&&CFG.sheetsUrl) || APPS_SCRIPT;
+  const params = encodeURIComponent(JSON.stringify({nome, cidade, uf}));
+
+  let lista = [];
+
+  try {
+    // Usar Apps Script como proxy — ele não tem bloqueio de CORS
+    const r = await fetch(url+'?action=buscarEmpresas&params='+params, {
+      signal: AbortSignal.timeout(30000),
+      cache: 'no-cache'
+    });
+    if(r.ok){
+      const d = await r.json();
+      if(d.ok && d.data) lista = d.data;
+    }
+  } catch(e) {
+    console.warn('Proxy falhou:', e.message);
   }
 
   btn.disabled=false; btn.textContent='🔍 Pesquisar';
 
   if(!lista.length){
-    res.innerHTML=`<div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:10px;padding:16px">
-      <div style="font-size:13px;color:var(--amber);margin-bottom:8px">⚠ Nenhuma empresa encontrada.</div>
-      <div style="font-size:12px;color:var(--txt2);line-height:1.7">
-        Dicas para melhorar a busca:<br>
-        • Sem acento: <strong>PECAS</strong> em vez de Peças · <strong>SAO LUIS</strong> em vez de São Luís<br>
-        • Termos curtos: <strong>MOTO</strong> em vez de MOTOCICLETAS<br>
-        • Tente só o nome sem cidade, ou só a cidade sem nome<br>
-        • Se souber o CNPJ, use a aba <strong>Por CNPJ</strong>
-      </div>
-    </div>`; return;
+    res.innerHTML='<div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:10px;padding:16px">'
+      +'<div style="font-size:13px;color:var(--amber);margin-bottom:8px">⚠ Nenhuma empresa encontrada.</div>'
+      +'<div style="font-size:12px;color:var(--txt2);line-height:1.7">'
+      +'Dicas:<br>'
+      +'• Sem acento: <strong>PECAS</strong> em vez de Peças · <strong>SAO LUIS</strong> em vez de São Luís<br>'
+      +'• Termos curtos: <strong>MOTO</strong> em vez de MOTOCICLETAS<br>'
+      +'• Tente só o nome sem cidade<br>'
+      +'• Se souber o CNPJ, use a aba <strong>Por CNPJ</strong>'
+      +'</div></div>';
+    return;
   }
 
   const cards = lista.map(capNorm);
-  res.innerHTML=`<div style="font-size:12px;color:var(--txt2);margin-bottom:14px;font-weight:500">
-    ${cards.length} empresa(s) encontrada(s)
-  </div>${cards.map(capCard).join('')}`;
+  res.innerHTML = '<div style="font-size:12px;color:var(--txt2);margin-bottom:14px;font-weight:500">'
+    +cards.length+' empresa(s) encontrada(s)</div>'
+    +cards.map(capCard).join('');
 }
 
 /* ── Loading spinner ── */
@@ -1020,7 +985,8 @@ function capLoading(fontes){
 }
 
 /* ── Adicionar à carteira ── */
-function capAdicionar(e){
+function capAdicionar(btn){
+  const e = JSON.parse(btn.getAttribute('data-info'));
   const cnpjNum=(e.cnpj||'').replace(/\D/g,'');
   if(cnpjNum&&CLI_DB.find(c=>(c.cnpj||'').replace(/\D/g,'')===cnpjNum)){
     alert('Este cliente já está na sua carteira!'); return;
@@ -1037,7 +1003,9 @@ function capAdicionar(e){
   });
   salvarCLI();
   audLog('cadastro','Cliente captado',e.nome);
-  alert('✅ '+e.nome+'\nAdicionado à carteira com sucesso!');
+  btn.textContent='✅ Adicionado!';
+  btn.disabled=true;
+  btn.style.background='var(--green)';
 }
 
 
