@@ -622,19 +622,27 @@ function renderNav(){
 }
 
 function navigate(id){
-  document.querySelectorAll('.sb-item').forEach(el=>el.classList.remove('on'));
-  const nav=document.getElementById('nav-'+id);
-  if(nav) nav.classList.add('on');
-  const pg=buildPage(id);
-  document.getElementById('pg-eyebrow').textContent=pg.eye||'Módulo';
-  document.getElementById('pg-title').textContent=pg.title||id;
-  document.getElementById('pg-sub').textContent=pg.sub||'';
-  document.getElementById('pg-body').innerHTML=pg.body||'';
-  document.getElementById('tb-breadcrumb').innerHTML=`<strong>${pg.title||id}</strong>`;
-  // Inicializar módulo
-  if(id==='admin')    setTimeout(usrRender,50);
-  if(id==='auditoria')setTimeout(audRender,50);
-  if(id==='config')   setTimeout(cfgCarregar,50);
+  try{
+    document.querySelectorAll('.sb-item').forEach(el=>el.classList.remove('on'));
+    const nav=document.getElementById('nav-'+id);
+    if(nav) nav.classList.add('on');
+    const pg=buildPage(id);
+    if(!pg){ console.error('buildPage retornou null para:',id); return; }
+    document.getElementById('pg-eyebrow').textContent=pg.eye||'Módulo';
+    document.getElementById('pg-title').textContent=pg.title||id;
+    document.getElementById('pg-sub').textContent=pg.sub||'';
+    document.getElementById('pg-body').innerHTML=pg.body||'';
+    document.getElementById('tb-breadcrumb').innerHTML='<strong>'+(pg.title||id)+'</strong>';
+    if(id==='admin')    setTimeout(usrRender,50);
+    if(id==='auditoria')setTimeout(audRender,50);
+    if(id==='config')   setTimeout(cfgCarregar,50);
+    if(id==='clientes') setTimeout(cliRender,50);
+    if(id==='retornos') setTimeout(retRender,50);
+    if(id==='vendas')   setTimeout(vndRender,50);
+  }catch(err){
+    console.error('Erro no navigate('+id+'):', err);
+    document.getElementById('pg-body').innerHTML='<div class="empty-state"><div class="es-icon">⚠️</div><div class="es-title">Erro ao carregar módulo</div><div class="es-sub">'+err.message+'</div></div>';
+  }
 }
 
 /* ═══ PÁGINAS ══════════════════════════════════════════════════════════ */
@@ -1612,11 +1620,4 @@ function buildConfig(){
     +'<span style="font-size:18px">💾</span><div><div style="font-size:14px;font-weight:600">Dados e Backup</div></div>'
     +'</div>'
     +'<div style="padding:20px;display:flex;gap:10px;flex-wrap:wrap">'
-    +'<button onclick="cfgExportarDados()" style="height:38px;padding:0 16px;background:var(--green);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif">📥 Exportar JSON</button>'
-    +'<button onclick="cfgLimparTudo()" style="height:38px;padding:0 16px;background:none;border:1px solid rgba(239,68,68,.3);color:var(--red);border-radius:9px;font-size:13px;cursor:pointer;font-family:DM Sans,sans-serif">🗑️ Limpar todos os dados</button>'
-    +'</div></div></div>';
-}
-
-</script>
-</body>
-</html>
+    +'<button onclick="cfgExportarDados()" style="height:38px;padding:0 16px;background:var(--green);color:#fff;border:none;border-radius:9px;font-siz
