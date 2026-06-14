@@ -463,6 +463,9 @@ let VND_DB = JSON.parse(localStorage.getItem('nexora_vendas')||'[]');
 let RET_DB = JSON.parse(localStorage.getItem('nexora_retornos')||'[]');
 let AUD_DB = JSON.parse(localStorage.getItem('nexora_auditoria')||'[]');
 let CFG    = JSON.parse(localStorage.getItem('nexora_config')||'{}');
+// Forçar URL correta sempre
+CFG.sheetsUrl = 'https://script.google.com/macros/s/AKfycbz5OKxXDWpF_YeZ5JpE3jUsXqSQzMwpwmGV1-Rat7SzIqyEPZ-VAEX8r4jH8RQzImmb/exec';
+try{localStorage.setItem('nexora_config',JSON.stringify(CFG));}catch(e){}
 let MET_DB = JSON.parse(localStorage.getItem('nexora_metas')||'{}');
 let REL_HISTORICO = [];
 
