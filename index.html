@@ -941,446 +941,66 @@ function capAdicionar(btn) {
 
 // ═══ CLIENTES ════════════════════════════════════════════
 function cliRender() {
-  var busca = (document.getElementById('cli-busca') ? document.getElementById('cli-busca').value : '').toLowerCase();
-  var todos = me && me.role==='rep' ? CLI_DB.filter(function(c){ return c.representante===me.name; }) : CLI_DB;
-  var lista = todos;
-  if(busca) lista = lista.filter(function(c){
-    return (c.nome||'').toLowerCase().indexOf(busca) > -1
-      || (c.cnpj||'').indexOf(busca) > -1
-      || (c.cpf||'').indexOf(busca) > -1
-      || (c.telefone||'').indexOf(busca) > -1;
-  });
+  var busca = document.getElementById('cli-busca') ? document.getElementById('cli-busca').value.toLowerCase() : '';
+  var todos = (me && me.role==='rep')
+    ? CLI_DB.filter(function(c){ return c.representante===me.name; })
+    : CLI_DB;
+  var lista = busca ? todos.filter(function(c){
+    return (c.nome||'').toLowerCase().indexOf(busca)>-1
+      || (c.cnpj||'').indexOf(busca)>-1
+      || (c.cpf||'').indexOf(busca)>-1
+      || (c.telefne||c.telefone||'').indexOf(busca)>-1;
+  }) : todos;
 
   // Stats
   var st = document.getElementById('cli-stats');
-  if(st) st.innerHTML = '<div class="usr-stat"><div class="usr-stat-val">'+todos.length+'</div><div class="usr-stat-label">Total</div></div>'
-    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--green)">'+todos.filter(function(c){ return c.status==='Ativo'; }).length+'</div><div class="usr-stat-label">Ativos</div></div>'
-    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--amber)">'+todos.filter(function(c){ return c.status==='Novo'||c.status==='Negociação'; }).length+'</div><div class="usr-stat-label">Em Prospecção</div></div>';
+  if(st) st.innerHTML =
+    '<div class="usr-stat"><div class="usr-stat-val">'+todos.length+'</div><div class="usr-stat-label">Total</div></div>'
+    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--green)">'+todos.filter(function(c){return c.status==='Ativo';}).length+'</div><div class="usr-stat-label">Ativos</div></div>'
+    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--amber)">'+todos.filter(function(c){return c.status==='Novo'||c.status==='Negociação';}).length+'</div><div class="usr-stat-label">Em Prospecção</div></div>';
 
   var el = document.getElementById('cli-lista');
   if(!el) return;
   if(!lista.length){ el.innerHTML='<div class="empty-state">Nenhum cliente encontrado.</div>'; return; }
 
+  // Guardar lista atual para referência por índice
+  window._cliLista = lista;
+
   var STATUS_COR = {Ativo:'tag-ativo',Novo:'tag-rep',Negociação:'tag-ger','Aguardando Retorno':'tag-ger',Inativo:'tag-inativo'};
   var html = '<div class="usr-table">';
-  for(var i=0;i<lista.length;i++){
+  for(var i=0; i<lista.length; i++){
     var c = lista[i];
-    var tel = (c.telefone||'').replace(/\D/g,'');
-    var doc = c.cnpj ? c.cnpj : (c.cpf||'');
-    var docLabel = c.cnpj ? 'CNPJ' : (c.cpf ? 'CPF' : '');
-    var ini = (c.nome||'?').split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
-    html += '<div class="usr-row">'
-      +'<div class="usr-av" style="background:var(--blue)">'+(c.tipo==='pf'?'👤':ini)+'</div>'
+    var tel = (c.telefne||c.telefone||'').replace(/\D/g,'');
+    var doc = c.cnpj||'';
+    var docLabel = doc ? 'CNPJ' : (c.cpf?'CPF':'');
+    if(!doc && c.cpf) doc = c.cpf;
+    var ini = (c.nome||'?').split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+
+    html += '<div class="usr-row" style="cursor:pointer" data-cli-idx="'+i+'">'
+      +'<div class="usr-av" style="background:'+(c.tipo==='pf'?'#10B981':'#2563EB')+'">'+(c.tipo==='pf'?'👤':ini)+'</div>'
       +'<div style="flex:1;min-width:0">'
       +'<div class="usr-name">'+c.nome+'</div>'
       +'<div class="usr-login">'+(docLabel&&doc?docLabel+': '+doc+' · ':'')+(c.cidade||'')+(c.uf?' - '+c.uf:'')+'</div>'
       +'</div>'
-      +(tel.length>=10?'<a class="link-btn link-wa" href="https://wa.me/55'+tel+'" target="_blank" style="text-decoration:none;font-size:13px">💬</a>':'')
+      +(tel.length>=10?'<a class="link-btn link-wa" href="https://wa.me/55'+tel+'" target="_blank" style="text-decoration:none" onclick="event.stopPropagation()">💬</a>':'')
       +'<span class="tag '+(STATUS_COR[c.status]||'tag-rep')+'">'+(c.status||'Novo')+'</span>'
       +'</div>';
   }
   html += '</div>';
   el.innerHTML = html;
-}
 
-// ═══ RETORNOS ════════════════════════════════════════════
-function retRender() {
-  var lista = me && me.role==='rep' ? RET_DB.filter(function(r){ return r.representante===me.name; }) : RET_DB;
-  var el = document.getElementById('ret-lista');
-  if(!el) return;
-  if(!lista.length){ el.innerHTML='<div class="empty-state">Nenhum retorno agendado.</div>'; return; }
-  var html = '';
-  for(var i=0;i<lista.length;i++){
-    var r = lista[i];
-    var idx = RET_DB.indexOf(r);
-    var tel = (r.telefone||'').replace(/\D/g,'');
-    html += '<div class="ret-row">'
-      +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">'+r.cliente+'</div>'
-      +'<div style="font-size:11px;color:var(--txt2)">📅 '+(r.data||'')+' '+(r.hora?'às '+r.hora:'')+'</div>'
-      +(r.motivo?'<div style="font-size:11px;color:var(--txt3)">'+r.motivo+'</div>':'')
-      +'</div>'
-      +(tel.length>=10?'<a class="link-btn link-wa" href="https://wa.me/55'+tel+'" target="_blank" style="text-decoration:none">💬</a>':'')
-      +(r.status!=='concluido'?'<button class="btn-sm" onclick="retConcluir('+idx+')">✓ Concluído</button>':'')
-      +'<span class="tag '+(r.status==='concluido'?'tag-ativo':'tag-inativo')+'">'+(r.status==='concluido'?'Concluído':'Pendente')+'</span>'
-      +'</div>';
-  }
-  el.innerHTML = html;
-}
-
-function retNovo() {
-  // Popular select com clientes da carteira
-  var sel = document.getElementById('ret-cli');
-  if(sel) {
-    sel.innerHTML = '<option value="">-- Selecione um cliente --</option>';
-    var carteira = (me && me.role === 'rep')
-      ? CLI_DB.filter(function(c){ return c.representante === me.name; })
-      : CLI_DB;
-    for(var i=0; i<carteira.length; i++){
-      var c = carteira[i];
-      var opt = document.createElement('option');
-      opt.value = c.nome;
-      // Mostrar telefone para facilitar identificação
-      opt.textContent = c.nome + (c.cidade ? ' — '+c.cidade : '') + (c.telefne||c.telefone ? ' · '+(c.telefne||c.telefone) : '');
-      sel.appendChild(opt);
-    }
-    // Adicionar opção para digitar manualmente se não tiver na carteira
-    var optManual = document.createElement('option');
-    optManual.value = '__manual__';
-    optManual.textContent = '✏️ Digitar manualmente...';
-    sel.appendChild(optManual);
-  }
-
-  // Data de hoje
-  var hoje = new Date();
-  var dd = String(hoje.getDate()).padStart(2,'0');
-  var mm = String(hoje.getMonth()+1).padStart(2,'0');
-  var yyyy = hoje.getFullYear();
-  document.getElementById('ret-dat').value = yyyy+'-'+mm+'-'+dd;
-  document.getElementById('ret-tel').value = '';
-  document.getElementById('ret-hor').value = '09:00';
-  document.getElementById('ret-obs').value = '';
-
-  // Esconder campo manual por padrão
-  var manualDiv = document.getElementById('ret-cli-manual-div');
-  if(manualDiv) manualDiv.style.display = 'none';
-
-  document.getElementById('ret-modal').style.display = 'flex';
-
-  // Quando selecionar cliente, preencher telefone automaticamente
-  if(sel) {
-    sel.onchange = function(){
-      if(sel.value === '__manual__'){
-        var manDiv = document.getElementById('ret-cli-manual-div');
-        if(manDiv) manDiv.style.display = '';
-      } else {
-        var manDiv = document.getElementById('ret-cli-manual-div');
-        if(manDiv) manDiv.style.display = 'none';
-        // Preencher telefone automaticamente
-        var carteira2 = (me && me.role === 'rep')
-          ? CLI_DB.filter(function(c){ return c.representante === me.name; })
-          : CLI_DB;
-        var cli = carteira2.find(function(c){ return c.nome === sel.value; });
-        if(cli) {
-          var tel = cli.telefne || cli.telefone || '';
-          var telEl = document.getElementById('ret-tel');
-          if(telEl) telEl.value = tel;
-        }
-      }
-    };
+  // Adicionar clique nas rows via addEventListener
+  var rows = el.querySelectorAll('[data-cli-idx]');
+  for(var j=0; j<rows.length; j++){
+    (function(row){
+      row.addEventListener('click', function(){
+        var idx = parseInt(row.getAttribute('data-cli-idx'));
+        cliVerIdx(idx);
+      });
+    })(rows[j]);
   }
 }
 
-function retSalvar() {
-  var sel = document.getElementById('ret-cli');
-  var cli = '';
-  if(sel) {
-    if(sel.value === '__manual__') {
-      var manInp = document.getElementById('ret-cli-manual');
-      cli = manInp ? manInp.value.trim() : '';
-    } else {
-      cli = sel.value;
-    }
-  }
-  var tel = document.getElementById('ret-tel') ? document.getElementById('ret-tel').value.trim() : '';
-  var dat = document.getElementById('ret-dat') ? document.getElementById('ret-dat').value        : '';
-  var hor = document.getElementById('ret-hor') ? document.getElementById('ret-hor').value        : '';
-  var mot = document.getElementById('ret-mot') ? document.getElementById('ret-mot').value        : '';
-  var obs = document.getElementById('ret-obs') ? document.getElementById('ret-obs').value.trim() : '';
-
-  if(!cli){ showToast('⚠️ Informe o cliente.','erro'); return; }
-  if(!dat){ showToast('⚠️ Informe a data.','erro'); return; }
-
-  var dataBR = dat.split('-').reverse().join('/');
-  var novo = {
-    cliente:cli, representante:me?me.name:'',
-    data:dataBR, hora:hor, motivo:mot,
-    telefone:tel, obs:obs, status:'pendente'
-  };
-
-  RET_DB.push(novo);
-  lsSet('nxr_ret', JSON.stringify(RET_DB));
-  audLog('retorno','Retorno agendado',cli+' · '+dataBR);
-
-  fetch(APPS_URL+'?action=inserirLinha&sheet=Retornos&row='+encodeURIComponent(JSON.stringify(novo)))
-    .catch(function(){});
-
-  document.getElementById('ret-modal').style.display = 'none';
-  
-  setTimeout(function(){
-    showToast('✅ Retorno agendado para '+dataBR+'!');
-    var lista = document.getElementById('ret-lista');
-    if(lista){ retRender(); } else { navigate('retornos'); }
-  }, 100);
-}
-
-
-function retConcluir(idx) {
-  if(!confirm('Marcar como concluído?')) return;
-  RET_DB[idx].status = 'concluido';
-  lsSet('nxr_ret', JSON.stringify(RET_DB));
-  showToast('✅ Retorno concluído!');
-  retRender();
-}
-
-// ═══ VENDAS ══════════════════════════════════════════════
-function vndRender() {
-  var lista = (me && me.role==='rep')
-    ? VND_DB.filter(function(v){ return v.representante===me.name; })
-    : VND_DB;
-  var el = document.getElementById('vnd-lista');
-  if(!el) return;
-  if(!lista.length){
-    el.innerHTML='<div class="empty-state">Nenhuma venda registrada.</div>';
-    return;
-  }
-  var html = '<div class="usr-table">';
-  for(var i=lista.length-1; i>=0; i--){
-    var v = lista[i];
-    html += '<div class="usr-row">'
-      +'<div style="flex:1;min-width:0">'
-      +'<div class="usr-name">'+v.cliente+'</div>'
-      +'<div class="usr-login">'+v.data+(v.pgto?' · '+v.pgto:'')+'</div>'
-      +'</div>'
-      +'<span style="font-size:15px;font-weight:700;color:var(--green)">R$ '+Number(v.valor||0).toLocaleString('pt-BR',{minimumFractionDigits:2})+'</span>'
-      +'</div>';
-  }
-  html += '</div>';
-  el.innerHTML = html;
-}
-
-function vndNova() {
-  // Popular select com clientes da carteira
-  var sel = document.getElementById('vnd-cli-sel');
-  if(!sel){ alert('ERRO: campo select não encontrado'); return; }
-  sel.innerHTML = '<option value="">-- Selecione um cliente --</option>';
-
-  var carteira = (me && me.role==='rep')
-    ? CLI_DB.filter(function(c){ return c.representante===me.name; })
-    : CLI_DB;
-
-  for(var i=0; i<carteira.length; i++){
-    var c = carteira[i];
-    var opt = document.createElement('option');
-    opt.value = c.nome;
-    opt.textContent = c.nome + (c.cidade ? ' — '+c.cidade : '');
-    sel.appendChild(opt);
-  }
-
-  document.getElementById('vnd-val').value = '';
-  document.getElementById('vnd-obs').value = '';
-  var modal = document.getElementById('vnd-modal');
-  if(!modal){ alert('ERRO: modal não encontrado'); return; }
-  modal.style.display = 'flex';
-}
-
-function vndSalvar() {
-  try {
-    var sel  = document.getElementById('vnd-cli-sel');
-    var cli  = sel ? sel.value : '';
-    var val  = document.getElementById('vnd-val').value;
-    var pgto = document.getElementById('vnd-pgto').value;
-    var obs  = document.getElementById('vnd-obs').value.trim();
-
-    if(!cli){
-      sel.style.borderColor = 'var(--red)';
-      alert('Selecione um cliente da carteira.');
-      return;
-    }
-    if(!val || Number(val) <= 0){
-      document.getElementById('vnd-val').style.borderColor = 'var(--red)';
-      alert('Informe o valor da venda.');
-      return;
-    }
-
-    var novaVenda = {
-      id:            'VND-'+Date.now(),
-      cliente:       cli,
-      representante: me ? me.name : '',
-      data:          new Date().toLocaleDateString('pt-BR'),
-      valor:         Number(val),
-      pgto:          pgto,
-      obs:           obs
-    };
-
-    VND_DB.push(novaVenda);
-    lsSet('nxr_vnd', JSON.stringify(VND_DB));
-    audLog('venda', 'Venda registrada', cli + ' · R$ ' + Number(val).toLocaleString('pt-BR'));
-
-    // Salvar na planilha
-    var row = encodeURIComponent(JSON.stringify(novaVenda));
-    fetch(APPS_URL + '?action=inserirLinha&sheet=Vendas&row=' + row)
-      .then(function(r){ return r.json(); })
-      .then(function(d){
-        console.log('Venda salva na planilha:', d.ok);
-      })
-      .catch(function(){ /* salvo localmente */ });
-
-    // Fechar modal e mostrar feedback
-    try { document.getElementById('vnd-modal').style.display = 'none'; } catch(e){}
-    setTimeout(function(){
-      showToast('✅ Venda de R$ '+Number(val).toLocaleString('pt-BR')+' registrada!');
-      try {
-        var vndEl = document.getElementById('vnd-lista');
-        if(vndEl){ vndRender(); } else { navigate('vendas'); }
-      } catch(e){ navigate('vendas'); }
-    }, 100);
-  } catch(e) {
-    alert('Erro ao salvar: ' + e.message);
-  }
-}
-
-
-function usrRender() {
-  _usrKeys = [];
-  var busca  = (document.getElementById('usr-busca')  ? document.getElementById('usr-busca').value  : '').toLowerCase();
-  var filtro = (document.getElementById('usr-filtro') ? document.getElementById('usr-filtro').value : '');
-  var lista  = USR_DB.slice();
-  if(busca)  lista = lista.filter(function(u){ return (u.name||'').toLowerCase().indexOf(busca)>-1 || (u.user||'').indexOf(busca)>-1; });
-  if(filtro) lista = lista.filter(function(u){ return u.role===filtro; });
-
-  var stats = document.getElementById('usr-stats');
-  if(stats) stats.innerHTML =
-    '<div class="usr-stat"><div class="usr-stat-val">'+USR_DB.length+'</div><div class="usr-stat-label">Total</div></div>'
-    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--green)">'+USR_DB.filter(function(u){ return u.status==='active'; }).length+'</div><div class="usr-stat-label">Ativos</div></div>'
-    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--red)">'+USR_DB.filter(function(u){ return u.status!=='active'; }).length+'</div><div class="usr-stat-label">Inativos</div></div>'
-    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--blue-h)">'+USR_DB.filter(function(u){ return u.role==='rep'; }).length+'</div><div class="usr-stat-label">Representantes</div></div>';
-
-  var el = document.getElementById('usr-lista');
-  if(!el) return;
-  if(!lista.length){ el.innerHTML='<div class="aud-row">Nenhum usuário encontrado.</div>'; return; }
-
-  var RL = {rep:'Representante',ger:'Gerente',adm:'ADM'};
-  var RC = {rep:'tag-rep',ger:'tag-ger',adm:'tag-adm'};
-  var isAdm = me && me.role === 'adm';
-  var html = '';
-
-  for(var i=0; i<lista.length; i++){
-    var u = lista[i];
-    var uKey = u.user; // chave única — login do usuário
-    var isMe = me && u.user === me.user;
-    var ini  = (u.name||'?').split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
-    var ativo = u.status === 'active';
-
-    html += '<div class="usr-row">';
-    html += '<div class="usr-av">'+ini+'</div>';
-    html += '<div style="flex:1;min-width:0">';
-    html += '<div class="usr-name">'+u.name+(isMe?' <span style="font-size:10px;color:var(--txt3)">(você)</span>':'')+'</div>';
-    html += '<div class="usr-login">'+u.user+'</div>';
-    html += '</div>';
-    html += '<span class="tag '+RC[u.role]+'">'+RL[u.role]+'</span>';
-    html += '<span class="tag '+(ativo?'tag-ativo':'tag-inativo')+'">'+(ativo?'Ativo':'Inativo')+'</span>';
-
-    if(isAdm && !isMe){
-      _usrKeys.push(uKey);
-      var ki = _usrKeys.length - 1;
-      html += '<div class="usr-actions">';
-      html += '<button class="btn-sm" onclick="_usrAcao('+ki+',\'ed\')">Ed</button>';
-      html += '<button class="btn-sm" onclick="_usrAcao('+ki+',\'tg\')">'+(ativo?'Inativar':'Ativar')+'</button>';
-      html += '<button class="btn-sm btn-del" onclick="_usrAcao('+ki+',\'ex\')">Del</button>';
-      html += '</div>';
-    } else {
-      html += '<div class="usr-actions"><span style="font-size:11px;color:var(--txt3)">—</span></div>';
-    }
-    html += '</div>';
-  }
-  el.innerHTML = html;
-}
-
-
-function _usrAcao(ki, tipo) {
-  var key = _usrKeys[ki];
-  if(!key) return;
-  if(tipo === 'ed') usrEditarKey(key);
-  else if(tipo === 'tg') usrToggleKey(key);
-  else if(tipo === 'ex') usrExcluirKey(key);
-}
-
-function usrNovo() {
-  usrEditIdx = null;
-  document.getElementById('usr-modal-title').textContent = 'Novo Usuário';
-  document.getElementById('um-nome').value = '';
-  document.getElementById('um-user').value = '';
-  document.getElementById('um-pin').value  = '';
-  document.getElementById('um-role').value = 'rep';
-  document.getElementById('um-status').value = 'active';
-  document.getElementById('usr-modal').style.display = 'flex';
-}
-
-function usrEditarKey(userKey) {
-  var idx = -1;
-  for(var i=0;i<USR_DB.length;i++){ if(USR_DB[i].user===userKey){ idx=i; break; } }
-  if(idx===-1){ alert('Usuário não encontrado.'); return; }
-  usrEditIdx = idx;
-  var u = USR_DB[idx];
-  document.getElementById('usr-modal-title').textContent = 'Editar Usuário';
-  document.getElementById('um-nome').value   = u.name||'';
-  document.getElementById('um-user').value   = u.user||'';
-  document.getElementById('um-pin').value    = '';
-  document.getElementById('um-role').value   = u.role||'rep';
-  document.getElementById('um-status').value = u.status||'active';
-  document.getElementById('usr-modal').style.display = 'flex';
-}
-
-function usrToggleKey(userKey) {
-  var idx = -1;
-  for(var i=0;i<USR_DB.length;i++){ if(USR_DB[i].user===userKey){ idx=i; break; } }
-  if(idx===-1){ alert('Usuário não encontrado.'); return; }
-  var nome  = USR_DB[idx].name;
-  var ativo = USR_DB[idx].status === 'active';
-  if(!confirm((ativo?'Inativar':'Ativar')+' "'+nome+'"?')) return;
-  USR_DB[idx].status = ativo ? 'inactive' : 'active';
-  lsSet('nxr_usr', JSON.stringify(USR_DB));
-  usrRender();
-  // Salvar automaticamente na planilha
-  usrSalvarPlanilha();
-}
-
-function usrExcluirKey(userKey) {
-  var idx = -1;
-  for(var i=0;i<USR_DB.length;i++){ if(USR_DB[i].user===userKey){ idx=i; break; } }
-  if(idx===-1){ alert('Usuário não encontrado.'); return; }
-  if(!confirm('Excluir "'+USR_DB[idx].name+'"? Esta ação não pode ser desfeita.')) return;
-  USR_DB.splice(idx, 1);
-  lsSet('nxr_usr', JSON.stringify(USR_DB));
-  usrRender();
-}
-
-function usrFecharModal() {
-  document.getElementById('usr-modal').style.display = 'none';
-}
-
-function usrSalvar() {
-  var nome   = document.getElementById('um-nome').value.trim();
-  var user   = document.getElementById('um-user').value.trim().toLowerCase();
-  var pin    = document.getElementById('um-pin').value.trim();
-  var role   = document.getElementById('um-role').value;
-  var status = document.getElementById('um-status').value;
-  if(!nome){ alert('Informe o nome.'); return; }
-  if(!user){ alert('Informe o usuário.'); return; }
-  var dup = -1;
-  for(var i=0;i<USR_DB.length;i++){ if(USR_DB[i].user===user && i!==usrEditIdx){ dup=i; break; } }
-  if(dup > -1){ alert('Usuário já existe.'); return; }
-  if(usrEditIdx === null){
-    if(!pin || pin.length !== 6){ alert('Senha deve ter 6 dígitos.'); return; }
-    USR_DB.push({user:user,pin:pin,name:nome,role:role,status:status,criado:new Date().toLocaleDateString('pt-BR')});
-  } else {
-    USR_DB[usrEditIdx].name   = nome;
-    USR_DB[usrEditIdx].user   = user;
-    USR_DB[usrEditIdx].role   = role;
-    USR_DB[usrEditIdx].status = status;
-    if(pin && pin.length===6) USR_DB[usrEditIdx].pin = pin;
-  }
-  lsSet('nxr_usr', JSON.stringify(USR_DB));
-  usrFecharModal();
-  audLog(usrEditIdx===null?'cadastro':'edicao', usrEditIdx===null?'Novo usuário':'Usuário editado', nome);
-  showToast(usrEditIdx===null ? '✅ Usuário '+nome+' criado!' : '✅ Usuário '+nome+' atualizado!');
-  usrRender();
-  usrSalvarPlanilha();
-}
-
-
-// ═══ CADASTRO MANUAL CLIENTE ══════════════════════════════
-var cliTipoAtual = 'pj';
 
 function cliTipo(tipo) {
   cliTipoAtual = tipo;
@@ -1753,17 +1373,19 @@ function vndSelecionarIdx(i) {
 
 // ═══ VER / EDITAR / EXCLUIR CLIENTE ══════════════════════
 var _cliAtualIdx = -1;
+var cliTipoAtual = 'pj';
 
 function cliVerIdx(idx) {
-  _cliAtualIdx = idx;
-  var carteira = (me && me.role==='rep')
-    ? CLI_DB.filter(function(c){ return c.representante===me.name; })
-    : CLI_DB;
-  var c = carteira[idx];
-  if(!c) return;
-
-  // Encontrar índice real no CLI_DB
+  var lista = window._cliLista || [];
+  var c = lista[idx];
+  if(!c){ return; }
   _cliAtualIdx = CLI_DB.indexOf(c);
+  if(_cliAtualIdx === -1){
+    // fallback: buscar por nome
+    for(var i=0;i<CLI_DB.length;i++){
+      if(CLI_DB[i].nome===c.nome){ _cliAtualIdx=i; break; }
+    }
+  }
 
   document.getElementById('cli-view-nome').textContent = c.nome;
 
@@ -1826,6 +1448,308 @@ function cliExcluirAtual() {
   showToast('✅ Cliente excluído!');
   document.getElementById('cli-view-modal').style.display = 'none';
   cliRender();
+}
+
+
+// ═══ RETORNOS ════════════════════════════════════════════
+function retRender() {
+  var lista = (me && me.role==='rep')
+    ? RET_DB.filter(function(r){ return r.representante===me.name; })
+    : RET_DB;
+  var el = document.getElementById('ret-lista');
+  if(!el) return;
+  if(!lista.length){ el.innerHTML='<div class="empty-state">Nenhum retorno agendado.</div>'; return; }
+  var html = '<div class="usr-table">';
+  for(var i=lista.length-1; i>=0; i--){
+    var r = lista[i];
+    var idx = RET_DB.indexOf(r);
+    var tel = (r.telefone||'').replace(/\D/g,'');
+    html += '<div class="usr-row">'
+      +'<div style="flex:1;min-width:0">'
+      +'<div class="usr-name">'+r.cliente+'</div>'
+      +'<div class="usr-login">📅 '+r.data+(r.hora?' às '+r.hora:'')+(r.motivo?' · '+r.motivo:'')+'</div>'
+      +'</div>'
+      +(tel.length>=10?'<a class="link-btn link-wa" href="https://wa.me/55'+tel+'" target="_blank" style="text-decoration:none">💬</a>':'')
+      +(r.status!=='concluido'?'<button class="btn-sm" data-ret-idx="'+idx+'" onclick="retConcluirBtn(this)">✓ Concluído</button>':'')
+      +'<span class="tag '+(r.status==='concluido'?'tag-ativo':'tag-inativo')+'">'+(r.status==='concluido'?'Concluído':'Pendente')+'</span>'
+      +'</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function retNovo() {
+  var sel = document.getElementById('ret-cli');
+  if(sel) {
+    sel.innerHTML = '<option value="">-- Selecione --</option>';
+    var carteira = (me && me.role==='rep') ? CLI_DB.filter(function(c){ return c.representante===me.name; }) : CLI_DB;
+    for(var i=0;i<carteira.length;i++){
+      var opt = document.createElement('option');
+      opt.value = carteira[i].nome;
+      opt.textContent = carteira[i].nome + (carteira[i].cidade?' — '+carteira[i].cidade:'');
+      sel.appendChild(opt);
+    }
+    var optM = document.createElement('option');
+    optM.value = '__manual__'; optM.textContent = '✏️ Digitar manualmente...';
+    sel.appendChild(optM);
+    sel.onchange = function(){
+      var manDiv = document.getElementById('ret-cli-manual-div');
+      if(manDiv) manDiv.style.display = sel.value==='__manual__' ? '' : 'none';
+      if(sel.value && sel.value!=='__manual__'){
+        var cli = carteira.find(function(c){ return c.nome===sel.value; });
+        if(cli){ var telEl=document.getElementById('ret-tel'); if(telEl) telEl.value=cli.telefne||cli.telefone||''; }
+      }
+    };
+  }
+  var hoje = new Date();
+  var dd=String(hoje.getDate()).padStart(2,'0'), mm=String(hoje.getMonth()+1).padStart(2,'0'), yyyy=hoje.getFullYear();
+  if(document.getElementById('ret-dat')) document.getElementById('ret-dat').value=yyyy+'-'+mm+'-'+dd;
+  if(document.getElementById('ret-tel')) document.getElementById('ret-tel').value='';
+  if(document.getElementById('ret-hor')) document.getElementById('ret-hor').value='09:00';
+  if(document.getElementById('ret-obs')) document.getElementById('ret-obs').value='';
+  var manDiv=document.getElementById('ret-cli-manual-div');
+  if(manDiv) manDiv.style.display='none';
+  document.getElementById('ret-modal').style.display='flex';
+}
+
+function retSalvar() {
+  var sel = document.getElementById('ret-cli');
+  var cli = '';
+  if(sel){
+    if(sel.value==='__manual__'){ var m=document.getElementById('ret-cli-manual'); cli=m?m.value.trim():''; }
+    else { cli = sel.value; }
+  }
+  var tel = document.getElementById('ret-tel') ? document.getElementById('ret-tel').value.trim() : '';
+  var dat = document.getElementById('ret-dat') ? document.getElementById('ret-dat').value : '';
+  var hor = document.getElementById('ret-hor') ? document.getElementById('ret-hor').value : '';
+  var mot = document.getElementById('ret-mot') ? document.getElementById('ret-mot').value : '';
+  var obs = document.getElementById('ret-obs') ? document.getElementById('ret-obs').value.trim() : '';
+  if(!cli){ showToast('⚠️ Selecione o cliente.','erro'); return; }
+  if(!dat){ showToast('⚠️ Informe a data.','erro'); return; }
+  var dataBR = dat.split('-').reverse().join('/');
+  var novo = {cliente:cli,representante:me?me.name:'',data:dataBR,hora:hor,motivo:mot,telefone:tel,obs:obs,status:'pendente'};
+  RET_DB.push(novo);
+  lsSet('nxr_ret', JSON.stringify(RET_DB));
+  audLog('retorno','Retorno agendado',cli+' · '+dataBR);
+  fetch(APPS_URL+'?action=inserirLinha&sheet=Retornos&row='+encodeURIComponent(JSON.stringify(novo))).catch(function(){});
+  document.getElementById('ret-modal').style.display='none';
+  setTimeout(function(){ showToast('✅ Retorno agendado para '+dataBR+'!'); var l=document.getElementById('ret-lista'); if(l){retRender();}else{navigate('retornos');} },100);
+}
+
+function retConcluirBtn(btn) {
+  var idx = parseInt(btn.getAttribute('data-ret-idx'));
+  if(!confirm('Marcar como concluído?')) return;
+  RET_DB[idx].status='concluido';
+  lsSet('nxr_ret', JSON.stringify(RET_DB));
+  showToast('✅ Retorno concluído!');
+  retRender();
+}
+
+function retConcluir(idx) {
+  if(!confirm('Marcar como concluído?')) return;
+  RET_DB[idx].status='concluido';
+  lsSet('nxr_ret', JSON.stringify(RET_DB));
+  showToast('✅ Retorno concluído!');
+  retRender();
+}
+
+// ═══ VENDAS ══════════════════════════════════════════════
+function vndRender() {
+  var lista = (me && me.role==='rep') ? VND_DB.filter(function(v){ return v.representante===me.name; }) : VND_DB;
+  var el = document.getElementById('vnd-lista');
+  if(!el) return;
+  if(!lista.length){ el.innerHTML='<div class="empty-state">Nenhuma venda registrada.</div>'; return; }
+  var html = '<div class="usr-table">';
+  for(var i=lista.length-1;i>=0;i--){
+    var v=lista[i];
+    html += '<div class="usr-row">'
+      +'<div style="flex:1;min-width:0"><div class="usr-name">'+v.cliente+'</div>'
+      +'<div class="usr-login">'+v.data+(v.pgto?' · '+v.pgto:'')+'</div></div>'
+      +'<span style="font-size:15px;font-weight:700;color:var(--green)">R$ '+Number(v.valor||0).toLocaleString('pt-BR',{minimumFractionDigits:2})+'</span>'
+      +'</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function vndNova() {
+  var sel = document.getElementById('vnd-cli-sel');
+  if(sel){
+    sel.innerHTML='<option value="">-- Selecione um cliente --</option>';
+    var carteira=(me&&me.role==='rep')?CLI_DB.filter(function(c){return c.representante===me.name;}):CLI_DB;
+    for(var i=0;i<carteira.length;i++){
+      var opt=document.createElement('option');
+      opt.value=carteira[i].nome;
+      opt.textContent=carteira[i].nome+(carteira[i].cidade?' — '+carteira[i].cidade:'');
+      sel.appendChild(opt);
+    }
+  }
+  if(document.getElementById('vnd-val')) document.getElementById('vnd-val').value='';
+  if(document.getElementById('vnd-obs')) document.getElementById('vnd-obs').value='';
+  document.getElementById('vnd-modal').style.display='flex';
+}
+
+function vndSalvar() {
+  try {
+    var sel=document.getElementById('vnd-cli-sel');
+    var cli=sel?sel.value:'';
+    var val=document.getElementById('vnd-val').value;
+    var pgto=document.getElementById('vnd-pgto').value;
+    var obs=document.getElementById('vnd-obs').value.trim();
+    if(!cli){ sel.style.borderColor='var(--red)'; alert('Selecione um cliente.'); return; }
+    if(!val||Number(val)<=0){ document.getElementById('vnd-val').style.borderColor='var(--red)'; alert('Informe o valor.'); return; }
+    var nova={id:'VND-'+Date.now(),cliente:cli,representante:me?me.name:'',data:new Date().toLocaleDateString('pt-BR'),valor:Number(val),pgto:pgto,obs:obs};
+    VND_DB.push(nova);
+    lsSet('nxr_vnd', JSON.stringify(VND_DB));
+    audLog('venda','Venda registrada',cli+' · R$ '+Number(val).toLocaleString('pt-BR'));
+    fetch(APPS_URL+'?action=inserirLinha&sheet=Vendas&row='+encodeURIComponent(JSON.stringify(nova))).catch(function(){});
+    try{document.getElementById('vnd-modal').style.display='none';}catch(e){}
+    setTimeout(function(){
+      showToast('✅ Venda de R$ '+Number(val).toLocaleString('pt-BR')+' registrada!');
+      var el=document.getElementById('vnd-lista'); if(el){vndRender();}else{navigate('vendas');}
+    },100);
+  } catch(e){ alert('Erro: '+e.message); }
+}
+
+// ═══ USUÁRIOS ════════════════════════════════════════════
+function usrRender() {
+  var busca  = document.getElementById('usr-busca')  ? document.getElementById('usr-busca').value.toLowerCase()  : '';
+  var filtro = document.getElementById('usr-filtro') ? document.getElementById('usr-filtro').value : '';
+  var lista  = USR_DB.slice();
+  if(busca)  lista=lista.filter(function(u){return (u.name||'').toLowerCase().indexOf(busca)>-1||(u.user||'').indexOf(busca)>-1;});
+  if(filtro) lista=lista.filter(function(u){return u.role===filtro;});
+
+  var stats=document.getElementById('usr-stats');
+  if(stats) stats.innerHTML='<div class="usr-stat"><div class="usr-stat-val">'+USR_DB.length+'</div><div class="usr-stat-label">Total</div></div>'
+    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--green)">'+USR_DB.filter(function(u){return u.status==='active';}).length+'</div><div class="usr-stat-label">Ativos</div></div>'
+    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--red)">'+USR_DB.filter(function(u){return u.status!=='active';}).length+'</div><div class="usr-stat-label">Inativos</div></div>'
+    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--blue-h)">'+USR_DB.filter(function(u){return u.role==='rep';}).length+'</div><div class="usr-stat-label">Representantes</div></div>';
+
+  var el=document.getElementById('usr-lista');
+  if(!el) return;
+  if(!lista.length){el.innerHTML='<div class="aud-row">Nenhum usuário.</div>';return;}
+
+  window._usrLista = lista;
+  var RL={rep:'Representante',ger:'Gerente',adm:'ADM'};
+  var RC={rep:'tag-rep',ger:'tag-ger',adm:'tag-adm'};
+  var isAdm=me&&me.role==='adm';
+  var html='';
+  for(var i=0;i<lista.length;i++){
+    var u=lista[i];
+    var isMe=me&&u.user===me.user;
+    var ini=(u.name||'?').split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+    var ativo=u.status==='active';
+    html+='<div class="usr-row">'
+      +'<div class="usr-av">'+ini+'</div>'
+      +'<div style="flex:1;min-width:0"><div class="usr-name">'+u.name+(isMe?' <span style="font-size:10px;color:var(--txt3)">(você)</span>':'')+'</div>'
+      +'<div class="usr-login">'+u.user+'</div></div>'
+      +'<span class="tag '+RC[u.role]+'">'+RL[u.role]+'</span>'
+      +'<span class="tag '+(ativo?'tag-ativo':'tag-inativo')+'">'+(ativo?'Ativo':'Inativo')+'</span>'
+      +(isAdm&&!isMe
+        ?'<div class="usr-actions">'
+          +'<button class="btn-sm" data-usr-idx="'+i+'" data-usr-action="ed">Ed</button>'
+          +'<button class="btn-sm" data-usr-idx="'+i+'" data-usr-action="tg">'+(ativo?'Inativar':'Ativar')+'</button>'
+          +'<button class="btn-sm btn-del" data-usr-idx="'+i+'" data-usr-action="ex">Del</button>'
+          +'</div>'
+        :'<div class="usr-actions"><span style="font-size:11px;color:var(--txt3)">—</span></div>')
+      +'</div>';
+  }
+  el.innerHTML = html;
+
+  var btns = el.querySelectorAll('[data-usr-action]');
+  for(var j=0;j<btns.length;j++){
+    (function(btn){
+      btn.addEventListener('click',function(ev){
+        ev.stopPropagation();
+        var idx=parseInt(btn.getAttribute('data-usr-idx'));
+        var action=btn.getAttribute('data-usr-action');
+        var ukey=(window._usrLista[idx]||{}).user;
+        if(action==='ed') usrEditarKey(ukey);
+        else if(action==='tg') usrToggleKey(ukey);
+        else if(action==='ex') usrExcluirKey(ukey);
+      });
+    })(btns[j]);
+  }
+}
+
+function usrNovo() {
+  usrEditIdx=null;
+  document.getElementById('usr-modal-title').textContent='Novo Usuário';
+  document.getElementById('um-nome').value='';
+  document.getElementById('um-user').value='';
+  document.getElementById('um-pin').value='';
+  document.getElementById('um-role').value='rep';
+  document.getElementById('um-status').value='active';
+  document.getElementById('usr-modal').style.display='flex';
+}
+
+function usrFecharModal(){ document.getElementById('usr-modal').style.display='none'; }
+
+function usrSalvar() {
+  var nome=document.getElementById('um-nome').value.trim();
+  var user=document.getElementById('um-user').value.trim().toLowerCase();
+  var pin=document.getElementById('um-pin').value.trim();
+  var role=document.getElementById('um-role').value;
+  var status=document.getElementById('um-status').value;
+  if(!nome){alert('Informe o nome.');return;}
+  if(!user){alert('Informe o usuário.');return;}
+  var dup=-1;
+  for(var i=0;i<USR_DB.length;i++){if(USR_DB[i].user===user&&i!==usrEditIdx){dup=i;break;}}
+  if(dup>-1){alert('Usuário já existe.');return;}
+  if(usrEditIdx===null){
+    if(!pin||pin.length!==6){alert('Senha deve ter 6 dígitos.');return;}
+    USR_DB.push({user:user,pin:pin,name:nome,role:role,status:status,criado:new Date().toLocaleDateString('pt-BR')});
+  } else {
+    USR_DB[usrEditIdx].name=nome; USR_DB[usrEditIdx].user=user;
+    USR_DB[usrEditIdx].role=role; USR_DB[usrEditIdx].status=status;
+    if(pin&&pin.length===6) USR_DB[usrEditIdx].pin=pin;
+  }
+  lsSet('nxr_usr',JSON.stringify(USR_DB));
+  usrFecharModal();
+  audLog(usrEditIdx===null?'cadastro':'edicao',usrEditIdx===null?'Novo usuário':'Usuário editado',nome);
+  showToast(usrEditIdx===null?'✅ Usuário '+nome+' criado!':'✅ Usuário '+nome+' atualizado!');
+  usrRender();
+  usrSalvarPlanilha();
+}
+
+function usrToggleKey(userKey) {
+  var idx=-1;
+  for(var i=0;i<USR_DB.length;i++){if(USR_DB[i].user===userKey){idx=i;break;}}
+  if(idx===-1){alert('Não encontrado.');return;}
+  var ativo=USR_DB[idx].status==='active';
+  if(!confirm((ativo?'Inativar':'Ativar')+' "'+USR_DB[idx].name+'"?')) return;
+  USR_DB[idx].status=ativo?'inactive':'active';
+  lsSet('nxr_usr',JSON.stringify(USR_DB));
+  showToast('✅ Status alterado!');
+  usrRender();
+  usrSalvarPlanilha();
+}
+
+function usrEditarKey(userKey) {
+  var idx=-1;
+  for(var i=0;i<USR_DB.length;i++){if(USR_DB[i].user===userKey){idx=i;break;}}
+  if(idx===-1){alert('Não encontrado.');return;}
+  usrEditIdx=idx;
+  var u=USR_DB[idx];
+  document.getElementById('usr-modal-title').textContent='Editar Usuário';
+  document.getElementById('um-nome').value=u.name||'';
+  document.getElementById('um-user').value=u.user||'';
+  document.getElementById('um-pin').value='';
+  document.getElementById('um-role').value=u.role||'rep';
+  document.getElementById('um-status').value=u.status||'active';
+  document.getElementById('usr-modal').style.display='flex';
+}
+
+function usrExcluirKey(userKey) {
+  var idx=-1;
+  for(var i=0;i<USR_DB.length;i++){if(USR_DB[i].user===userKey){idx=i;break;}}
+  if(idx===-1){alert('Não encontrado.');return;}
+  if(!confirm('Excluir "'+USR_DB[idx].name+'"?')) return;
+  USR_DB.splice(idx,1);
+  lsSet('nxr_usr',JSON.stringify(USR_DB));
+  showToast('✅ Usuário excluído!');
+  usrRender();
+  usrSalvarPlanilha();
 }
 
 </script>
