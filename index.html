@@ -1022,27 +1022,51 @@ function vndSalvar() {
     var obs  = document.getElementById('vnd-obs').value.trim();
 
     if(!cli){
-      sel.style.borderColor='var(--red)';
+      sel.style.borderColor = 'var(--red)';
       alert('Selecione um cliente da carteira.');
       return;
     }
-    if(!val || Number(val)<=0){
-      document.getElementById('vnd-val').style.borderColor='var(--red)';
+    if(!val || Number(val) <= 0){
+      document.getElementById('vnd-val').style.borderColor = 'var(--red)';
       alert('Informe o valor da venda.');
       return;
     }
 
-    VND_DB.push({
-      cliente: cli,
+    var novaVenda = {
+      cliente:       cli,
       representante: me ? me.name : '',
-      data: new Date().toLocaleDateString('pt-BR'),
-      valor: Number(val),
-      pgto: pgto,
-      obs: obs
-    });
+      data:          new Date().toLocaleDateString('pt-BR'),
+      valor:         Number(val),
+      pgto:          pgto,
+      obs:           obs
+    };
+
+    VND_DB.push(novaVenda);
     lsSet('nxr_vnd', JSON.stringify(VND_DB));
-    audLog('venda','Venda registrada',cli+' · R$ '+Number(val).toLocaleString('pt-BR'));
-    document.getElementById('vnd-modal').style.display='none';
+    audLog('venda', 'Venda registrada', cli + ' · R$ ' + Number(val).toLocaleString('pt-BR'));
+
+    // Salvar na planilha
+    var row = encodeURIComponent(JSON.stringify(novaVenda));
+    fetch(APPS_URL + '?action=inserirLinha&sheet=Vendas&row=' + row)
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        console.log('Venda salva na planilha:', d.ok);
+      })
+      .catch(function(){ /* salvo localmente */ });
+
+    // Fechar modal e mostrar feedback
+    document.getElementById('vnd-modal').style.display = 'none';
+
+    // Toast de confirmação
+    var toast = document.createElement('div');
+    toast.textContent = '✅ Venda registrada com sucesso!';
+    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);'
+      +'background:#10B981;color:#fff;padding:12px 24px;border-radius:10px;'
+      +'font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);'
+      +'font-family:DM Sans,Arial,sans-serif';
+    document.body.appendChild(toast);
+    setTimeout(function(){ document.body.removeChild(toast); }, 3000);
+
     navigate('vendas');
   } catch(e) {
     alert('Erro ao salvar: ' + e.message);
