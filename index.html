@@ -989,98 +989,42 @@ function vndRender() {
 }
 
 function vndNova() {
-  document.getElementById('vnd-busca-inp').value = '';
-  document.getElementById('vnd-busca-inp').style.display = '';
-  document.getElementById('vnd-lista-drop').style.display = 'none';
-  document.getElementById('vnd-cli-nome').value = '';
-  document.getElementById('vnd-cli-card').style.display = 'none';
-  document.getElementById('vnd-val').value = '';
-  document.getElementById('vnd-obs').value = '';
-  window._vndClientes = [];
-  document.getElementById('vnd-modal').style.display = 'flex';
-  setTimeout(function(){ document.getElementById('vnd-busca-inp').focus(); }, 150);
-}
-
-function vndFiltrar() {
-  var busca = document.getElementById('vnd-busca-inp').value.toLowerCase();
-  var drop  = document.getElementById('vnd-lista-drop');
-  if(!busca){ drop.style.display='none'; return; }
+  // Popular select com clientes da carteira
+  var sel = document.getElementById('vnd-cli-sel');
+  sel.innerHTML = '<option value="">-- Selecione um cliente --</option>';
 
   var carteira = (me && me.role==='rep')
     ? CLI_DB.filter(function(c){ return c.representante===me.name; })
     : CLI_DB;
 
-  window._vndClientes = carteira.filter(function(c){
-    return (c.nome||'').toLowerCase().indexOf(busca)>-1
-      || (c.cnpj||'').indexOf(busca)>-1
-      || (c.cpf||'').indexOf(busca)>-1;
-  }).slice(0,10);
-
-  if(!window._vndClientes.length){
-    drop.innerHTML = '<div style="padding:12px;font-size:12px;color:var(--txt2)">Nenhum cliente encontrado.</div>';
-    drop.style.display = 'block';
-    return;
+  for(var i=0; i<carteira.length; i++){
+    var c = carteira[i];
+    var opt = document.createElement('option');
+    opt.value = c.nome;
+    opt.textContent = c.nome + (c.cidade ? ' — '+c.cidade : '');
+    sel.appendChild(opt);
   }
 
-  var html = '';
-  for(var i=0; i<window._vndClientes.length; i++){
-    var c = window._vndClientes[i];
-    var doc = c.cnpj ? 'CNPJ: '+c.cnpj : (c.cpf?'CPF: '+c.cpf:'');
-    html += '<div class="vnd-item" data-idx="'+i+'">'
-      +'<div style="font-size:13px;font-weight:600">'+c.nome+'</div>'
-      +'<div style="font-size:10px;color:var(--txt3)">'+(doc||c.cidade||'')+'</div>'
-      +'</div>';
-  }
-  drop.innerHTML = html;
-  drop.style.display = 'block';
-
-  // Adicionar eventos de clique em cada item
-  var itens = drop.querySelectorAll('.vnd-item');
-  for(var j=0; j<itens.length; j++){
-    (function(item){
-      item.addEventListener('click', function(){
-        var idx = parseInt(item.getAttribute('data-idx'));
-        var cli = window._vndClientes[idx];
-        if(!cli) return;
-        var doc = cli.cnpj ? 'CNPJ: '+cli.cnpj : (cli.cpf?'CPF: '+cli.cpf:'');
-        document.getElementById('vnd-cli-nome').value = cli.nome;
-        document.getElementById('vnd-busca-inp').style.display = 'none';
-        document.getElementById('vnd-lista-drop').style.display = 'none';
-        document.getElementById('vnd-cli-nm').textContent = cli.nome;
-        document.getElementById('vnd-cli-dc').textContent = doc;
-        document.getElementById('vnd-cli-card').style.display = 'flex';
-        setTimeout(function(){ document.getElementById('vnd-val').focus(); }, 100);
-      });
-    })(itens[j]);
-  }
-}
-
-function vndLimparCliente() {
-  document.getElementById('vnd-cli-nome').value = '';
-  document.getElementById('vnd-cli-card').style.display = 'none';
-  var busca = document.getElementById('vnd-busca-inp');
-  busca.value = '';
-  busca.style.display = '';
-  busca.focus();
-  document.getElementById('vnd-lista-drop').style.display = 'none';
+  document.getElementById('vnd-val').value = '';
+  document.getElementById('vnd-obs').value = '';
+  document.getElementById('vnd-modal').style.display = 'flex';
 }
 
 function vndSalvar() {
-  var cli  = document.getElementById('vnd-cli-nome').value.trim();
+  var sel  = document.getElementById('vnd-cli-sel');
+  var cli  = sel ? sel.value : '';
   var val  = document.getElementById('vnd-val').value;
   var pgto = document.getElementById('vnd-pgto').value;
   var obs  = document.getElementById('vnd-obs').value.trim();
 
   if(!cli){
-    var busca = document.getElementById('vnd-busca-inp');
-    busca.style.borderColor = 'var(--red)';
-    busca.focus();
+    sel.style.borderColor='var(--red)';
+    alert('Selecione um cliente da carteira.');
     return;
   }
-  if(!val || Number(val) <= 0){
-    var valEl = document.getElementById('vnd-val');
-    valEl.style.borderColor = 'var(--red)';
-    valEl.focus();
+  if(!val || Number(val)<=0){
+    document.getElementById('vnd-val').style.borderColor='var(--red)';
+    alert('Informe o valor da venda.');
     return;
   }
 
@@ -1093,8 +1037,8 @@ function vndSalvar() {
     obs: obs
   });
   lsSet('nxr_vnd', JSON.stringify(VND_DB));
-  audLog('venda', 'Venda registrada', cli+' · R$ '+Number(val).toLocaleString('pt-BR'));
-  document.getElementById('vnd-modal').style.display = 'none';
+  audLog('venda','Venda registrada',cli+' · R$ '+Number(val).toLocaleString('pt-BR'));
+  document.getElementById('vnd-modal').style.display='none';
   vndRender();
 }
 
@@ -1497,26 +1441,13 @@ function cfgExportar() {
     <div class="modal-body">
 
       <div class="mfield">
-        <label>Buscar Cliente da Carteira *</label>
-        <input id="vnd-busca-inp" placeholder="Digite o nome do cliente..."
+        <label>Cliente da Carteira *</label>
+        <select id="vnd-cli-sel"
           style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;
-          padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none"
-          oninput="vndFiltrar()">
-        <div id="vnd-lista-drop" style="display:none;border:1px solid var(--line);border-radius:9px;
-          margin-top:4px;background:var(--s2);max-height:180px;overflow-y:auto"></div>
+          padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none;cursor:pointer">
+          <option value="">-- Selecione um cliente --</option>
+        </select>
       </div>
-
-      <div id="vnd-cli-card" style="display:none;padding:10px 13px;background:rgba(37,99,235,.08);
-        border:1px solid rgba(37,99,235,.2);border-radius:9px;margin-bottom:12px;
-        display:none;align-items:center;justify-content:space-between">
-        <div>
-          <div id="vnd-cli-nm" style="font-size:13px;font-weight:600"></div>
-          <div id="vnd-cli-dc" style="font-size:10px;color:var(--txt3)"></div>
-        </div>
-        <button onclick="vndLimparCliente()"
-          style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:18px;padding:0 4px">✕</button>
-      </div>
-      <input type="hidden" id="vnd-cli-nome">
 
       <div class="mfield">
         <label>Valor (R$) *</label>
