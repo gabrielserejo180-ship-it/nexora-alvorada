@@ -991,6 +991,7 @@ function vndRender() {
 function vndNova() {
   // Popular select com clientes da carteira
   var sel = document.getElementById('vnd-cli-sel');
+  if(!sel){ alert('ERRO: campo select não encontrado'); return; }
   sel.innerHTML = '<option value="">-- Selecione um cliente --</option>';
 
   var carteira = (me && me.role==='rep')
@@ -1007,7 +1008,9 @@ function vndNova() {
 
   document.getElementById('vnd-val').value = '';
   document.getElementById('vnd-obs').value = '';
-  document.getElementById('vnd-modal').style.display = 'flex';
+  var modal = document.getElementById('vnd-modal');
+  if(!modal){ alert('ERRO: modal não encontrado'); return; }
+  modal.style.display = 'flex';
 }
 
 function vndSalvar() {
