@@ -385,7 +385,22 @@ function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; 
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 
 var USR_DB = JSON.parse(lsGet('nxr_usr') || '[]');
-if(USR_DB.length === 0){ USR_DB = USERS_BASE.slice(); lsSet('nxr_usr', JSON.stringify(USR_DB)); }
+// Garantir que usuários base sempre existem no USR_DB
+(function(){
+  var mudou = false;
+  for(var bi=0; bi<USERS_BASE.length; bi++){
+    var base = USERS_BASE[bi];
+    var existe = false;
+    for(var ui=0; ui<USR_DB.length; ui++){
+      if(USR_DB[ui].user === base.user){ existe=true; break; }
+    }
+    if(!existe){ USR_DB.push(base); mudou=true; }
+  }
+  if(mudou || USR_DB.length === 0){
+    if(USR_DB.length === 0) USR_DB = USERS_BASE.slice();
+    lsSet('nxr_usr', JSON.stringify(USR_DB));
+  }
+})();
 
 var CLI_DB = JSON.parse(lsGet('nxr_cli') || '[]');
 var VND_DB = JSON.parse(lsGet('nxr_vnd') || '[]');
@@ -434,15 +449,18 @@ function doLogin() {
   pin = String(pin).trim();
   if(pin.length < 6){ alertEl.textContent = 'Senha deve ter 6 dígitos.'; alertEl.className = 'alert show'; return; }
 
-  // Buscar em USR_DB e USERS_BASE (garantir que adm/ger padrão sempre funcione)
-  var todos = USR_DB.slice();
-  // Adicionar USERS_BASE que não estão no USR_DB
-  for(var bi=0; bi<USERS_BASE.length; bi++){
-    var existe = false;
+  // Montar lista: USERS_BASE + usuários extras do USR_DB
+  var todos = USERS_BASE.slice();
+  for(var bi=0; bi<USR_DB.length; bi++){
+    var existeBase = false;
     for(var bj=0; bj<todos.length; bj++){
-      if(todos[bj].user === USERS_BASE[bi].user){ existe=true; break; }
+      if(todos[bj].user === USR_DB[bi].user){ 
+        // Atualizar com dados mais recentes (ex: senha alterada)
+        todos[bj] = USR_DB[bi];
+        existeBase = true; break; 
+      }
     }
-    if(!existe) todos.push(USERS_BASE[bi]);
+    if(!existeBase) todos.push(USR_DB[bi]);
   }
   var found = null;
   for(var i=0;i<todos.length;i++){
