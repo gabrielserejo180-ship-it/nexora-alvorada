@@ -1000,10 +1000,12 @@ function retSalvar() {
     .then(function(d){ console.log('Retorno salvo na planilha:', d.ok); })
     .catch(function(){});
 
-  document.getElementById('ret-modal').style.display = 'none';
+  try { document.getElementById('ret-modal').style.display = 'none'; } catch(e){}
   showToast('✅ Retorno agendado para '+dataBR+'!');
-  var retEl = document.getElementById('ret-lista');
-  if(retEl) { retRender(); } else { navigate('retornos'); }
+  try {
+    var retEl = document.getElementById('ret-lista');
+    if(retEl){ retRender(); } else { navigate('retornos'); }
+  } catch(e){ navigate('retornos'); }
 }
 
 
@@ -1109,10 +1111,12 @@ function vndSalvar() {
       .catch(function(){ /* salvo localmente */ });
 
     // Fechar modal e mostrar feedback
-    document.getElementById('vnd-modal').style.display = 'none';
-    showToast('✅ Venda de R$ '+Number(val).toLocaleString('pt-BR')+'registrada!');
-    var vndEl = document.getElementById('vnd-lista');
-    if(vndEl) { vndRender(); } else { navigate('vendas'); }
+    try { document.getElementById('vnd-modal').style.display = 'none'; } catch(e){}
+    showToast('✅ Venda de R$ '+Number(val).toLocaleString('pt-BR')+' registrada!');
+    try {
+      var vndEl = document.getElementById('vnd-lista');
+      if(vndEl){ vndRender(); } else { navigate('vendas'); }
+    } catch(e){ navigate('vendas'); }
   } catch(e) {
     alert('Erro ao salvar: ' + e.message);
   }
@@ -1262,7 +1266,7 @@ function usrSalvar() {
   lsSet('nxr_usr', JSON.stringify(USR_DB));
   usrFecharModal();
   audLog(usrEditIdx===null?'cadastro':'edicao', usrEditIdx===null?'Novo usuário':'Usuário editado', nome);
-  showToast(usrEditIdx===null?'✅ Usuário "'+nome+'" criado!':'✅ Usuário "'+nome+'" atualizado!');
+  showToast(usrEditIdx===null ? '✅ Usuário '+nome+' criado!' : '✅ Usuário '+nome+' atualizado!');
   usrRender();
   usrSalvarPlanilha();
 }
@@ -1384,19 +1388,16 @@ function cliSalvarManual() {
     .catch(function(){});
 
   // Fechar modal
-  document.getElementById('cli-modal').style.display = 'none';
+  try { document.getElementById('cli-modal').style.display = 'none'; } catch(e){}
 
-  // Toast de confirmação
-  showToast('✅ Cliente "'+nome+'" cadastrado!');
+  // Toast
+  showToast('✅ '+nome+' cadastrado com sucesso!');
 
-  // Se já está na tela de clientes, atualizar lista
-  // Se não, navegar para clientes
-  var listaEl = document.getElementById('cli-lista');
-  if(listaEl) {
-    cliRender();
-  } else {
-    navigate('clientes');
-  }
+  // Atualizar lista
+  try {
+    var listaEl = document.getElementById('cli-lista');
+    if(listaEl){ cliRender(); } else { navigate('clientes'); }
+  } catch(e){ navigate('clientes'); }
 }
 
 
@@ -1475,17 +1476,30 @@ function cfgExportar() {
 
 // ═══ TOAST GLOBAL ════════════════════════════════════════
 function showToast(msg, tipo) {
-  var cor = tipo === 'erro' ? '#EF4444' : '#10B981';
-  var toast = document.createElement('div');
-  toast.textContent = msg;
-  toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);'
-    +'background:'+cor+';color:#fff;padding:13px 28px;border-radius:10px;'
-    +'font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.4);'
-    +'font-family:DM Sans,Arial,sans-serif;white-space:nowrap;pointer-events:none';
-  document.body.appendChild(toast);
-  setTimeout(function(){ 
-    if(toast.parentNode) toast.parentNode.removeChild(toast); 
-  }, 3000);
+  try {
+    var cor = tipo === 'erro' ? '#EF4444' : '#10B981';
+    var toast = document.createElement('div');
+    toast.textContent = msg;
+    toast.style.position = 'fixed';
+    toast.style.bottom = '30px';
+    toast.style.left = '50%';
+    toast.style.transform = 'translateX(-50%)';
+    toast.style.background = cor;
+    toast.style.color = '#fff';
+    toast.style.padding = '14px 28px';
+    toast.style.borderRadius = '10px';
+    toast.style.fontSize = '14px';
+    toast.style.fontWeight = '700';
+    toast.style.zIndex = '99999';
+    toast.style.boxShadow = '0 4px 20px rgba(0,0,0,.5)';
+    toast.style.fontFamily = 'Arial,sans-serif';
+    toast.style.maxWidth = '90vw';
+    toast.style.textAlign = 'center';
+    document.body.appendChild(toast);
+    setTimeout(function(){
+      if(toast && toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 3500);
+  } catch(e){ alert(msg); }
 }
 
 
