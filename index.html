@@ -370,6 +370,217 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
   </div>
 </div>
 
+<!-- MODAL RETORNO -->
+<div class="modal-bg" id="ret-modal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-head-title">🔔 Agendar Retorno</div>
+      <button class="modal-close" onclick="document.getElementById('ret-modal').style.display='none'">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="mfield">
+        <label>Cliente *</label>
+        <select id="ret-cli" style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none;cursor:pointer">
+          <option value="">-- Selecione um cliente --</option>
+        </select>
+      </div>
+      <div class="mfield" id="ret-cli-manual-div" style="display:none">
+        <label>Nome do Cliente (manual)</label>
+        <input id="ret-cli-manual" placeholder="Digite o nome do cliente">
+      </div>
+      <div class="mfield"><label>Telefone</label><input id="ret-tel" placeholder="(98) 99999-9999" type="tel"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="mfield"><label>Data *</label><input id="ret-dat" type="date"></div>
+        <div class="mfield"><label>Hora</label><input id="ret-hor" type="time" value="09:00"></div>
+      </div>
+      <div class="mfield"><label>Motivo</label>
+        <select id="ret-mot" style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
+          <option>Retorno de proposta</option>
+          <option>Apresentação de produto</option>
+          <option>Cobrança de parcela</option>
+          <option>Pós-venda</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div class="mfield"><label>Observação</label><input id="ret-obs" placeholder="Observação opcional"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="document.getElementById('ret-modal').style.display='none'">Cancelar</button>
+      <button class="btn-save2" onclick="retSalvar()">✓ Agendar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VENDA -->
+<div class="modal-bg" id="vnd-modal" style="display:none">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-head">
+      <div class="modal-head-title">💰 Registrar Venda</div>
+      <button class="modal-close" onclick="document.getElementById('vnd-modal').style.display='none'">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="mfield">
+        <label>Cliente da Carteira *</label>
+        <select id="vnd-cli-sel"
+          style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;
+          padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none;cursor:pointer">
+          <option value="">-- Selecione um cliente --</option>
+        </select>
+      </div>
+
+      <div class="mfield">
+        <label>Valor (R$) *</label>
+        <input id="vnd-val" type="number" step="0.01" min="0" placeholder="0,00"
+          style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;
+          padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
+      </div>
+
+      <div class="mfield">
+        <label>Forma de Pagamento</label>
+        <select id="vnd-pgto"
+          style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;
+          padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
+          <option>Boleto</option>
+          <option>Cartão de Crédito</option>
+          <option>Cartão de Débito</option>
+          <option>PIX</option>
+          <option>Dinheiro</option>
+          <option>Financiamento</option>
+          <option>Consórcio</option>
+        </select>
+      </div>
+
+      <div class="mfield">
+        <label>Observação</label>
+        <input id="vnd-obs" placeholder="Observação opcional"
+          style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;
+          padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="document.getElementById('vnd-modal').style.display='none'">Cancelar</button>
+      <button class="btn-save2" onclick="vndSalvar()">✓ Registrar Venda</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CADASTRO MANUAL CLIENTE -->
+<div class="modal-bg" id="cli-modal" style="display:none">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-head">
+      <div class="modal-head-title">👤 Cadastro Manual de Cliente</div>
+      <button class="modal-close" onclick="document.getElementById('cli-modal').style.display='none'">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Tipo: PF ou PJ -->
+      <div class="mfield">
+        <label>Tipo de Pessoa *</label>
+        <div style="display:flex;gap:8px">
+          <button id="cli-tipo-pj" onclick="cliTipo('pj')"
+            style="flex:1;height:38px;border-radius:9px;border:2px solid var(--blue);background:rgba(37,99,235,.1);color:var(--blue-h);font-weight:700;cursor:pointer;font-family:var(--ff);font-size:13px">
+            🏢 Pessoa Jurídica
+          </button>
+          <button id="cli-tipo-pf" onclick="cliTipo('pf')"
+            style="flex:1;height:38px;border-radius:9px;border:1px solid var(--line2);background:none;color:var(--txt2);font-weight:600;cursor:pointer;font-family:var(--ff);font-size:13px">
+            👤 Pessoa Física
+          </button>
+        </div>
+      </div>
+
+      <div class="mfield">
+        <label id="cli-doc-label">CNPJ</label>
+        <input id="cli-doc" placeholder="00.000.000/0001-00" maxlength="20">
+      </div>
+
+      <div class="mfield">
+        <label id="cli-nome-label">Razão Social / Nome Fantasia *</label>
+        <input id="cli-nome" placeholder="Nome da empresa ou cliente">
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="mfield">
+          <label>Telefone</label>
+          <input id="cli-tel" placeholder="(98) 99999-9999" type="tel">
+        </div>
+        <div class="mfield">
+          <label>E-mail</label>
+          <input id="cli-email" placeholder="email@exemplo.com" type="email">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="mfield">
+          <label>Cidade</label>
+          <input id="cli-cid" placeholder="Ex: São Luís">
+        </div>
+        <div class="mfield">
+          <label>UF</label>
+          <select id="cli-uf" style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
+            <option value="MA">MA</option>
+            <option value="AC">AC</option><option value="AL">AL</option>
+            <option value="AM">AM</option><option value="AP">AP</option>
+            <option value="BA">BA</option><option value="CE">CE</option>
+            <option value="DF">DF</option><option value="ES">ES</option>
+            <option value="GO">GO</option><option value="MG">MG</option>
+            <option value="MS">MS</option><option value="MT">MT</option>
+            <option value="PA">PA</option><option value="PB">PB</option>
+            <option value="PE">PE</option><option value="PI">PI</option>
+            <option value="PR">PR</option><option value="RJ">RJ</option>
+            <option value="RN">RN</option><option value="RO">RO</option>
+            <option value="RR">RR</option><option value="RS">RS</option>
+            <option value="SC">SC</option><option value="SE">SE</option>
+            <option value="SP">SP</option><option value="TO">TO</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mfield">
+        <label>Endereço</label>
+        <input id="cli-end" placeholder="Rua, número, bairro">
+      </div>
+
+      <div class="mfield">
+        <label>Status</label>
+        <select id="cli-status" style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
+          <option value="Novo">Novo</option>
+          <option value="Ativo">Ativo</option>
+          <option value="Negociação">Negociação</option>
+          <option value="Aguardando Retorno">Aguardando Retorno</option>
+          <option value="Inativo">Inativo</option>
+        </select>
+      </div>
+
+      <div class="mfield">
+        <label>Observação</label>
+        <input id="cli-obs" placeholder="Observação opcional">
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="document.getElementById('cli-modal').style.display='none'">Cancelar</button>
+      <button class="btn-save2" onclick="cliSalvarManual()">✓ Cadastrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VER CLIENTE -->
+<div class="modal-bg" id="cli-view-modal" style="display:none">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-head">
+      <div class="modal-head-title" id="cli-view-nome">Cliente</div>
+      <button class="modal-close" onclick="document.getElementById('cli-view-modal').style.display='none'">✕</button>
+    </div>
+    <div class="modal-body" id="cli-view-body"></div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="document.getElementById('cli-view-modal').style.display='none'">Fechar</button>
+      <button class="btn-save2" id="cli-view-edit-btn" onclick="cliEditarAtual()">✏️ Editar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 
 // ═══ AUDITORIA ════════════════════════════════════════════
@@ -1090,38 +1301,27 @@ function cliRender() {
 
 function cliTipo(tipo) {
   cliTipoAtual = tipo;
-  var btnPj = document.getElementById('cli-tipo-pj');
-  var btnPf = document.getElementById('cli-tipo-pf');
+  var btnPj   = document.getElementById('cli-tipo-pj');
+  var btnPf   = document.getElementById('cli-tipo-pf');
   var docLbl  = document.getElementById('cli-doc-label');
   var nomeLbl = document.getElementById('cli-nome-label');
   var docInp  = document.getElementById('cli-doc');
 
   if(tipo === 'pj') {
-    btnPj.style.borderWidth = '2px';
-    btnPj.style.borderColor = 'var(--blue)';
-    btnPj.style.background  = 'rgba(37,99,235,.1)';
-    btnPj.style.color       = 'var(--blue-h)';
-    btnPf.style.borderWidth = '1px';
-    btnPf.style.borderColor = 'var(--line2)';
-    btnPf.style.background  = 'none';
-    btnPf.style.color       = 'var(--txt2)';
+    if(btnPj){ btnPj.style.borderWidth='2px'; btnPj.style.borderColor='var(--blue)'; btnPj.style.background='rgba(37,99,235,.1)'; btnPj.style.color='var(--blue-h)'; }
+    if(btnPf){ btnPf.style.borderWidth='1px'; btnPf.style.borderColor='var(--line2)'; btnPf.style.background='none'; btnPf.style.color='var(--txt2)'; }
     if(docLbl)  docLbl.textContent  = 'CNPJ';
     if(nomeLbl) nomeLbl.textContent = 'Razão Social / Nome Fantasia *';
     if(docInp)  docInp.placeholder  = '00.000.000/0001-00';
   } else {
-    btnPf.style.borderWidth = '2px';
-    btnPf.style.borderColor = 'var(--blue)';
-    btnPf.style.background  = 'rgba(37,99,235,.1)';
-    btnPf.style.color       = 'var(--blue-h)';
-    btnPj.style.borderWidth = '1px';
-    btnPj.style.borderColor = 'var(--line2)';
-    btnPj.style.background  = 'none';
-    btnPj.style.color       = 'var(--txt2)';
+    if(btnPf){ btnPf.style.borderWidth='2px'; btnPf.style.borderColor='var(--blue)'; btnPf.style.background='rgba(37,99,235,.1)'; btnPf.style.color='var(--blue-h)'; }
+    if(btnPj){ btnPj.style.borderWidth='1px'; btnPj.style.borderColor='var(--line2)'; btnPj.style.background='none'; btnPj.style.color='var(--txt2)'; }
     if(docLbl)  docLbl.textContent  = 'CPF';
     if(nomeLbl) nomeLbl.textContent = 'Nome Completo *';
     if(docInp)  docInp.placeholder  = '000.000.000-00';
   }
 }
+
 
 function cliNovoManual() {
   cliTipoAtual = 'pj';
@@ -1806,214 +2006,4 @@ function usrRender() {
   var busca  = document.getElementById('usr-busca')  ? document.getElementById('usr-busca').value.toLowerCase()  : '';
   var filtro = document.getElementById('usr-filtro') ? document.getElementById('usr-filtro').value : '';
   var lista  = USR_DB.slice();
-  if(busca)  lista=lista.filter(function(u){return (u.name||'').toLowerCase().indexOf(busca)>-1||(u.user||'').indexOf(busca)>-1;});
-  if(filtro) lista=lista.filter(function(u){return u.role===filtro;});
-
-  var stats=document.getElementById('usr-stats');
-  if(stats) stats.innerHTML='<div class="usr-stat"><div class="usr-stat-val">'+USR_DB.length+'</div><div class="usr-stat-label">Total</div></div>'
-    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--green)">'+USR_DB.filter(function(u){return u.status==='active';}).length+'</div><div class="usr-stat-label">Ativos</div></div>'
-    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--red)">'+USR_DB.filter(function(u){return u.status!=='active';}).length+'</div><div class="usr-stat-label">Inativos</div></div>'
-    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--blue-h)">'+USR_DB.filter(function(u){return u.role==='rep';}).length+'</div><div class="usr-stat-label">Representantes</div></div>';
-
-  var el=document.getElementById('usr-lista');
-  if(!el) return;
-  if(!lista.length){el.innerHTML='<div class="aud-row">Nenhum usuário.</div>';return;}
-
-  window._usrLista = lista;
-  var RL={rep:'Representante',ger:'Gerente',adm:'ADM'};
-  var RC={rep:'tag-rep',ger:'tag-ger',adm:'tag-adm'};
-  var isAdm=me&&me.role==='adm';
-  var html='';
-  for(var i=0;i<lista.length;i++){
-    var u=lista[i];
-    var isMe=me&&u.user===me.user;
-    var ini=(u.name||'?').split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
-    var ativo=u.status==='active';
-    html+='<div class="usr-row">'
-      +'<div class="usr-av">'+ini+'</div>'
-      +'<div style="flex:1;min-width:0"><div class="usr-name">'+u.name+(isMe?' <span style="font-size:10px;color:var(--txt3)">(você)</span>':'')+'</div>'
-      +'<div class="usr-login">'+u.user+'</div></div>'
-      +'<span class="tag '+RC[u.role]+'">'+RL[u.role]+'</span>'
-      +'<span class="tag '+(ativo?'tag-ativo':'tag-inativo')+'">'+(ativo?'Ativo':'Inativo')+'</span>'
-      +(isAdm&&!isMe
-        ?'<div class="usr-actions">'
-          +'<button class="btn-sm" data-usr-idx="'+i+'" data-usr-action="ed">Ed</button>'
-          +'<button class="btn-sm" data-usr-idx="'+i+'" data-usr-action="tg">'+(ativo?'Inativar':'Ativar')+'</button>'
-          +'<button class="btn-sm btn-del" data-usr-idx="'+i+'" data-usr-action="ex">Del</button>'
-          +'</div>'
-        :'<div class="usr-actions"><span style="font-size:11px;color:var(--txt3)">—</span></div>')
-      +'</div>';
-  }
-  el.innerHTML = html;
-
-  var btns = el.querySelectorAll('[data-usr-action]');
-  for(var j=0;j<btns.length;j++){
-    (function(btn){
-      btn.addEventListener('click',function(ev){
-        ev.stopPropagation();
-        var idx=parseInt(btn.getAttribute('data-usr-idx'));
-        var action=btn.getAttribute('data-usr-action');
-        var ukey=(window._usrLista[idx]||{}).user;
-        if(action==='ed') usrEditarKey(ukey);
-        else if(action==='tg') usrToggleKey(ukey);
-        else if(action==='ex') usrExcluirKey(ukey);
-      });
-    })(btns[j]);
-  }
-}
-
-function usrNovo() {
-  usrEditIdx=null;
-  document.getElementById('usr-modal-title').textContent='Novo Usuário';
-  document.getElementById('um-nome').value='';
-  document.getElementById('um-user').value='';
-  document.getElementById('um-pin').value='';
-  document.getElementById('um-role').value='rep';
-  document.getElementById('um-status').value='active';
-  document.getElementById('usr-modal').style.display='flex';
-}
-
-function usrFecharModal(){ document.getElementById('usr-modal').style.display='none'; }
-
-function usrSalvar() {
-  var nome=document.getElementById('um-nome').value.trim();
-  var user=document.getElementById('um-user').value.trim().toLowerCase();
-  var pin=document.getElementById('um-pin').value.trim();
-  var role=document.getElementById('um-role').value;
-  var status=document.getElementById('um-status').value;
-  if(!nome){alert('Informe o nome.');return;}
-  if(!user){alert('Informe o usuário.');return;}
-  var dup=-1;
-  for(var i=0;i<USR_DB.length;i++){if(USR_DB[i].user===user&&i!==usrEditIdx){dup=i;break;}}
-  if(dup>-1){alert('Usuário já existe.');return;}
-  if(usrEditIdx===null){
-    if(!pin||pin.length!==6){alert('Senha deve ter 6 dígitos.');return;}
-    USR_DB.push({user:user,pin:pin,name:nome,role:role,status:status,criado:new Date().toLocaleDateString('pt-BR')});
-  } else {
-    USR_DB[usrEditIdx].name=nome; USR_DB[usrEditIdx].user=user;
-    USR_DB[usrEditIdx].role=role; USR_DB[usrEditIdx].status=status;
-    if(pin&&pin.length===6) USR_DB[usrEditIdx].pin=pin;
-  }
-  lsSet('nxr_usr',JSON.stringify(USR_DB));
-  usrFecharModal();
-  audLog(usrEditIdx===null?'cadastro':'edicao',usrEditIdx===null?'Novo usuário':'Usuário editado',nome);
-  showToast(usrEditIdx===null?'✅ Usuário '+nome+' criado!':'✅ Usuário '+nome+' atualizado!');
-  usrRender();
-  usrSalvarPlanilha();
-}
-
-function usrToggleKey(userKey) {
-  var idx=-1;
-  for(var i=0;i<USR_DB.length;i++){if(USR_DB[i].user===userKey){idx=i;break;}}
-  if(idx===-1){alert('Não encontrado.');return;}
-  var ativo=USR_DB[idx].status==='active';
-  if(!confirm((ativo?'Inativar':'Ativar')+' "'+USR_DB[idx].name+'"?')) return;
-  USR_DB[idx].status=ativo?'inactive':'active';
-  lsSet('nxr_usr',JSON.stringify(USR_DB));
-  showToast('✅ Status alterado!');
-  usrRender();
-  usrSalvarPlanilha();
-}
-
-function usrEditarKey(userKey) {
-  var idx=-1;
-  for(var i=0;i<USR_DB.length;i++){if(USR_DB[i].user===userKey){idx=i;break;}}
-  if(idx===-1){alert('Não encontrado.');return;}
-  usrEditIdx=idx;
-  var u=USR_DB[idx];
-  document.getElementById('usr-modal-title').textContent='Editar Usuário';
-  document.getElementById('um-nome').value=u.name||'';
-  document.getElementById('um-user').value=u.user||'';
-  document.getElementById('um-pin').value='';
-  document.getElementById('um-role').value=u.role||'rep';
-  document.getElementById('um-status').value=u.status||'active';
-  document.getElementById('usr-modal').style.display='flex';
-}
-
-function usrExcluirKey(userKey) {
-  var idx=-1;
-  for(var i=0;i<USR_DB.length;i++){if(USR_DB[i].user===userKey){idx=i;break;}}
-  if(idx===-1){alert('Não encontrado.');return;}
-  if(!confirm('Excluir "'+USR_DB[idx].name+'"?')) return;
-  USR_DB.splice(idx,1);
-  lsSet('nxr_usr',JSON.stringify(USR_DB));
-  showToast('✅ Usuário excluído!');
-  usrRender();
-  usrSalvarPlanilha();
-}
-
-
-function vndLimparCliente() {
-  document.getElementById('vnd-cli-nome').value = '';
-  var card = document.getElementById('vnd-cli-card');
-  if(card) card.style.display = 'none';
-  var busca = document.getElementById('vnd-busca-inp');
-  if(busca){ busca.value=''; busca.style.display=''; busca.focus(); }
-  var drop = document.getElementById('vnd-lista-drop');
-  if(drop) drop.style.display = 'none';
-}
-
-</script>
-
-<!-- MODAL RETORNO -->
-<div class="modal-bg" id="ret-modal" style="display:none">
-  <div class="modal-box">
-    <div class="modal-head">
-      <div class="modal-head-title">🔔 Agendar Retorno</div>
-      <button class="modal-close" onclick="document.getElementById('ret-modal').style.display='none'">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="mfield">
-        <label>Cliente *</label>
-        <select id="ret-cli" style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none;cursor:pointer">
-          <option value="">-- Selecione um cliente --</option>
-        </select>
-      </div>
-      <div class="mfield" id="ret-cli-manual-div" style="display:none">
-        <label>Nome do Cliente (manual)</label>
-        <input id="ret-cli-manual" placeholder="Digite o nome do cliente">
-      </div>
-      <div class="mfield"><label>Telefone</label><input id="ret-tel" placeholder="(98) 99999-9999" type="tel"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="mfield"><label>Data *</label><input id="ret-dat" type="date"></div>
-        <div class="mfield"><label>Hora</label><input id="ret-hor" type="time" value="09:00"></div>
-      </div>
-      <div class="mfield"><label>Motivo</label>
-        <select id="ret-mot" style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
-          <option>Retorno de proposta</option>
-          <option>Apresentação de produto</option>
-          <option>Cobrança de parcela</option>
-          <option>Pós-venda</option>
-          <option>Outro</option>
-        </select>
-      </div>
-      <div class="mfield"><label>Observação</label><input id="ret-obs" placeholder="Observação opcional"></div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn-cancel" onclick="document.getElementById('ret-modal').style.display='none'">Cancelar</button>
-      <button class="btn-save2" onclick="retSalvar()">✓ Agendar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL VENDA -->
-<div class="modal-bg" id="vnd-modal" style="display:none">
-  <div class="modal-box" style="max-width:480px">
-    <div class="modal-head">
-      <div class="modal-head-title">💰 Registrar Venda</div>
-      <button class="modal-close" onclick="document.getElementById('vnd-modal').style.display='none'">✕</button>
-    </div>
-    <div class="modal-body">
-
-      <div class="mfield">
-        <label>Cliente da Carteira *</label>
-        <select id="vnd-cli-sel"
-          style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;
-          padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none;cursor:pointer">
-          <option value="">-- Selecione um cliente --</option>
-        </select>
-      </div>
-
-      <div class="mfield">
-        <label>Valor (R$) *</label>
-        <input
+  if(busca)  lista=lista.filter(function(u){return (u.name||'').toLowerCase().indexOf(busca)>-1||(u.user||'').indexOf(busca)>-1;})
