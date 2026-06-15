@@ -183,6 +183,8 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 .sc.pointer{cursor:pointer;transition:border-color .2s}
 .sc.pointer:hover{border-color:var(--blue)}
 @media(max-width:650px){.home-left,.moto-col,.sidebar{display:none!important}.main{padding:16px}}
+.vnd-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--line);}
+.vnd-item:hover{background:var(--s3);}
 </style>
 </head>
 <body>
@@ -910,32 +912,122 @@ function vndRender() {
   for(var i=lista.length-1;i>=0;i--){
     var v = lista[i];
     html += '<div class="vnd-row">'
-      +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">'+v.cliente+'</div>'
-      +'<div style="font-size:11px;color:var(--txt2)">'+v.data+(v.pgto?' · '+v.pgto:'')+'</div></div>'
-      +'<span style="font-size:15px;font-weight:700;color:var(--green)">R$ '+Number(v.valor||0).toLocaleString('pt-BR')+'</span>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:13px;font-weight:600">'+v.cliente+'</div>'
+      +'<div style="font-size:11px;color:var(--txt2)">'+v.data+(v.pgto?' · '+v.pgto:'')+'</div>'
+      +(me&&me.role!=='rep'?'<div style="font-size:10px;color:var(--txt3)">'+(v.representante||'')+'</div>':'')
+      +'</div>'
+      +'<span style="font-size:15px;font-weight:700;color:var(--green)">R$ '+Number(v.valor||0).toLocaleString('pt-BR',{minimumFractionDigits:2})+'</span>'
       +'</div>';
   }
   el.innerHTML = html;
 }
 
 function vndNova() {
-  document.getElementById('vnd-cli').value = '';
-  document.getElementById('vnd-val').value = '';
-  document.getElementById('vnd-obs').value = '';
+  // Limpar campos
+  document.getElementById('vnd-cli-busca').value = '';
+  document.getElementById('vnd-cli-nome').value  = '';
+  document.getElementById('vnd-val').value  = '';
+  document.getElementById('vnd-obs').value  = '';
+  var sel = document.getElementById('vnd-cli-sel');
+  if(sel) sel.style.display = 'none';
+  var lst = document.getElementById('vnd-cli-lista');
+  if(lst) lst.style.display = 'none';
+  document.getElementById('vnd-cli-busca').style.borderColor = '';
+  document.getElementById('vnd-val').style.borderColor = '';
   document.getElementById('vnd-modal').style.display = 'flex';
-  setTimeout(function(){ document.getElementById('vnd-cli').focus(); }, 100);
+  setTimeout(function(){ document.getElementById('vnd-cli-busca').focus(); }, 150);
+}
+
+function vndBuscarCliente() {
+  var busca = (document.getElementById('vnd-cli-busca').value || '').toLowerCase();
+  var lista = document.getElementById('vnd-cli-lista');
+  if(!lista) return;
+
+  if(busca.length < 1) { lista.style.display = 'none'; return; }
+
+  // Filtrar carteira do representante
+  var carteira = me && me.role === 'rep'
+    ? CLI_DB.filter(function(c){ return c.representante === me.name; })
+    : CLI_DB;
+
+  var filtrado = carteira.filter(function(c){
+    return (c.nome||'').toLowerCase().indexOf(busca) > -1
+      || (c.cnpj||'').indexOf(busca) > -1
+      || (c.cpf||'').indexOf(busca) > -1;
+  });
+
+  if(!filtrado.length) {
+    lista.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:var(--txt2)">Nenhum cliente encontrado na carteira.</div>';
+    lista.style.display = 'block';
+    return;
+  }
+
+  var html = '';
+  for(var i=0; i<Math.min(filtrado.length, 8); i++) {
+    var c = filtrado[i];
+    var doc = c.cnpj ? 'CNPJ: '+c.cnpj : (c.cpf ? 'CPF: '+c.cpf : '');
+    var nomeEsc = (c.nome||'').replace(/"/g,'&quot;');
+    var docEsc  = (doc||'').replace(/"/g,'&quot;');
+    html += '<div class="vnd-item" onclick="vndSelecionarCliente(\"'+nomeEsc+'\",\"'+docEsc+'\")">'
+      +'<div style="font-size:13px;font-weight:600;color:var(--txt)">'+c.nome+'</div>'
+      +'<div style="font-size:10px;color:var(--txt3)">'+(doc||c.cidade||'')+(c.uf?' - '+c.uf:'')+'</div>'
+      +'</div>';
+  }
+  lista.innerHTML = html;
+  lista.style.display = 'block';
+}
+
+function vndSelecionarCliente(nome, doc) {
+  document.getElementById('vnd-cli-nome').value  = nome;
+  document.getElementById('vnd-cli-busca').value = '';
+  document.getElementById('vnd-cli-busca').style.display = 'none';
+  var lista = document.getElementById('vnd-cli-lista');
+  if(lista) lista.style.display = 'none';
+  var sel = document.getElementById('vnd-cli-sel');
+  var selNome = document.getElementById('vnd-cli-sel-nome');
+  var selDoc  = document.getElementById('vnd-cli-sel-doc');
+  if(sel)     { sel.style.display = 'flex'; }
+  if(selNome) selNome.textContent = nome;
+  if(selDoc)  selDoc.textContent  = doc;
+  setTimeout(function(){ document.getElementById('vnd-val').focus(); }, 100);
+}
+
+function vndLimparCliente() {
+  document.getElementById('vnd-cli-nome').value = '';
+  var busca = document.getElementById('vnd-cli-busca');
+  if(busca) { busca.value = ''; busca.style.display = ''; busca.focus(); }
+  var sel = document.getElementById('vnd-cli-sel');
+  if(sel) sel.style.display = 'none';
 }
 
 function vndSalvar() {
-  var cli  = document.getElementById('vnd-cli').value.trim();
+  var cli  = document.getElementById('vnd-cli-nome').value.trim();
   var val  = document.getElementById('vnd-val').value;
   var pgto = document.getElementById('vnd-pgto').value;
   var obs  = document.getElementById('vnd-obs').value.trim();
-  if(!cli){ document.getElementById('vnd-cli').style.borderColor='var(--red)'; return; }
-  if(!val||Number(val)<=0){ document.getElementById('vnd-val').style.borderColor='var(--red)'; return; }
-  VND_DB.push({cliente:cli,representante:me?me.name:'',data:new Date().toLocaleDateString('pt-BR'),valor:Number(val),pgto:pgto,obs:obs});
+
+  if(!cli) {
+    document.getElementById('vnd-cli-busca').style.borderColor = 'var(--red)';
+    document.getElementById('vnd-cli-busca').focus();
+    return;
+  }
+  if(!val || Number(val) <= 0) {
+    document.getElementById('vnd-val').style.borderColor = 'var(--red)';
+    document.getElementById('vnd-val').focus();
+    return;
+  }
+
+  VND_DB.push({
+    cliente: cli,
+    representante: me ? me.name : '',
+    data: new Date().toLocaleDateString('pt-BR'),
+    valor: Number(val),
+    pgto:  pgto,
+    obs:   obs
+  });
   lsSet('nxr_vnd', JSON.stringify(VND_DB));
-  audLog('venda','Venda registrada',cli);
+  audLog('venda', 'Venda registrada', cli + ' · R$ ' + Number(val).toLocaleString('pt-BR'));
   document.getElementById('vnd-modal').style.display = 'none';
   vndRender();
 }
@@ -1307,15 +1399,45 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <!-- MODAL VENDA -->
 <div class="modal-bg" id="vnd-modal" style="display:none">
-  <div class="modal-box">
+  <div class="modal-box" style="max-width:480px">
     <div class="modal-head">
       <div class="modal-head-title">💰 Registrar Venda</div>
       <button class="modal-close" onclick="document.getElementById('vnd-modal').style.display='none'">✕</button>
     </div>
     <div class="modal-body">
-      <div class="mfield"><label>Cliente *</label><input id="vnd-cli" placeholder="Nome do cliente"></div>
-      <div class="mfield"><label>Valor (R$) *</label><input id="vnd-val" placeholder="0,00" type="number" step="0.01" min="0"></div>
-      <div class="mfield"><label>Forma de Pagamento</label>
+
+      <!-- BUSCA DE CLIENTE DA CARTEIRA -->
+      <div class="mfield">
+        <label>Cliente da Carteira *</label>
+        <div style="position:relative">
+          <input id="vnd-cli-busca" placeholder="🔍 Buscar cliente da carteira..." autocomplete="off"
+            oninput="vndBuscarCliente()"
+            style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
+          <div id="vnd-cli-lista" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:999;
+            background:var(--s2);border:1px solid var(--line);border-radius:9px;margin-top:4px;
+            max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.4)"></div>
+        </div>
+        <!-- Cliente selecionado -->
+        <div id="vnd-cli-sel" style="display:none;margin-top:8px;padding:10px 13px;
+          background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.2);border-radius:9px;
+          display:none;align-items:center;justify-content:space-between;gap:8px">
+          <div>
+            <div id="vnd-cli-sel-nome" style="font-size:13px;font-weight:600;color:var(--txt)"></div>
+            <div id="vnd-cli-sel-doc" style="font-size:10px;color:var(--txt3)"></div>
+          </div>
+          <button onclick="vndLimparCliente()" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:16px">✕</button>
+        </div>
+        <input type="hidden" id="vnd-cli-nome">
+      </div>
+
+      <div class="mfield">
+        <label>Valor (R$) *</label>
+        <input id="vnd-val" placeholder="0,00" type="number" step="0.01" min="0"
+          style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
+      </div>
+
+      <div class="mfield">
+        <label>Forma de Pagamento</label>
         <select id="vnd-pgto" style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
           <option>Boleto</option>
           <option>Cartão de Crédito</option>
@@ -1323,13 +1445,20 @@ document.addEventListener('DOMContentLoaded', function(){
           <option>PIX</option>
           <option>Dinheiro</option>
           <option>Financiamento</option>
+          <option>Consórcio</option>
         </select>
       </div>
-      <div class="mfield"><label>Observação</label><input id="vnd-obs" placeholder="Observação opcional"></div>
+
+      <div class="mfield">
+        <label>Observação</label>
+        <input id="vnd-obs" placeholder="Observação opcional"
+          style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
+      </div>
+
     </div>
     <div class="modal-foot">
       <button class="btn-cancel" onclick="document.getElementById('vnd-modal').style.display='none'">Cancelar</button>
-      <button class="btn-save2" onclick="vndSalvar()">✓ Registrar</button>
+      <button class="btn-save2" onclick="vndSalvar()">✓ Registrar Venda</button>
     </div>
   </div>
 </div>
