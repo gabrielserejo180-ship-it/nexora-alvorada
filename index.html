@@ -424,9 +424,19 @@ function goLogin(p) {
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(d.ok && d.data && d.data.length > 0){
-        USR_DB = d.data;
+        // Normalizar dados da planilha
+        USR_DB = d.data.map(function(u){
+          var st = String(u.status||'').toLowerCase().trim();
+          return {
+            user:   String(u.user||'').trim(),
+            pin:    String(u.pin||'').trim(),
+            name:   String(u.name||'').trim(),
+            role:   String(u.role||'rep').toLowerCase().trim(),
+            status: (st==='active'||st==='ativo'||st==='true'||st==='1') ? 'active' : 'inactive',
+            criado: String(u.criado||'').trim(),
+          };
+        });
         lsSet('nxr_usr', JSON.stringify(USR_DB));
-        console.log('Usuários carregados da planilha:', USR_DB.length);
       }
     })
     .catch(function(){ /* usar cache local */ });
@@ -475,7 +485,17 @@ function doLogin() {
 }
 
 function doLoginVerificar(user, pin, alertEl) {
-  var todos = USR_DB.length > 0 ? USR_DB : USERS_BASE;
+  // Normalizar status de todos os usuários antes de verificar
+  var todos = (USR_DB.length > 0 ? USR_DB : USERS_BASE).map(function(u){
+    var st = String(u.status||'').toLowerCase().trim();
+    return {
+      user:   String(u.user||'').trim(),
+      pin:    u.pin,
+      name:   String(u.name||'').trim(),
+      role:   String(u.role||'').toLowerCase().trim(),
+      status: (st==='active'||st==='ativo'||st==='true'||st==='1') ? 'active' : 'inactive',
+    };
+  });
   var found = null;
 
   // DEBUG: mostrar o que está sendo comparado
