@@ -78,7 +78,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 .app-shell{display:none;min-height:100vh;flex-direction:column}
 .app-shell.on{display:flex}
 .topbar{height:56px;background:var(--s1);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 20px;gap:12px;position:sticky;top:0;z-index:100}
-.tb-logo{font-size:13px;font-weight:700;color:var(--blue-h);letter-spacing:-.3px}
+.tb-logo{display:flex;align-items:center;gap:6px;color:var(--blue-h);flex-shrink:0}
 .tb-divider{width:1px;height:20px;background:var(--line2)}
 .tb-breadcrumb{font-size:13px;font-weight:600;color:var(--txt);flex:1}
 .tb-user{font-size:11px;color:var(--txt2);background:var(--s2);border:1px solid var(--line2);border-radius:99px;padding:5px 13px;font-family:'DM Mono',monospace}
@@ -306,10 +306,21 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 
 <div class="app-shell" id="app-shell">
   <div class="topbar">
-    <div class="tb-logo">⬡ Nexora</div>
+    <div class="tb-logo">
+      <span style="font-size:16px">⬡</span>
+      <span style="font-weight:800;letter-spacing:-.5px">Nexora</span>
+      <span style="color:var(--txt3);font-weight:400;font-size:11px">Connect</span>
+    </div>
     <div class="tb-divider"></div>
     <div class="tb-breadcrumb" id="tb-breadcrumb">Dashboard</div>
-    <div class="tb-user" id="tb-user">—</div>
+    <div id="tb-user-info" style="display:flex;align-items:center;gap:8px">
+      <div id="tb-avatar" style="width:30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0"></div>
+      <div style="text-align:right">
+        <div id="tb-name" style="font-size:12px;font-weight:600;color:var(--txt);line-height:1.2"></div>
+        <div id="tb-role" style="font-size:10px;color:var(--txt3);line-height:1.2"></div>
+      </div>
+    </div>
+    <div class="tb-divider"></div>
     <button class="tb-out" onclick="goHome()">⎋ Sair</button>
   </div>
   <div class="app-body">
@@ -450,7 +461,16 @@ function launchApp() {
   document.querySelectorAll('.screen').forEach(function(s){ s.style.display='none'; });
   var shell = document.getElementById('app-shell');
   shell.className = 'app-shell on';
-  document.getElementById('tb-user').textContent = me.name + ' · ' + {rep:'Representante',ger:'Gerente',adm:'ADM'}[me.role];
+  var roleLabels = {rep:'Representante',ger:'Gerente',adm:'Administrador'};
+  var ini = me.name.split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
+  var av = document.getElementById('tb-avatar');
+  var tnm = document.getElementById('tb-name');
+  var trl = document.getElementById('tb-role');
+  if(av) av.textContent = ini;
+  if(tnm) tnm.textContent = me.name;
+  if(trl) trl.textContent = roleLabels[me.role]||me.role;
+  var roleColors = {rep:'#10B981',ger:'#3B82F6',adm:'#818CF8'};
+  if(av) av.style.background = roleColors[me.role]||'var(--blue)';
   var bc=document.getElementById('tb-breadcrumb'); if(bc) bc.textContent='Dashboard';
   renderNav();
   navigate('dashboard');
@@ -813,14 +833,34 @@ function retRender() {
 }
 
 function retNovo() {
-  var cli = prompt('Nome do cliente:'); if(!cli) return;
-  var dat = prompt('Data (ex: 15/06/2026):',new Date().toLocaleDateString('pt-BR')); if(!dat) return;
-  var hor = prompt('Hora (ex: 09:00):','09:00'); if(hor===null) return;
-  var mot = prompt('Motivo:','Retorno de proposta'); if(mot===null) return;
-  var tel = prompt('Telefone (opcional):','');
-  RET_DB.push({cliente:cli,representante:me?me.name:'',data:dat,hora:hor,motivo:mot,telefone:tel||'',status:'pendente'});
+  // Data de hoje
+  var hoje = new Date();
+  var dd = String(hoje.getDate()).padStart(2,'0');
+  var mm = String(hoje.getMonth()+1).padStart(2,'0');
+  var yyyy = hoje.getFullYear();
+  document.getElementById('ret-dat').value = yyyy+'-'+mm+'-'+dd;
+  document.getElementById('ret-cli').value = '';
+  document.getElementById('ret-tel').value = '';
+  document.getElementById('ret-hor').value = '09:00';
+  document.getElementById('ret-obs').value = '';
+  document.getElementById('ret-modal').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('ret-cli').focus(); }, 100);
+}
+
+function retSalvar() {
+  var cli = document.getElementById('ret-cli').value.trim();
+  var tel = document.getElementById('ret-tel').value.trim();
+  var dat = document.getElementById('ret-dat').value;
+  var hor = document.getElementById('ret-hor').value;
+  var mot = document.getElementById('ret-mot').value;
+  var obs = document.getElementById('ret-obs').value.trim();
+  if(!cli){ document.getElementById('ret-cli').style.borderColor='var(--red)'; return; }
+  // Converter data para pt-BR
+  var dataBR = dat ? dat.split('-').reverse().join('/') : '';
+  RET_DB.push({cliente:cli,representante:me?me.name:'',data:dataBR,hora:hor,motivo:mot,telefone:tel,obs:obs,status:'pendente'});
   lsSet('nxr_ret', JSON.stringify(RET_DB));
   audLog('retorno','Retorno agendado',cli);
+  document.getElementById('ret-modal').style.display = 'none';
   retRender();
 }
 
@@ -850,12 +890,24 @@ function vndRender() {
 }
 
 function vndNova() {
-  var cli = prompt('Nome do cliente:'); if(!cli) return;
-  var val = prompt('Valor (R$):'); if(!val) return;
-  var pgto = prompt('Forma de pagamento:','Boleto'); if(pgto===null) return;
-  VND_DB.push({cliente:cli,representante:me?me.name:'',data:new Date().toLocaleDateString('pt-BR'),valor:Number(val.replace(',','.')),pgto:pgto});
+  document.getElementById('vnd-cli').value = '';
+  document.getElementById('vnd-val').value = '';
+  document.getElementById('vnd-obs').value = '';
+  document.getElementById('vnd-modal').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('vnd-cli').focus(); }, 100);
+}
+
+function vndSalvar() {
+  var cli  = document.getElementById('vnd-cli').value.trim();
+  var val  = document.getElementById('vnd-val').value;
+  var pgto = document.getElementById('vnd-pgto').value;
+  var obs  = document.getElementById('vnd-obs').value.trim();
+  if(!cli){ document.getElementById('vnd-cli').style.borderColor='var(--red)'; return; }
+  if(!val||Number(val)<=0){ document.getElementById('vnd-val').style.borderColor='var(--red)'; return; }
+  VND_DB.push({cliente:cli,representante:me?me.name:'',data:new Date().toLocaleDateString('pt-BR'),valor:Number(val),pgto:pgto,obs:obs});
   lsSet('nxr_vnd', JSON.stringify(VND_DB));
   audLog('venda','Venda registrada',cli);
+  document.getElementById('vnd-modal').style.display = 'none';
   vndRender();
 }
 
@@ -1097,5 +1149,66 @@ document.addEventListener('DOMContentLoaded', function(){
   showScreen('screen-home');
 });
 </script>
+
+<!-- MODAL RETORNO -->
+<div class="modal-bg" id="ret-modal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-head-title">🔔 Agendar Retorno</div>
+      <button class="modal-close" onclick="document.getElementById('ret-modal').style.display='none'">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="mfield"><label>Cliente *</label><input id="ret-cli" placeholder="Nome do cliente"></div>
+      <div class="mfield"><label>Telefone</label><input id="ret-tel" placeholder="(98) 99999-9999" type="tel"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="mfield"><label>Data *</label><input id="ret-dat" type="date"></div>
+        <div class="mfield"><label>Hora</label><input id="ret-hor" type="time" value="09:00"></div>
+      </div>
+      <div class="mfield"><label>Motivo</label>
+        <select id="ret-mot" style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
+          <option>Retorno de proposta</option>
+          <option>Apresentação de produto</option>
+          <option>Cobrança de parcela</option>
+          <option>Pós-venda</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div class="mfield"><label>Observação</label><input id="ret-obs" placeholder="Observação opcional"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="document.getElementById('ret-modal').style.display='none'">Cancelar</button>
+      <button class="btn-save2" onclick="retSalvar()">✓ Agendar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VENDA -->
+<div class="modal-bg" id="vnd-modal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-head-title">💰 Registrar Venda</div>
+      <button class="modal-close" onclick="document.getElementById('vnd-modal').style.display='none'">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="mfield"><label>Cliente *</label><input id="vnd-cli" placeholder="Nome do cliente"></div>
+      <div class="mfield"><label>Valor (R$) *</label><input id="vnd-val" placeholder="0,00" type="number" step="0.01" min="0"></div>
+      <div class="mfield"><label>Forma de Pagamento</label>
+        <select id="vnd-pgto" style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
+          <option>Boleto</option>
+          <option>Cartão de Crédito</option>
+          <option>Cartão de Débito</option>
+          <option>PIX</option>
+          <option>Dinheiro</option>
+          <option>Financiamento</option>
+        </select>
+      </div>
+      <div class="mfield"><label>Observação</label><input id="vnd-obs" placeholder="Observação opcional"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="document.getElementById('vnd-modal').style.display='none'">Cancelar</button>
+      <button class="btn-save2" onclick="vndSalvar()">✓ Registrar</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
