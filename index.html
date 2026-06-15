@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nexora Connect</title>
+<title>Nexora Connect v1.7</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 :root{
@@ -194,7 +194,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
     <!-- LEFT -->
     <div class="home-left">
       <div>
-        <div class="brand-v">v1.6 — Alvorada Motocicletas</div>
+        <div class="brand-v">v1.7 — Alvorada Motocicletas</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestão comercial centralizada</div>
@@ -425,10 +425,11 @@ function audRender() {
 // Capturar erros JS
 window.onerror = function(msg, src, line, col, err) {
   var d = document.createElement('div');
-  d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:8px 12px;z-index:99999;font-size:12px;font-family:monospace;cursor:pointer';
-  d.textContent = 'JS ERRO linha '+line+': '+msg+' (clique para fechar)';
-  d.onclick = function(){ d.remove(); };
+  d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:10px 14px;z-index:99999;font-size:13px;font-family:monospace;cursor:pointer;font-weight:bold';
+  d.textContent = '⚠️ ERRO linha '+line+': '+msg+' — clique para fechar';
+  d.onclick = function(){ document.body.removeChild(d); };
   document.body.appendChild(d);
+  return false;
 };
 
 // ═══ CONFIGURAÇÃO ═══════════════════════════════════════
@@ -799,7 +800,7 @@ function buildPage(id) {
           +'<input class="usr-search" id="usr-busca" placeholder="🔍 Buscar..." oninput="usrRender()">'
           +'<select class="usr-sel" id="usr-filtro" onchange="usrRender()"><option value="">Todos</option><option value="rep">Rep.</option><option value="ger">Gerente</option><option value="adm">ADM</option></select>'
           +'<button class="btn-new" onclick="usrNovo()">+ Novo</button>'
-          +'<button class="btn-save" onclick="usrSalvarPlanilha()">☁️ Salvar</button>'
+          +'<button class="btn-save" id="usr-salvar-btn" onclick="usrSalvarPlanilha()">☁️ Salvar</button>'
           +'</div>'
           +'<div class="usr-stats" id="usr-stats"></div>'
           +'<div class="usr-table" id="usr-lista"></div>'};
@@ -1431,7 +1432,6 @@ function cliNovoManual() {
 }
 
 function cliSalvarManual() {
-  console.log("cliSalvarManual chamada");
   var nome  = document.getElementById('cli-nome')  ? document.getElementById('cli-nome').value.trim()  : '';
   var doc   = document.getElementById('cli-doc')   ? document.getElementById('cli-doc').value.trim()   : '';
   var tel   = document.getElementById('cli-tel')   ? document.getElementById('cli-tel').value.trim()   : '';
@@ -1648,8 +1648,7 @@ function cfgTesteSalvar() {
 // ═══ FUNÇÕES QUE ESTAVAM FALTANDO ════════════════════════
 
 function usrSalvarPlanilha() {
-  var btn = document.querySelector('.btn-save');
-  if(btn){ btn.textContent='⏳...'; btn.disabled=true; }
+  var btn = document.getElementById('usr-salvar-btn');
 
   var ordem = {adm:0,ger:1,rep:2};
   var lista = USR_DB.slice().sort(function(a,b){
@@ -1659,7 +1658,7 @@ function usrSalvarPlanilha() {
   var i = 0;
   function next(){
     if(i>=lista.length){
-      if(btn){btn.textContent='✅ Salvo!';btn.disabled=false;setTimeout(function(){btn.textContent='☁️ Salvar';},3000);}
+      if(btn){btn.textContent='✅ Salvo!';setTimeout(function(){btn.textContent='☁️ Salvar';},3000);}
       showToast('✅ Usuários salvos na planilha!');
       return;
     }
@@ -1667,14 +1666,14 @@ function usrSalvarPlanilha() {
     fetch(APPS_URL+'?action=inserirLinha&sheet=Usuarios&row='+encodeURIComponent(JSON.stringify(u)))
       .then(function(){next();})
       .catch(function(){
-        if(btn){btn.textContent='❌ Falhou';btn.disabled=false;setTimeout(function(){btn.textContent='☁️ Salvar';},3000);}
+        if(btn){btn.textContent='❌ Falhou';setTimeout(function(){btn.textContent='☁️ Salvar';},3000);}
       });
   }
 
   fetch(APPS_URL+'?action=limpar&sheet=Usuarios')
     .then(function(){next();})
     .catch(function(){
-      if(btn){btn.textContent='❌ Sem conexão';btn.disabled=false;setTimeout(function(){btn.textContent='☁️ Salvar';},3000);}
+      if(btn){btn.textContent='❌ Sem conexão';setTimeout(function(){btn.textContent='☁️ Salvar';},3000);}
     });
 }
 
@@ -1749,6 +1748,84 @@ function vndSelecionarIdx(i) {
 
   var val=document.getElementById('vnd-val');
   if(val) setTimeout(function(){val.focus();},100);
+}
+
+
+// ═══ VER / EDITAR / EXCLUIR CLIENTE ══════════════════════
+var _cliAtualIdx = -1;
+
+function cliVerIdx(idx) {
+  _cliAtualIdx = idx;
+  var carteira = (me && me.role==='rep')
+    ? CLI_DB.filter(function(c){ return c.representante===me.name; })
+    : CLI_DB;
+  var c = carteira[idx];
+  if(!c) return;
+
+  // Encontrar índice real no CLI_DB
+  _cliAtualIdx = CLI_DB.indexOf(c);
+
+  document.getElementById('cli-view-nome').textContent = c.nome;
+
+  var doc = c.cnpj ? 'CNPJ: '+c.cnpj : (c.cpf?'CPF: '+c.cpf:'—');
+  var tel = c.telefne || c.telefone || '—';
+
+  document.getElementById('cli-view-body').innerHTML =
+    '<div style="display:grid;gap:12px">'
+    +'<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Documento</div><div style="font-size:14px">'+doc+'</div></div>'
+    +'<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Telefone</div>'
+    +'<div style="display:flex;gap:8px;align-items:center"><span style="font-size:14px">'+tel+'</span>'
+    +(tel!=='—'?'<a href="https://wa.me/55'+tel.replace(/\D/g,'')+'" target="_blank" class="link-btn link-wa">💬 WhatsApp</a>':'')
+    +'</div></div>'
+    +'<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Cidade / UF</div><div style="font-size:14px">'+(c.cidade||'—')+(c.uf?' — '+c.uf:'')+'</div></div>'
+    +(c.email?'<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">E-mail</div><div style="font-size:14px">'+c.email+'</div></div>':'')
+    +(c.endereco?'<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Endereço</div><div style="font-size:14px">'+c.endereco+'</div></div>':'')
+    +'<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Status</div><div style="font-size:14px">'+( c.status||'Novo')+'</div></div>'
+    +'<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Representante</div><div style="font-size:14px">'+(c.representante||'—')+'</div></div>'
+    +(c.obs?'<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Observação</div><div style="font-size:14px">'+c.obs+'</div></div>':'')
+    +'<div style="display:flex;gap:8px;padding-top:4px">'
+    +'<button onclick="cliExcluirAtual()" style="flex:1;height:36px;background:none;border:1px solid var(--red);color:var(--red);border-radius:9px;font-size:13px;cursor:pointer;font-family:var(--ff)">🗑️ Excluir</button>'
+    +'</div>'
+    +'</div>';
+
+  document.getElementById('cli-view-modal').style.display = 'flex';
+}
+
+function cliEditarAtual() {
+  if(_cliAtualIdx < 0) return;
+  var c = CLI_DB[_cliAtualIdx];
+  if(!c) return;
+  document.getElementById('cli-view-modal').style.display = 'none';
+  // Abrir modal de cadastro com dados preenchidos
+  cliTipoAtual = c.tipo || (c.cnpj ? 'pj' : 'pf');
+  cliTipo(cliTipoAtual);
+  document.getElementById('cli-doc').value   = c.cnpj || c.cpf || '';
+  document.getElementById('cli-nome').value  = c.nome || '';
+  document.getElementById('cli-tel').value   = c.telefne || c.telefone || '';
+  document.getElementById('cli-email').value = c.email || '';
+  document.getElementById('cli-cid').value   = c.cidade || '';
+  document.getElementById('cli-end').value   = c.endereco || '';
+  document.getElementById('cli-obs').value   = c.obs || '';
+  document.getElementById('cli-status').value= c.status || 'Novo';
+  var ufEl = document.getElementById('cli-uf');
+  if(ufEl) ufEl.value = c.uf || 'MA';
+  // Salvar vai atualizar em vez de criar novo
+  document.getElementById('cli-modal').style.display = 'flex';
+  // Marcar índice para edição
+  window._cliEditIdx = _cliAtualIdx;
+}
+
+function cliExcluirAtual() {
+  if(_cliAtualIdx < 0) return;
+  var c = CLI_DB[_cliAtualIdx];
+  if(!c) return;
+  if(!confirm('Excluir "'+c.nome+'"? Esta ação não pode ser desfeita.')) return;
+  CLI_DB.splice(_cliAtualIdx, 1);
+  lsSet('nxr_cli', JSON.stringify(CLI_DB));
+  audLog('exclusao','Cliente excluído',c.nome);
+  showToast('✅ Cliente excluído!');
+  document.getElementById('cli-view-modal').style.display = 'none';
+  cliRender();
 }
 
 </script>
@@ -1948,5 +2025,21 @@ function vndSelecionarIdx(i) {
     </div>
   </div>
 </div>
+
+<!-- MODAL VER CLIENTE -->
+<div class="modal-bg" id="cli-view-modal" style="display:none">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-head">
+      <div class="modal-head-title" id="cli-view-nome">Cliente</div>
+      <button class="modal-close" onclick="document.getElementById('cli-view-modal').style.display='none'">✕</button>
+    </div>
+    <div class="modal-body" id="cli-view-body"></div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="document.getElementById('cli-view-modal').style.display='none'">Fechar</button>
+      <button class="btn-save2" id="cli-view-edit-btn" onclick="cliEditarAtual()">✏️ Editar</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
