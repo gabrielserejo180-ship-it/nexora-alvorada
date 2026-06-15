@@ -1526,6 +1526,113 @@ function cfgTesteSalvar() {
     });
 }
 
+
+// ═══ FUNÇÕES QUE ESTAVAM FALTANDO ════════════════════════
+
+function usrSalvarPlanilha() {
+  var btn = document.querySelector('.btn-save');
+  if(btn){ btn.textContent='⏳...'; btn.disabled=true; }
+
+  var ordem = {adm:0,ger:1,rep:2};
+  var lista = USR_DB.slice().sort(function(a,b){
+    return (ordem[a.role]||9)-(ordem[b.role]||9) || (a.name||'').localeCompare(b.name||'');
+  });
+
+  var i = 0;
+  function next(){
+    if(i>=lista.length){
+      if(btn){btn.textContent='✅ Salvo!';btn.disabled=false;setTimeout(function(){btn.textContent='☁️ Salvar';},3000);}
+      showToast('✅ Usuários salvos na planilha!');
+      return;
+    }
+    var u=lista[i]; i++;
+    fetch(APPS_URL+'?action=inserirLinha&sheet=Usuarios&row='+encodeURIComponent(JSON.stringify(u)))
+      .then(function(){next();})
+      .catch(function(){
+        if(btn){btn.textContent='❌ Falhou';btn.disabled=false;setTimeout(function(){btn.textContent='☁️ Salvar';},3000);}
+      });
+  }
+
+  fetch(APPS_URL+'?action=limpar&sheet=Usuarios')
+    .then(function(){next();})
+    .catch(function(){
+      if(btn){btn.textContent='❌ Sem conexão';btn.disabled=false;setTimeout(function(){btn.textContent='☁️ Salvar';},3000);}
+    });
+}
+
+function vndFiltrar() {
+  var inp = document.getElementById('vnd-busca-inp');
+  var busca = inp ? inp.value.toLowerCase() : '';
+  var drop = document.getElementById('vnd-lista-drop');
+  if(!drop) return;
+  if(!busca){ drop.style.display='none'; return; }
+
+  var carteira = (me&&me.role==='rep')
+    ? CLI_DB.filter(function(c){return c.representante===me.name;})
+    : CLI_DB;
+
+  window._vndClientes = carteira.filter(function(c){
+    return (c.nome||'').toLowerCase().indexOf(busca)>-1
+      ||(c.cnpj||'').indexOf(busca)>-1
+      ||(c.cpf||'').indexOf(busca)>-1;
+  }).slice(0,10);
+
+  if(!window._vndClientes.length){
+    drop.innerHTML='<div style="padding:12px;font-size:12px;color:var(--txt2)">Nenhum cliente encontrado.</div>';
+    drop.style.display='block';
+    return;
+  }
+
+  var html='';
+  for(var i=0;i<window._vndClientes.length;i++){
+    var c=window._vndClientes[i];
+    var doc=c.cnpj?'CNPJ: '+c.cnpj:(c.cpf?'CPF: '+c.cpf:'');
+    html+='<div class="vnd-item" data-i="'+i+'">'
+      +'<div style="font-size:13px;font-weight:600">'+c.nome+'</div>'
+      +'<div style="font-size:10px;color:var(--txt3)">'+(doc||c.cidade||'')+'</div>'
+      +'</div>';
+  }
+  drop.innerHTML=html;
+  drop.style.display='block';
+
+  var items=drop.querySelectorAll('.vnd-item');
+  for(var j=0;j<items.length;j++){
+    (function(el){
+      el.addEventListener('click',function(){
+        var idx=parseInt(el.getAttribute('data-i'));
+        vndSelecionarIdx(idx);
+      });
+    })(items[j]);
+  }
+}
+
+function vndBuscarCliente() { vndFiltrar(); }
+
+function vndSelecionarIdx(i) {
+  var c = window._vndClientes && window._vndClientes[i];
+  if(!c) return;
+  var doc=c.cnpj?'CNPJ: '+c.cnpj:(c.cpf?'CPF: '+c.cpf:'');
+
+  var inp = document.getElementById('vnd-cli-nome');
+  if(inp) inp.value=c.nome;
+
+  var busca=document.getElementById('vnd-busca-inp');
+  if(busca){busca.value='';busca.style.display='none';}
+
+  var drop=document.getElementById('vnd-lista-drop');
+  if(drop) drop.style.display='none';
+
+  var card=document.getElementById('vnd-cli-card');
+  var nm=document.getElementById('vnd-cli-nm');
+  var dc=document.getElementById('vnd-cli-dc');
+  if(card) card.style.display='flex';
+  if(nm) nm.textContent=c.nome;
+  if(dc) dc.textContent=doc;
+
+  var val=document.getElementById('vnd-val');
+  if(val) setTimeout(function(){val.focus();},100);
+}
+
 </script>
 
 <!-- MODAL RETORNO -->
