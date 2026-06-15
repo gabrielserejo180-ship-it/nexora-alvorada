@@ -417,7 +417,16 @@ function doLogin() {
   if(!user){ alertEl.textContent = 'Informe o usuário.'; alertEl.className = 'alert show'; return; }
   if(pin.length < 6){ alertEl.textContent = 'Senha deve ter 6 dígitos.'; alertEl.className = 'alert show'; return; }
 
+  // Buscar em USR_DB e USERS_BASE (garantir que adm/ger padrão sempre funcione)
   var todos = USR_DB.slice();
+  // Adicionar USERS_BASE que não estão no USR_DB
+  for(var bi=0; bi<USERS_BASE.length; bi++){
+    var existe = false;
+    for(var bj=0; bj<todos.length; bj++){
+      if(todos[bj].user === USERS_BASE[bi].user){ existe=true; break; }
+    }
+    if(!existe) todos.push(USERS_BASE[bi]);
+  }
   var found = null;
   for(var i=0;i<todos.length;i++){
     var u = todos[i];
@@ -961,16 +970,27 @@ function usrExcluir(idx) {
 function usrSalvarPlanilha() {
   var btn = document.querySelector('.btn-save');
   if(btn){ btn.textContent='⏳ Salvando...'; btn.disabled=true; }
-  var url = APPS_URL + '?action=limpar&sheet=Usuarios';
-  fetch(url)
+
+  // Ordenar: adm > ger > rep, depois por nome
+  var ordem = {adm:0, ger:1, rep:2};
+  var lista = USR_DB.slice().sort(function(a,b){
+    var ra = ordem[a.role]||9;
+    var rb = ordem[b.role]||9;
+    if(ra !== rb) return ra - rb;
+    return (a.name||'').localeCompare(b.name||'');
+  });
+
+  fetch(APPS_URL + '?action=limpar&sheet=Usuarios')
     .then(function(){
       var chain = Promise.resolve();
-      USR_DB.forEach(function(u){
-        chain = chain.then(function(){
-          var row = encodeURIComponent(JSON.stringify(u));
-          return fetch(APPS_URL+'?action=inserirLinha&sheet=Usuarios&row='+row);
-        });
-      });
+      for(var i=0; i<lista.length; i++){
+        (function(u){
+          chain = chain.then(function(){
+            var row = encodeURIComponent(JSON.stringify(u));
+            return fetch(APPS_URL+'?action=inserirLinha&sheet=Usuarios&row='+row);
+          });
+        })(lista[i]);
+      }
       return chain;
     })
     .then(function(){
@@ -1044,8 +1064,24 @@ function carregarDoSheets() {
   fetch(url + '?action=getUsuarios')
     .then(function(r){ return r.json(); })
     .then(function(d){
-      if(d.ok && d.data && d.data.length > 0){
-        USR_DB = d.data;
+      if(d.ok && d.data && d.data.length > 0) {
+        // Mesclar: começar com USERS_BASE e adicionar usuários da planilha
+        // que não existem no USERS_BASE (sem duplicar)
+        var merged = USERS_BASE.slice();
+        for(var i=0; i<d.data.length; i++){
+          var u = d.data[i];
+          var existe = false;
+          for(var j=0; j<merged.length; j++){
+            if(merged[j].user === u.user){ 
+              // Atualizar dados mas manter posição
+              merged[j] = u;
+              existe = true; 
+              break; 
+            }
+          }
+          if(!existe) merged.push(u);
+        }
+        USR_DB = merged;
         lsSet('nxr_usr', JSON.stringify(USR_DB));
       }
     })
