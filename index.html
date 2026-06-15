@@ -513,11 +513,28 @@ function doLoginVerificar(user, pin, alertEl) {
     }
   }
   if(!found) {
-    alertEl.textContent = 'DIAG: '+debug+' | buscando: '+user+'/'+pin+'/'+profile;
+    // Verificar se o usuário existe mas a senha está errada
+    var usuarioExiste = false;
+    for(var xi=0; xi<todos.length; xi++){
+      if(String(todos[xi].user||'').toLowerCase().trim() === user && String(todos[xi].role||'').trim() === profile){
+        usuarioExiste = true; break;
+      }
+    }
+    if(usuarioExiste){
+      alertEl.textContent = '❌ Senha incorreta. Verifique sua senha.';
+    } else {
+      alertEl.textContent = '❌ Usuário não encontrado. Verifique o login e o perfil selecionado.';
+    }
+    alertEl.className = 'alert show';
+    document.getElementById('inp-pin').value = '';
+    document.getElementById('inp-pin').focus();
+    return;
+  }
+  if(found.status === 'inactive'){
+    alertEl.textContent = '⚠️ Usuário inativo. Contate o administrador.';
     alertEl.className = 'alert show';
     return;
   }
-  if(found.status === 'inactive'){ alertEl.textContent = 'Usuário inativo.'; alertEl.className = 'alert show'; return; }
 
   me = found;
   launchApp();
@@ -985,7 +1002,8 @@ function retSalvar() {
 
   document.getElementById('ret-modal').style.display = 'none';
   showToast('✅ Retorno agendado para '+dataBR+'!');
-  navigate('retornos');
+  var retEl = document.getElementById('ret-lista');
+  if(retEl) { retRender(); } else { navigate('retornos'); }
 }
 
 
@@ -1092,18 +1110,9 @@ function vndSalvar() {
 
     // Fechar modal e mostrar feedback
     document.getElementById('vnd-modal').style.display = 'none';
-
-    // Toast de confirmação
-    var toast = document.createElement('div');
-    toast.textContent = '✅ Venda registrada com sucesso!';
-    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);'
-      +'background:#10B981;color:#fff;padding:12px 24px;border-radius:10px;'
-      +'font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);'
-      +'font-family:DM Sans,Arial,sans-serif';
-    document.body.appendChild(toast);
-    setTimeout(function(){ document.body.removeChild(toast); }, 3000);
-
-    navigate('vendas');
+    showToast('✅ Venda de R$ '+Number(val).toLocaleString('pt-BR')+'registrada!');
+    var vndEl = document.getElementById('vnd-lista');
+    if(vndEl) { vndRender(); } else { navigate('vendas'); }
   } catch(e) {
     alert('Erro ao salvar: ' + e.message);
   }
@@ -1374,9 +1383,20 @@ function cliSalvarManual() {
     .then(function(d){ console.log('Cliente salvo na planilha:', d.ok); })
     .catch(function(){});
 
+  // Fechar modal
   document.getElementById('cli-modal').style.display = 'none';
-  showToast('✅ Cliente "'+nome+'" cadastrado com sucesso!');
-  navigate('clientes');
+
+  // Toast de confirmação
+  showToast('✅ Cliente "'+nome+'" cadastrado!');
+
+  // Se já está na tela de clientes, atualizar lista
+  // Se não, navegar para clientes
+  var listaEl = document.getElementById('cli-lista');
+  if(listaEl) {
+    cliRender();
+  } else {
+    navigate('clientes');
+  }
 }
 
 
