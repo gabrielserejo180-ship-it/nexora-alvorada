@@ -764,8 +764,9 @@ function buildPage(id) {
           +'<div style="font-size:13px;font-weight:600;margin-bottom:10px">💾 Backup e Dados</div>'
           +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
           +'<button class="btn-new" onclick="cfgExportar()">📥 Exportar JSON</button>'
-          +'<button onclick="cfgLimparClientes()" style="height:38px;padding:0 14px;background:none;border:1px solid var(--red);color:var(--red);border-radius:9px;font-size:13px;cursor:pointer;font-family:var(--ff)">🗑️ Limpar Clientes de Teste</button>'
-          +'<button onclick="cfgLimparVendas()" style="height:38px;padding:0 14px;background:none;border:1px solid var(--red);color:var(--red);border-radius:9px;font-size:13px;cursor:pointer;font-family:var(--ff)">🗑️ Limpar Vendas de Teste</button>'
+          +'<button onclick="cfgTesteSalvar()" style="height:38px;padding:0 14px;background:none;border:1px solid var(--amber);color:var(--amber);border-radius:9px;font-size:13px;cursor:pointer;font-family:var(--ff)">🧪 Testar Salvar</button>'
+          +'<button onclick="cfgLimparClientes()" style="height:38px;padding:0 14px;background:none;border:1px solid var(--red);color:var(--red);border-radius:9px;font-size:13px;cursor:pointer;font-family:var(--ff)">🗑️ Limpar Clientes</button>'
+          +'<button onclick="cfgLimparVendas()" style="height:38px;padding:0 14px;background:none;border:1px solid var(--red);color:var(--red);border-radius:9px;font-size:13px;cursor:pointer;font-family:var(--ff)">🗑️ Limpar Vendas</button>'
           +'</div>'
           +'</div>'};
     },
@@ -1329,12 +1330,18 @@ function cliSalvarManual() {
   if(!end){  showToast('⚠️ Informe o endereço.','erro'); return; }
 
   var novo = {
-    nome:nome, cnpj:cliTipoAtual==='pj'?doc:'', cpf:cliTipoAtual==='pf'?doc:'',
-    fantasia:'', status:status, cidade:cid, uf:uf,
-    telefone:tel, telefne:tel, email:email,
-    representante:me?me.name:'',
-    criado_em:new Date().toLocaleDateString('pt-BR'),
-    ultimo_contato:'', obs:obs, endereco:end, tipo:cliTipoAtual
+    nome:           nome,
+    cnpj:           cliTipoAtual==='pj' ? doc : '',
+    fantasia:       cliTipoAtual==='pf' ? doc : '',
+    status:         status,
+    cidade:         cid,
+    uf:             uf,
+    telefne:        tel,
+    email:          email,
+    representante:  me ? me.name : '',
+    criado_em:      new Date().toLocaleDateString('pt-BR'),
+    ultimo_contato: '',
+    obs:            obs + (end ? ' | End: '+end : '')
   };
 
   CLI_DB.push(novo);
@@ -1469,6 +1476,54 @@ function cfgLimparVendas() {
   VND_DB = [];
   lsSet('nxr_vnd', '[]');
   showToast('✅ Vendas removidas!');
+}
+
+
+function cfgTesteSalvar() {
+  var st = document.getElementById('cfg-status');
+  if(st){ st.textContent = '🔄 Testando salvar...'; st.style.color='var(--amber)'; }
+  
+  var row = JSON.stringify({
+    nome:'TESTE NEXORA',
+    cnpj:'00000000000000',
+    fantasia:'Teste',
+    status:'Novo',
+    cidade:'Sao Luis',
+    uf:'MA',
+    telefne:'98999999999',
+    email:'teste@nexora.com',
+    representante:'Administrador',
+    criado_em:'15/06/2026',
+    ultimo_contato:'',
+    obs:'Registro de teste'
+  });
+  
+  var url = APPS_URL+'?action=inserirLinha&sheet=Clientes&row='+encodeURIComponent(row);
+  console.log('URL teste:', url);
+  
+  fetch(url)
+    .then(function(r){ 
+      console.log('Status HTTP:', r.status);
+      return r.text(); 
+    })
+    .then(function(txt){
+      console.log('Resposta:', txt);
+      try {
+        var d = JSON.parse(txt);
+        if(st){ 
+          st.textContent = d.ok ? '✅ Salvo na planilha!' : '❌ Erro: '+d.msg; 
+          st.style.color = d.ok ? 'var(--green)' : 'var(--red)';
+        }
+        alert('Resposta: '+(d.ok?'SUCESSO':'ERRO: '+d.msg));
+      } catch(e){
+        if(st){ st.textContent = '❌ Resposta inválida: '+txt.slice(0,50); st.style.color='var(--red)'; }
+        alert('Resposta inválida: '+txt.slice(0,100));
+      }
+    })
+    .catch(function(e){
+      if(st){ st.textContent = '❌ Erro de conexão: '+e.message; st.style.color='var(--red)'; }
+      alert('Erro de conexão: '+e.message);
+    });
 }
 
 </script>
