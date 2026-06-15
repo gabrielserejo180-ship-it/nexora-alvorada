@@ -1073,7 +1073,9 @@ function vndSalvar() {
 }
 
 // ═══ USUÁRIOS ════════════════════════════════════════════
+var _usrKeys = [];
 function usrRender() {
+  _usrKeys = [];
   var busca  = (document.getElementById('usr-busca')  ? document.getElementById('usr-busca').value  : '').toLowerCase();
   var filtro = (document.getElementById('usr-filtro') ? document.getElementById('usr-filtro').value : '');
   var lista  = USR_DB.slice();
@@ -1081,7 +1083,8 @@ function usrRender() {
   if(filtro) lista = lista.filter(function(u){ return u.role===filtro; });
 
   var stats = document.getElementById('usr-stats');
-  if(stats) stats.innerHTML = '<div class="usr-stat"><div class="usr-stat-val">'+USR_DB.length+'</div><div class="usr-stat-label">Total</div></div>'
+  if(stats) stats.innerHTML =
+    '<div class="usr-stat"><div class="usr-stat-val">'+USR_DB.length+'</div><div class="usr-stat-label">Total</div></div>'
     +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--green)">'+USR_DB.filter(function(u){ return u.status==='active'; }).length+'</div><div class="usr-stat-label">Ativos</div></div>'
     +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--red)">'+USR_DB.filter(function(u){ return u.status!=='active'; }).length+'</div><div class="usr-stat-label">Inativos</div></div>'
     +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--blue-h)">'+USR_DB.filter(function(u){ return u.role==='rep'; }).length+'</div><div class="usr-stat-label">Representantes</div></div>';
@@ -1092,27 +1095,48 @@ function usrRender() {
 
   var RL = {rep:'Representante',ger:'Gerente',adm:'ADM'};
   var RC = {rep:'tag-rep',ger:'tag-ger',adm:'tag-adm'};
+  var isAdm = me && me.role === 'adm';
   var html = '';
-  for(var i=0;i<lista.length;i++){
+
+  for(var i=0; i<lista.length; i++){
     var u = lista[i];
-    var idx = USR_DB.indexOf(u);
+    var uKey = u.user; // chave única — login do usuário
     var isMe = me && u.user === me.user;
-    var ini = (u.name||'?').split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
-    var isAdm = me && me.role === 'adm';
-    html += '<div class="usr-row">'
-      +'<div class="usr-av">'+ini+'</div>'
-      +'<div style="flex:1;min-width:0"><div class="usr-name">'+u.name+(isMe?' <span style="font-size:10px;color:var(--txt3)">(você)</span>':'')+'</div>'
-      +'<div class="usr-login">'+u.user+'</div></div>'
-      +'<span class="tag '+RC[u.role]+'">'+RL[u.role]+'</span>'
-      +'<span class="tag '+(u.status==='active'?'tag-ativo':'tag-inativo')+'">'+(u.status==='active'?'Ativo':'Inativo')+'</span>'
-      +(isAdm&&!isMe?'<div class="usr-actions">'
-        +'<button class="btn-sm" onclick="usrEditar('+idx+')">✏️</button>'
-        +'<button class="btn-sm" onclick="usrToggle('+idx+')">'+(u.status==='active'?'Inativar':'Ativar')+'</button>'
-        +'<button class="btn-sm btn-del" onclick="usrExcluir('+idx+')">🗑️</button>'
-        +'</div>':'<div class="usr-actions"><span style="font-size:11px;color:var(--txt3)">—</span></div>')
-      +'</div>';
+    var ini  = (u.name||'?').split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
+    var ativo = u.status === 'active';
+
+    html += '<div class="usr-row">';
+    html += '<div class="usr-av">'+ini+'</div>';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div class="usr-name">'+u.name+(isMe?' <span style="font-size:10px;color:var(--txt3)">(você)</span>':'')+'</div>';
+    html += '<div class="usr-login">'+u.user+'</div>';
+    html += '</div>';
+    html += '<span class="tag '+RC[u.role]+'">'+RL[u.role]+'</span>';
+    html += '<span class="tag '+(ativo?'tag-ativo':'tag-inativo')+'">'+(ativo?'Ativo':'Inativo')+'</span>';
+
+    if(isAdm && !isMe){
+      _usrKeys.push(uKey);
+      var ki = _usrKeys.length - 1;
+      html += '<div class="usr-actions">';
+      html += '<button class="btn-sm" onclick="_usrAcao('+ki+',\'ed\')">Ed</button>';
+      html += '<button class="btn-sm" onclick="_usrAcao('+ki+',\'tg\')">'+(ativo?'Inativar':'Ativar')+'</button>';
+      html += '<button class="btn-sm btn-del" onclick="_usrAcao('+ki+',\'ex\')">Del</button>';
+      html += '</div>';
+    } else {
+      html += '<div class="usr-actions"><span style="font-size:11px;color:var(--txt3)">—</span></div>';
+    }
+    html += '</div>';
   }
   el.innerHTML = html;
+}
+
+
+function _usrAcao(ki, tipo) {
+  var key = _usrKeys[ki];
+  if(!key) return;
+  if(tipo === 'ed') usrEditarKey(key);
+  else if(tipo === 'tg') usrToggleKey(key);
+  else if(tipo === 'ex') usrExcluirKey(key);
 }
 
 function usrNovo() {
@@ -1126,7 +1150,10 @@ function usrNovo() {
   document.getElementById('usr-modal').style.display = 'flex';
 }
 
-function usrEditar(idx) {
+function usrEditarKey(userKey) {
+  var idx = -1;
+  for(var i=0;i<USR_DB.length;i++){ if(USR_DB[i].user===userKey){ idx=i; break; } }
+  if(idx===-1){ alert('Usuário não encontrado.'); return; }
   usrEditIdx = idx;
   var u = USR_DB[idx];
   document.getElementById('usr-modal-title').textContent = 'Editar Usuário';
@@ -1136,6 +1163,28 @@ function usrEditar(idx) {
   document.getElementById('um-role').value   = u.role||'rep';
   document.getElementById('um-status').value = u.status||'active';
   document.getElementById('usr-modal').style.display = 'flex';
+}
+
+function usrToggleKey(userKey) {
+  var idx = -1;
+  for(var i=0;i<USR_DB.length;i++){ if(USR_DB[i].user===userKey){ idx=i; break; } }
+  if(idx===-1){ alert('Usuário não encontrado.'); return; }
+  var nome  = USR_DB[idx].name;
+  var ativo = USR_DB[idx].status === 'active';
+  if(!confirm((ativo?'Inativar':'Ativar')+' "'+nome+'"?')) return;
+  USR_DB[idx].status = ativo ? 'inactive' : 'active';
+  lsSet('nxr_usr', JSON.stringify(USR_DB));
+  usrRender();
+}
+
+function usrExcluirKey(userKey) {
+  var idx = -1;
+  for(var i=0;i<USR_DB.length;i++){ if(USR_DB[i].user===userKey){ idx=i; break; } }
+  if(idx===-1){ alert('Usuário não encontrado.'); return; }
+  if(!confirm('Excluir "'+USR_DB[idx].name+'"? Esta ação não pode ser desfeita.')) return;
+  USR_DB.splice(idx, 1);
+  lsSet('nxr_usr', JSON.stringify(USR_DB));
+  usrRender();
 }
 
 function usrFecharModal() {
@@ -1168,111 +1217,6 @@ function usrSalvar() {
   audLog(usrEditIdx===null?'cadastro':'edicao', usrEditIdx===null?'Novo usuário':'Usuário editado', nome);
   usrRender();
   usrSalvarPlanilha();
-}
-
-function usrToggle(idx) {
-  if(!confirm('Alterar status do usuário?')) return;
-  USR_DB[idx].status = USR_DB[idx].status==='active' ? 'inactive' : 'active';
-  lsSet('nxr_usr', JSON.stringify(USR_DB));
-  usrRender();
-}
-
-function usrExcluir(idx) {
-  if(!confirm('Excluir '+USR_DB[idx].name+'? Não pode ser desfeito.')) return;
-  USR_DB.splice(idx, 1);
-  lsSet('nxr_usr', JSON.stringify(USR_DB));
-  usrRender();
-}
-
-function usrSalvarPlanilha() {
-  var btn = document.querySelector('.btn-save');
-  if(btn){ btn.textContent='⏳ Salvando...'; btn.disabled=true; }
-
-  // Ordenar: adm > ger > rep, depois por nome
-  var ordem = {adm:0, ger:1, rep:2};
-  var lista = USR_DB.slice().sort(function(a,b){
-    var ra = ordem[a.role]||9;
-    var rb = ordem[b.role]||9;
-    if(ra !== rb) return ra - rb;
-    return (a.name||'').localeCompare(b.name||'');
-  });
-
-  fetch(APPS_URL + '?action=limpar&sheet=Usuarios')
-    .then(function(){
-      var chain = Promise.resolve();
-      for(var i=0; i<lista.length; i++){
-        (function(u){
-          chain = chain.then(function(){
-            var row = encodeURIComponent(JSON.stringify(u));
-            return fetch(APPS_URL+'?action=inserirLinha&sheet=Usuarios&row='+row);
-          });
-        })(lista[i]);
-      }
-      return chain;
-    })
-    .then(function(){
-      if(btn){ btn.textContent='✅ Salvo!'; btn.disabled=false; setTimeout(function(){ btn.textContent='☁️ Salvar'; },3000); }
-    })
-    .catch(function(){
-      if(btn){ btn.textContent='❌ Falhou'; btn.disabled=false; setTimeout(function(){ btn.textContent='☁️ Salvar'; },3000); }
-    });
-}
-
-// ═══ AUDITORIA ═══════════════════════════════════════════
-function audLog(tipo, desc, det) {
-  AUD_DB.unshift({tipo:tipo,descricao:desc,detalhe:det||'',usuario:me?me.name:'',data:new Date().toLocaleDateString('pt-BR'),hora:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});
-  if(AUD_DB.length > 200) AUD_DB = AUD_DB.slice(0,200);
-  lsSet('nxr_aud', JSON.stringify(AUD_DB));
-}
-
-function audRender() {
-  var busca = (document.getElementById('aud-busca') ? document.getElementById('aud-busca').value : '').toLowerCase();
-  var lista = AUD_DB.slice();
-  if(busca) lista = lista.filter(function(a){ return (a.descricao||'').toLowerCase().indexOf(busca)>-1 || (a.usuario||'').toLowerCase().indexOf(busca)>-1; });
-  var el = document.getElementById('aud-lista');
-  if(!el) return;
-  if(!lista.length){ el.innerHTML='<div class="aud-row">Nenhum registro.</div>'; return; }
-  var icons = {login:'🔐',logout:'🚪',cadastro:'➕',edicao:'✏️',venda:'💰',retorno:'🔔'};
-  var html = '';
-  for(var i=0;i<lista.length;i++){
-    var a = lista[i];
-    html += '<div class="aud-row">'
-      +'<span style="flex-shrink:0">'+(icons[a.tipo]||'📋')+'</span>'
-      +'<span style="flex:1;min-width:0"><strong>'+a.usuario+'</strong> — '+a.descricao+(a.detalhe?' · '+a.detalhe:'')+'</span>'
-      +'<span style="flex-shrink:0;color:var(--txt3)">'+a.data+' '+a.hora+'</span>'
-      +'</div>';
-  }
-  el.innerHTML = html;
-}
-
-// ═══ CONFIGURAÇÕES ════════════════════════════════════════
-function cfgCarregar() {
-  var el = document.getElementById('cfg-url');
-  if(el) el.value = lsGet('nxr_url') || APPS_URL;
-}
-
-function cfgSalvar() {
-  var url = (document.getElementById('cfg-url') ? document.getElementById('cfg-url').value : '').trim();
-  if(url){ APPS_URL = url; lsSet('nxr_url', url); }
-  document.getElementById('cfg-status').textContent = '✅ Salvo!';
-  setTimeout(function(){ document.getElementById('cfg-status').textContent=''; }, 2000);
-}
-
-function cfgTestar() {
-  var el = document.getElementById('cfg-status');
-  if(el) el.textContent = '🔄 Testando...';
-  fetch(APPS_URL + '?action=ping')
-    .then(function(r){ return r.json(); })
-    .then(function(d){ if(el) el.textContent = d.ok ? '✅ Conectado!' : '❌ Erro: '+d.msg; })
-    .catch(function(){ if(el) el.textContent = '❌ Falha na conexão'; });
-}
-
-function cfgExportar() {
-  var data = JSON.stringify({clientes:CLI_DB,vendas:VND_DB,retornos:RET_DB,usuarios:USR_DB,auditoria:AUD_DB});
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([data],{type:'application/json'}));
-  a.download = 'nexora-backup-'+new Date().toISOString().slice(0,10)+'.json';
-  a.click();
 }
 
 
