@@ -445,28 +445,36 @@ function doLogin() {
   pin = String(pin).trim();
   if(pin.length < 6){ alertEl.textContent = 'Senha deve ter 6 dígitos.'; alertEl.className = 'alert show'; return; }
 
-  // Se não tem usuários carregados ainda, tentar buscar da planilha primeiro
-  if(USR_DB.length === 0) {
-    alertEl.textContent = '🔄 Carregando usuários da planilha...';
-    alertEl.className = 'alert show';
-    alertEl.style.color = 'var(--amber)';
-    fetch(APPS_URL + '?action=getUsuarios')
-      .then(function(r){ return r.json(); })
-      .then(function(d){
-        if(d.ok && d.data && d.data.length > 0){
-          USR_DB = d.data;
-          lsSet('nxr_usr', JSON.stringify(USR_DB));
-        }
-        alertEl.style.color = '';
-        alertEl.className = 'alert';
-        doLogin(); // tentar novamente
-      })
-      .catch(function(){
-        alertEl.textContent = '⚠️ Sem conexão com a planilha. Verifique o URL do Apps Script.';
+  // Sempre buscar da planilha antes de verificar
+  alertEl.textContent = '🔄 Verificando...';
+  alertEl.className = 'alert show';
+  alertEl.style.color = 'var(--amber)';
+
+  fetch(APPS_URL + '?action=getUsuarios')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.ok && d.data && d.data.length > 0){
+        USR_DB = d.data;
+        lsSet('nxr_usr', JSON.stringify(USR_DB));
+      }
+      alertEl.style.color = '';
+      alertEl.className = 'alert';
+      doLoginVerificar(user, pin, alertEl);
+    })
+    .catch(function(){
+      // Se falhou a conexão, usar cache local
+      alertEl.style.color = '';
+      alertEl.className = 'alert';
+      if(USR_DB.length === 0){
+        alertEl.textContent = '⚠️ Sem conexão com a planilha. Tente novamente.';
         alertEl.className = 'alert show';
-      });
-    return;
-  }
+        return;
+      }
+      doLoginVerificar(user, pin, alertEl);
+    });
+}
+
+function doLoginVerificar(user, pin, alertEl) {
 
   // Buscar apenas nos usuários carregados da planilha
   // Se não tem nenhum ainda, usar só o ADM de emergência
@@ -474,10 +482,12 @@ function doLogin() {
   var found = null;
   for(var i=0;i<todos.length;i++){
     var u = todos[i];
-    var uPin = String(u.pin||'').trim();
     var uUser = String(u.user||'').toLowerCase().trim();
     var uRole = String(u.role||'').trim();
-    if(uUser === user && uPin === pin && uRole === profile){
+    // Comparar pin como string E como número (Sheets converte 000000 → 0)
+    var uPin  = String(u.pin||'').trim();
+    var pinOk = (uPin === pin) || (Number(u.pin) === Number(pin));
+    if(uUser === user && pinOk && uRole === profile){
       found = u; break;
     }
   }
