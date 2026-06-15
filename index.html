@@ -961,51 +961,35 @@ function retNovo() {
 }
 
 function retSalvar() {
-  var cli = (document.getElementById('ret-cli') ? document.getElementById('ret-cli').value.trim() : '');
-  var tel = (document.getElementById('ret-tel') ? document.getElementById('ret-tel').value.trim() : '');
-  var dat = (document.getElementById('ret-dat') ? document.getElementById('ret-dat').value        : '');
-  var hor = (document.getElementById('ret-hor') ? document.getElementById('ret-hor').value        : '');
-  var mot = (document.getElementById('ret-mot') ? document.getElementById('ret-mot').value        : '');
-  var obs = (document.getElementById('ret-obs') ? document.getElementById('ret-obs').value.trim() : '');
+  var cli = document.getElementById('ret-cli') ? document.getElementById('ret-cli').value.trim() : '';
+  var tel = document.getElementById('ret-tel') ? document.getElementById('ret-tel').value.trim() : '';
+  var dat = document.getElementById('ret-dat') ? document.getElementById('ret-dat').value        : '';
+  var hor = document.getElementById('ret-hor') ? document.getElementById('ret-hor').value        : '';
+  var mot = document.getElementById('ret-mot') ? document.getElementById('ret-mot').value        : '';
+  var obs = document.getElementById('ret-obs') ? document.getElementById('ret-obs').value.trim() : '';
 
-  if(!cli){ 
-    document.getElementById('ret-cli').style.borderColor='var(--red)';
-    document.getElementById('ret-cli').focus();
-    showToast('⚠️ Informe o nome do cliente.','erro'); return; 
-  }
-  if(!dat){ 
-    showToast('⚠️ Informe a data do retorno.','erro'); return; 
-  }
+  if(!cli){ showToast('⚠️ Informe o cliente.','erro'); return; }
+  if(!dat){ showToast('⚠️ Informe a data.','erro'); return; }
 
-  var dataBR = dat ? dat.split('-').reverse().join('/') : '';
+  var dataBR = dat.split('-').reverse().join('/');
   var novo = {
-    cliente:       cli,
-    representante: me ? me.name : '',
-    data:          dataBR,
-    hora:          hor,
-    motivo:        mot,
-    telefone:      tel,
-    obs:           obs,
-    status:        'pendente'
+    cliente:cli, representante:me?me.name:'',
+    data:dataBR, hora:hor, motivo:mot,
+    telefone:tel, obs:obs, status:'pendente'
   };
 
   RET_DB.push(novo);
   lsSet('nxr_ret', JSON.stringify(RET_DB));
-  audLog('retorno','Retorno agendado', cli+' · '+dataBR);
+  audLog('retorno','Retorno agendado',cli+' · '+dataBR);
 
-  // Salvar na planilha
-  var row = encodeURIComponent(JSON.stringify(novo));
-  fetch(APPS_URL+'?action=inserirLinha&sheet=Retornos&row='+row)
-    .then(function(r){ return r.json(); })
-    .then(function(d){ console.log('Retorno salvo na planilha:', d.ok); })
+  fetch(APPS_URL+'?action=inserirLinha&sheet=Retornos&row='+encodeURIComponent(JSON.stringify(novo)))
     .catch(function(){});
 
-  try { document.getElementById('ret-modal').style.display = 'none'; } catch(e){}
+  document.getElementById('ret-modal').style.display = 'none';
   showToast('✅ Retorno agendado para '+dataBR+'!');
-  try {
-    var retEl = document.getElementById('ret-lista');
-    if(retEl){ retRender(); } else { navigate('retornos'); }
-  } catch(e){ navigate('retornos'); }
+
+  var lista = document.getElementById('ret-lista');
+  if(lista){ retRender(); } else { navigate('retornos'); }
 }
 
 
@@ -1325,79 +1309,52 @@ function cliNovoManual() {
 }
 
 function cliSalvarManual() {
-  var nome  = (document.getElementById('cli-nome')  ? document.getElementById('cli-nome').value.trim()  : '');
-  var doc   = (document.getElementById('cli-doc')   ? document.getElementById('cli-doc').value.trim()   : '');
-  var tel   = (document.getElementById('cli-tel')   ? document.getElementById('cli-tel').value.trim()   : '');
-  var email = (document.getElementById('cli-email') ? document.getElementById('cli-email').value.trim() : '');
-  var cid   = (document.getElementById('cli-cid')   ? document.getElementById('cli-cid').value.trim()   : '');
-  var uf    = (document.getElementById('cli-uf')    ? document.getElementById('cli-uf').value            : 'MA');
-  var end   = (document.getElementById('cli-end')   ? document.getElementById('cli-end').value.trim()   : '');
-  var obs   = (document.getElementById('cli-obs')   ? document.getElementById('cli-obs').value.trim()   : '');
-  var status= (document.getElementById('cli-status')? document.getElementById('cli-status').value       : 'Novo');
+  // DEBUG
+  var _debug = [];
+  var _nomeEl = document.getElementById('cli-nome');
+  _debug.push('nome-el:'+(!!_nomeEl)+' val:'+(_nomeEl?_nomeEl.value:'N/A'));
+  var _telEl = document.getElementById('cli-tel');
+  _debug.push('tel-el:'+(!!_telEl)+' val:'+(_telEl?_telEl.value:'N/A'));
+  var _cidEl = document.getElementById('cli-cid');
+  _debug.push('cid-el:'+(!!_cidEl)+' val:'+(_cidEl?_cidEl.value:'N/A'));
+  alert('DEBUG CADASTRO:\n'+_debug.join('\n'));
 
-  // Validações obrigatórias
-  if(!nome){ 
-    document.getElementById('cli-nome').style.borderColor='var(--red)'; 
-    document.getElementById('cli-nome').focus();
-    showToast('⚠️ Informe o nome do cliente.','erro'); return; 
-  }
-  if(!tel){ 
-    document.getElementById('cli-tel').style.borderColor='var(--red)'; 
-    document.getElementById('cli-tel').focus();
-    showToast('⚠️ Informe o telefone.','erro'); return; 
-  }
-  if(!cid){ 
-    document.getElementById('cli-cid').style.borderColor='var(--red)'; 
-    document.getElementById('cli-cid').focus();
-    showToast('⚠️ Informe a cidade.','erro'); return; 
-  }
-  if(!end){ 
-    document.getElementById('cli-end').style.borderColor='var(--red)'; 
-    document.getElementById('cli-end').focus();
-    showToast('⚠️ Informe o endereço.','erro'); return; 
-  }
+  var nome  = document.getElementById('cli-nome')  ? document.getElementById('cli-nome').value.trim()  : '';
+  var doc   = document.getElementById('cli-doc')   ? document.getElementById('cli-doc').value.trim()   : '';
+  var tel   = document.getElementById('cli-tel')   ? document.getElementById('cli-tel').value.trim()   : '';
+  var email = document.getElementById('cli-email') ? document.getElementById('cli-email').value.trim() : '';
+  var cid   = document.getElementById('cli-cid')   ? document.getElementById('cli-cid').value.trim()   : '';
+  var uf    = document.getElementById('cli-uf')    ? document.getElementById('cli-uf').value           : 'MA';
+  var end   = document.getElementById('cli-end')   ? document.getElementById('cli-end').value.trim()   : '';
+  var obs   = document.getElementById('cli-obs')   ? document.getElementById('cli-obs').value.trim()   : '';
+  var status= document.getElementById('cli-status')? document.getElementById('cli-status').value       : 'Novo';
+
+  if(!nome){ showToast('⚠️ Informe o nome.','erro'); return; }
+  if(!tel){  showToast('⚠️ Informe o telefone.','erro'); return; }
+  if(!cid){  showToast('⚠️ Informe a cidade.','erro'); return; }
+  if(!end){  showToast('⚠️ Informe o endereço.','erro'); return; }
 
   var novo = {
-    nome:           nome,
-    cnpj:           cliTipoAtual==='pj' ? doc : '',
-    cpf:            cliTipoAtual==='pf' ? doc : '',
-    fantasia:       '',
-    status:         status,
-    cidade:         cid,
-    uf:             uf,
-    telefone:       tel,
-    telefne:        tel,
-    email:          email,
-    representante:  me ? me.name : '',
-    criado_em:      new Date().toLocaleDateString('pt-BR'),
-    ultimo_contato: '',
-    obs:            obs,
-    endereco:       end,
-    tipo:           cliTipoAtual,
+    nome:nome, cnpj:cliTipoAtual==='pj'?doc:'', cpf:cliTipoAtual==='pf'?doc:'',
+    fantasia:'', status:status, cidade:cid, uf:uf,
+    telefone:tel, telefne:tel, email:email,
+    representante:me?me.name:'',
+    criado_em:new Date().toLocaleDateString('pt-BR'),
+    ultimo_contato:'', obs:obs, endereco:end, tipo:cliTipoAtual
   };
 
   CLI_DB.push(novo);
   lsSet('nxr_cli', JSON.stringify(CLI_DB));
-  audLog('cadastro','Cliente cadastrado manualmente', nome);
+  audLog('cadastro','Cliente cadastrado',nome);
 
-  // Salvar na planilha
-  var row = encodeURIComponent(JSON.stringify(novo));
-  fetch(APPS_URL+'?action=inserirLinha&sheet=Clientes&row='+row)
-    .then(function(r){ return r.json(); })
-    .then(function(d){ console.log('Cliente salvo na planilha:', d.ok); })
+  fetch(APPS_URL+'?action=inserirLinha&sheet=Clientes&row='+encodeURIComponent(JSON.stringify(novo)))
     .catch(function(){});
 
-  // Fechar modal
-  try { document.getElementById('cli-modal').style.display = 'none'; } catch(e){}
+  document.getElementById('cli-modal').style.display = 'none';
+  showToast('✅ '+nome+' cadastrado!');
 
-  // Toast
-  showToast('✅ '+nome+' cadastrado com sucesso!');
-
-  // Atualizar lista
-  try {
-    var listaEl = document.getElementById('cli-lista');
-    if(listaEl){ cliRender(); } else { navigate('clientes'); }
-  } catch(e){ navigate('clientes'); }
+  var lista = document.getElementById('cli-lista');
+  if(lista){ cliRender(); } else { navigate('clientes'); }
 }
 
 
