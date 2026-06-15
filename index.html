@@ -540,7 +540,7 @@ function launchApp() {
   renderNav();
   navigate('dashboard');
   audLog('login', 'Login realizado', me.role);
-  setTimeout(function(){ carregarDoSheets(); }, 1500);
+  // carregarDoSheets feita apenas no login
 }
 
 // ═══ NAVEGAÇÃO ════════════════════════════════════════════
@@ -1195,6 +1195,8 @@ function usrToggleKey(userKey) {
   USR_DB[idx].status = ativo ? 'inactive' : 'active';
   lsSet('nxr_usr', JSON.stringify(USR_DB));
   usrRender();
+  // Salvar automaticamente na planilha
+  usrSalvarPlanilha();
 }
 
 function usrExcluirKey(userKey) {
