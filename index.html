@@ -1464,40 +1464,65 @@ var cliTipoAtual = 'pj';
 function cliVerIdx(idx) {
   var lista = window._cliLista || [];
   var c = lista[idx];
-  if(!c){ return; }
+  if(!c) return;
+
   _cliAtualIdx = CLI_DB.indexOf(c);
   if(_cliAtualIdx === -1){
-    // fallback: buscar por nome
     for(var i=0;i<CLI_DB.length;i++){
       if(CLI_DB[i].nome===c.nome){ _cliAtualIdx=i; break; }
     }
   }
 
-  document.getElementById('cli-view-nome').textContent = c.nome;
+  var nomeEl = document.getElementById('cli-view-nome');
+  var bodyEl = document.getElementById('cli-view-body');
+  var modal  = document.getElementById('cli-view-modal');
+
+  if(!nomeEl || !bodyEl || !modal){
+    // Modal não encontrado — mostrar como alert
+    var doc = c.cnpj ? 'CNPJ: '+c.cnpj : (c.cpf?'CPF: '+c.cpf:'');
+    var tel = c.telefne||c.telefone||'';
+    alert(c.nome+'\n'+(doc||'')+'\n'+(c.cidade||'')+(c.uf?' - '+c.uf:'')+'\nTel: '+tel);
+    return;
+  }
+
+  nomeEl.textContent = c.nome;
 
   var doc = c.cnpj ? 'CNPJ: '+c.cnpj : (c.cpf?'CPF: '+c.cpf:'—');
   var tel = c.telefne || c.telefone || '—';
+  var telNum = tel.replace(/\D/g,'');
 
-  document.getElementById('cli-view-body').innerHTML =
-    '<div style="display:grid;gap:12px">'
-    +'<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Documento</div><div style="font-size:14px">'+doc+'</div></div>'
-    +'<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Telefone</div>'
-    +'<div style="display:flex;gap:8px;align-items:center"><span style="font-size:14px">'+tel+'</span>'
-    +(tel!=='—'?'<a href="https://wa.me/55'+tel.replace(/\D/g,'')+'" target="_blank" class="link-btn link-wa">💬 WhatsApp</a>':'')
+  bodyEl.innerHTML =
+    '<div style="display:grid;gap:14px">'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    +'<div><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Documento</div>'
+    +'<div style="font-size:13px;font-family:monospace">'+doc+'</div></div>'
+    +'<div><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Status</div>'
+    +'<div><span class="tag '+(c.status==='Ativo'?'tag-ativo':'tag-rep')+'">'+(c.status||'Novo')+'</span></div></div>'
+    +'<div><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Telefone</div>'
+    +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
+    +'<span style="font-size:13px">'+tel+'</span>'
+    +(telNum.length>=10?'<a href="https://wa.me/55'+telNum+'" target="_blank" class="link-btn link-wa" style="text-decoration:none">💬 WhatsApp</a>':'')
     +'</div></div>'
-    +'<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Cidade / UF</div><div style="font-size:14px">'+(c.cidade||'—')+(c.uf?' — '+c.uf:'')+'</div></div>'
-    +(c.email?'<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">E-mail</div><div style="font-size:14px">'+c.email+'</div></div>':'')
-    +(c.endereco?'<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Endereço</div><div style="font-size:14px">'+c.endereco+'</div></div>':'')
-    +'<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Status</div><div style="font-size:14px">'+( c.status||'Novo')+'</div></div>'
-    +'<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Representante</div><div style="font-size:14px">'+(c.representante||'—')+'</div></div>'
-    +(c.obs?'<div><div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Observação</div><div style="font-size:14px">'+c.obs+'</div></div>':'')
-    +'<div style="display:flex;gap:8px;padding-top:4px">'
-    +'<button onclick="cliExcluirAtual()" style="flex:1;height:36px;background:none;border:1px solid var(--red);color:var(--red);border-radius:9px;font-size:13px;cursor:pointer;font-family:var(--ff)">🗑️ Excluir</button>'
+    +'<div><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Cidade / UF</div>'
+    +'<div style="font-size:13px">'+(c.cidade||'—')+(c.uf?' — '+c.uf:'')+'</div></div>'
+    +(c.email?'<div><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">E-mail</div>'
+    +'<div style="font-size:13px">'+c.email+'</div></div>':'')
+    +(c.endereco?'<div style="grid-column:1/-1"><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Endereço</div>'
+    +'<div style="font-size:13px">'+c.endereco+'</div></div>':'')
+    +'<div><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Representante</div>'
+    +'<div style="font-size:13px">'+(c.representante||'—')+'</div></div>'
+    +'<div><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Cadastrado em</div>'
+    +'<div style="font-size:13px">'+(c.criado_em||'—')+'</div></div>'
+    +(c.obs?'<div style="grid-column:1/-1"><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Observação</div>'
+    +'<div style="font-size:13px">'+c.obs+'</div></div>':'')
     +'</div>'
+    +'<div style="display:flex;gap:8px;padding-top:4px">'
+    +'<button onclick="cliExcluirAtual()" style="flex:1;height:38px;background:none;border:1px solid var(--red);color:var(--red);border-radius:9px;font-size:13px;cursor:pointer;font-family:var(--ff)">🗑️ Excluir</button>'
     +'</div>';
 
-  document.getElementById('cli-view-modal').style.display = 'flex';
+  modal.style.display = 'flex';
 }
+
 
 function cliEditarAtual() {
   if(_cliAtualIdx < 0) return;
@@ -1967,30 +1992,3 @@ function vndLimparCliente() {
           <button id="cli-tipo-pf" onclick="cliTipo('pf')"
             style="flex:1;height:38px;border-radius:9px;border:1px solid var(--line2);background:none;color:var(--txt2);font-weight:600;cursor:pointer;font-family:var(--ff);font-size:13px">
             👤 Pessoa Física
-          </button>
-        </div>
-      </div>
-
-      <div class="mfield">
-        <label id="cli-doc-label">CNPJ</label>
-        <input id="cli-doc" placeholder="00.000.000/0001-00" maxlength="20">
-      </div>
-
-      <div class="mfield">
-        <label id="cli-nome-label">Razão Social / Nome Fantasia *</label>
-        <input id="cli-nome" placeholder="Nome da empresa ou cliente">
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="mfield">
-          <label>Telefone</label>
-          <input id="cli-tel" placeholder="(98) 99999-9999" type="tel">
-        </div>
-        <div class="mfield">
-          <label>E-mail</label>
-          <input id="cli-email" placeholder="email@exemplo.com" type="email">
-        </div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-     
