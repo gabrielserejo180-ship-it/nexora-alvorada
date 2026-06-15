@@ -986,10 +986,12 @@ function retSalvar() {
     .catch(function(){});
 
   document.getElementById('ret-modal').style.display = 'none';
-  showToast('✅ Retorno agendado para '+dataBR+'!');
-
-  var lista = document.getElementById('ret-lista');
-  if(lista){ retRender(); } else { navigate('retornos'); }
+  
+  setTimeout(function(){
+    showToast('✅ Retorno agendado para '+dataBR+'!');
+    var lista = document.getElementById('ret-lista');
+    if(lista){ retRender(); } else { navigate('retornos'); }
+  }, 100);
 }
 
 
@@ -1096,11 +1098,13 @@ function vndSalvar() {
 
     // Fechar modal e mostrar feedback
     try { document.getElementById('vnd-modal').style.display = 'none'; } catch(e){}
-    showToast('✅ Venda de R$ '+Number(val).toLocaleString('pt-BR')+' registrada!');
-    try {
-      var vndEl = document.getElementById('vnd-lista');
-      if(vndEl){ vndRender(); } else { navigate('vendas'); }
-    } catch(e){ navigate('vendas'); }
+    setTimeout(function(){
+      showToast('✅ Venda de R$ '+Number(val).toLocaleString('pt-BR')+' registrada!');
+      try {
+        var vndEl = document.getElementById('vnd-lista');
+        if(vndEl){ vndRender(); } else { navigate('vendas'); }
+      } catch(e){ navigate('vendas'); }
+    }, 100);
   } catch(e) {
     alert('Erro ao salvar: ' + e.message);
   }
@@ -1309,16 +1313,6 @@ function cliNovoManual() {
 }
 
 function cliSalvarManual() {
-  // DEBUG
-  var _debug = [];
-  var _nomeEl = document.getElementById('cli-nome');
-  _debug.push('nome-el:'+(!!_nomeEl)+' val:'+(_nomeEl?_nomeEl.value:'N/A'));
-  var _telEl = document.getElementById('cli-tel');
-  _debug.push('tel-el:'+(!!_telEl)+' val:'+(_telEl?_telEl.value:'N/A'));
-  var _cidEl = document.getElementById('cli-cid');
-  _debug.push('cid-el:'+(!!_cidEl)+' val:'+(_cidEl?_cidEl.value:'N/A'));
-  alert('DEBUG CADASTRO:\n'+_debug.join('\n'));
-
   var nome  = document.getElementById('cli-nome')  ? document.getElementById('cli-nome').value.trim()  : '';
   var doc   = document.getElementById('cli-doc')   ? document.getElementById('cli-doc').value.trim()   : '';
   var tel   = document.getElementById('cli-tel')   ? document.getElementById('cli-tel').value.trim()   : '';
@@ -1351,10 +1345,13 @@ function cliSalvarManual() {
     .catch(function(){});
 
   document.getElementById('cli-modal').style.display = 'none';
-  showToast('✅ '+nome+' cadastrado!');
-
-  var lista = document.getElementById('cli-lista');
-  if(lista){ cliRender(); } else { navigate('clientes'); }
+  
+  // Aguardar modal fechar antes de mostrar toast e atualizar lista
+  setTimeout(function(){
+    showToast('✅ '+nome+' cadastrado com sucesso!');
+    var lista = document.getElementById('cli-lista');
+    if(lista){ cliRender(); } else { navigate('clientes'); }
+  }, 100);
 }
 
 
