@@ -964,119 +964,105 @@ function retConcluir(idx) {
 
 // ═══ VENDAS ══════════════════════════════════════════════
 function vndRender() {
-  var lista = me && me.role==='rep' ? VND_DB.filter(function(v){ return v.representante===me.name; }) : VND_DB;
+  var lista = (me && me.role==='rep')
+    ? VND_DB.filter(function(v){ return v.representante===me.name; })
+    : VND_DB;
   var el = document.getElementById('vnd-lista');
   if(!el) return;
-  if(!lista.length){ el.innerHTML='<div class="empty-state">Nenhuma venda registrada.</div>'; return; }
-  var html = '';
-  for(var i=lista.length-1;i>=0;i--){
+  if(!lista.length){
+    el.innerHTML='<div class="empty-state">Nenhuma venda registrada.</div>';
+    return;
+  }
+  var html = '<div class="usr-table">';
+  for(var i=lista.length-1; i>=0; i--){
     var v = lista[i];
-    html += '<div class="vnd-row">'
+    html += '<div class="usr-row">'
       +'<div style="flex:1;min-width:0">'
-      +'<div style="font-size:13px;font-weight:600">'+v.cliente+'</div>'
-      +'<div style="font-size:11px;color:var(--txt2)">'+v.data+(v.pgto?' · '+v.pgto:'')+'</div>'
-      +(me&&me.role!=='rep'?'<div style="font-size:10px;color:var(--txt3)">'+(v.representante||'')+'</div>':'')
+      +'<div class="usr-name">'+v.cliente+'</div>'
+      +'<div class="usr-login">'+v.data+(v.pgto?' · '+v.pgto:'')+'</div>'
       +'</div>'
       +'<span style="font-size:15px;font-weight:700;color:var(--green)">R$ '+Number(v.valor||0).toLocaleString('pt-BR',{minimumFractionDigits:2})+'</span>'
       +'</div>';
   }
+  html += '</div>';
   el.innerHTML = html;
 }
 
 function vndNova() {
-  // Limpar campos
-  document.getElementById('vnd-cli-busca').value = '';
-  document.getElementById('vnd-cli-nome').value  = '';
-  document.getElementById('vnd-val').value  = '';
-  document.getElementById('vnd-obs').value  = '';
-  var sel = document.getElementById('vnd-cli-sel');
-  if(sel) sel.style.display = 'none';
-  var lst = document.getElementById('vnd-cli-lista');
-  if(lst) lst.style.display = 'none';
-  document.getElementById('vnd-cli-busca').style.borderColor = '';
-  document.getElementById('vnd-val').style.borderColor = '';
+  document.getElementById('vnd-busca-inp').value = '';
+  document.getElementById('vnd-busca-inp').style.display = '';
+  document.getElementById('vnd-lista-drop').style.display = 'none';
+  document.getElementById('vnd-cli-nome').value = '';
+  document.getElementById('vnd-cli-card').style.display = 'none';
+  document.getElementById('vnd-val').value = '';
+  document.getElementById('vnd-obs').value = '';
+  window._vndClientes = [];
   document.getElementById('vnd-modal').style.display = 'flex';
-  setTimeout(function(){ document.getElementById('vnd-cli-busca').focus(); }, 150);
+  setTimeout(function(){ document.getElementById('vnd-busca-inp').focus(); }, 150);
 }
 
-function vndBuscarCliente() {
-  var busca = (document.getElementById('vnd-cli-busca').value || '').toLowerCase();
-  var lista = document.getElementById('vnd-cli-lista');
-  if(!lista) return;
-  if(busca.length < 1) { lista.style.display='none'; return; }
+function vndFiltrar() {
+  var busca = document.getElementById('vnd-busca-inp').value.toLowerCase();
+  var drop  = document.getElementById('vnd-lista-drop');
+  if(!busca){ drop.style.display='none'; return; }
 
   var carteira = (me && me.role==='rep')
     ? CLI_DB.filter(function(c){ return c.representante===me.name; })
     : CLI_DB;
 
-  var filtrado = carteira.filter(function(c){
+  window._vndClientes = carteira.filter(function(c){
     return (c.nome||'').toLowerCase().indexOf(busca)>-1
       || (c.cnpj||'').indexOf(busca)>-1
       || (c.cpf||'').indexOf(busca)>-1;
-  });
+  }).slice(0,10);
 
-  if(!filtrado.length){
-    lista.innerHTML='<div style="padding:12px 14px;font-size:12px;color:var(--txt2)">Nenhum cliente na carteira.</div>';
-    lista.style.display='block';
+  if(!window._vndClientes.length){
+    drop.innerHTML = '<div style="padding:12px;font-size:12px;color:var(--txt2)">Nenhum cliente encontrado.</div>';
+    drop.style.display = 'block';
     return;
   }
 
-  // Usar índice em array global para evitar problema de aspas
-  window._vndClientes = filtrado;
   var html = '';
-  for(var i=0; i<Math.min(filtrado.length,10); i++){
-    var c = filtrado[i];
+  for(var i=0; i<window._vndClientes.length; i++){
+    var c = window._vndClientes[i];
     var doc = c.cnpj ? 'CNPJ: '+c.cnpj : (c.cpf?'CPF: '+c.cpf:'');
-    html += '<div class="vnd-item" onclick="vndSelecionarIdx('+i+')">'
-      +'<div style="font-size:13px;font-weight:600;color:var(--txt)">'+c.nome+'</div>'
-      +'<div style="font-size:10px;color:var(--txt3)">'+(doc||c.cidade||'')+(c.uf?' - '+c.uf:'')+'</div>'
+    html += '<div class="vnd-item" data-idx="'+i+'">'
+      +'<div style="font-size:13px;font-weight:600">'+c.nome+'</div>'
+      +'<div style="font-size:10px;color:var(--txt3)">'+(doc||c.cidade||'')+'</div>'
       +'</div>';
   }
-  lista.innerHTML = html;
-  lista.style.display = 'block';
+  drop.innerHTML = html;
+  drop.style.display = 'block';
+
+  // Adicionar eventos de clique em cada item
+  var itens = drop.querySelectorAll('.vnd-item');
+  for(var j=0; j<itens.length; j++){
+    (function(item){
+      item.addEventListener('click', function(){
+        var idx = parseInt(item.getAttribute('data-idx'));
+        var cli = window._vndClientes[idx];
+        if(!cli) return;
+        var doc = cli.cnpj ? 'CNPJ: '+cli.cnpj : (cli.cpf?'CPF: '+cli.cpf:'');
+        document.getElementById('vnd-cli-nome').value = cli.nome;
+        document.getElementById('vnd-busca-inp').style.display = 'none';
+        document.getElementById('vnd-lista-drop').style.display = 'none';
+        document.getElementById('vnd-cli-nm').textContent = cli.nome;
+        document.getElementById('vnd-cli-dc').textContent = doc;
+        document.getElementById('vnd-cli-card').style.display = 'flex';
+        setTimeout(function(){ document.getElementById('vnd-val').focus(); }, 100);
+      });
+    })(itens[j]);
+  }
 }
-
-
-function vndSelecionarIdx(i) {
-  var c = window._vndClientes && window._vndClientes[i];
-  if(!c) return;
-  var doc = c.cnpj ? 'CNPJ: '+c.cnpj : (c.cpf?'CPF: '+c.cpf:'');
-  vndSelecionarCliente(c.nome, doc);
-}
-
-function vndSelecionarCliente(nome, doc) {
-  // Salvar nome no campo hidden
-  var inp = document.getElementById('vnd-cli-nome');
-  if(inp) inp.value = nome;
-
-  // Esconder busca
-  var busca = document.getElementById('vnd-cli-busca');
-  if(busca){ busca.value=''; busca.style.display='none'; }
-
-  // Esconder lista
-  var lista = document.getElementById('vnd-cli-lista');
-  if(lista) lista.style.display='none';
-
-  // Mostrar card selecionado
-  var sel     = document.getElementById('vnd-cli-sel');
-  var selNome = document.getElementById('vnd-cli-sel-nome');
-  var selDoc  = document.getElementById('vnd-cli-sel-doc');
-  if(sel)     sel.style.display='flex';
-  if(selNome) selNome.textContent = nome;
-  if(selDoc)  selDoc.textContent  = doc||'';
-
-  // Focar no valor
-  var val = document.getElementById('vnd-val');
-  if(val) setTimeout(function(){ val.focus(); }, 100);
-}
-
 
 function vndLimparCliente() {
   document.getElementById('vnd-cli-nome').value = '';
-  var busca = document.getElementById('vnd-cli-busca');
-  if(busca) { busca.value = ''; busca.style.display = ''; busca.focus(); }
-  var sel = document.getElementById('vnd-cli-sel');
-  if(sel) sel.style.display = 'none';
+  document.getElementById('vnd-cli-card').style.display = 'none';
+  var busca = document.getElementById('vnd-busca-inp');
+  busca.value = '';
+  busca.style.display = '';
+  busca.focus();
+  document.getElementById('vnd-lista-drop').style.display = 'none';
 }
 
 function vndSalvar() {
@@ -1085,14 +1071,16 @@ function vndSalvar() {
   var pgto = document.getElementById('vnd-pgto').value;
   var obs  = document.getElementById('vnd-obs').value.trim();
 
-  if(!cli) {
-    document.getElementById('vnd-cli-busca').style.borderColor = 'var(--red)';
-    document.getElementById('vnd-cli-busca').focus();
+  if(!cli){
+    var busca = document.getElementById('vnd-busca-inp');
+    busca.style.borderColor = 'var(--red)';
+    busca.focus();
     return;
   }
-  if(!val || Number(val) <= 0) {
-    document.getElementById('vnd-val').style.borderColor = 'var(--red)';
-    document.getElementById('vnd-val').focus();
+  if(!val || Number(val) <= 0){
+    var valEl = document.getElementById('vnd-val');
+    valEl.style.borderColor = 'var(--red)';
+    valEl.focus();
     return;
   }
 
@@ -1101,17 +1089,16 @@ function vndSalvar() {
     representante: me ? me.name : '',
     data: new Date().toLocaleDateString('pt-BR'),
     valor: Number(val),
-    pgto:  pgto,
-    obs:   obs
+    pgto: pgto,
+    obs: obs
   });
   lsSet('nxr_vnd', JSON.stringify(VND_DB));
-  audLog('venda', 'Venda registrada', cli + ' · R$ ' + Number(val).toLocaleString('pt-BR'));
+  audLog('venda', 'Venda registrada', cli+' · R$ '+Number(val).toLocaleString('pt-BR'));
   document.getElementById('vnd-modal').style.display = 'none';
   vndRender();
 }
 
-// ═══ USUÁRIOS ════════════════════════════════════════════
-var _usrKeys = [];
+
 function usrRender() {
   _usrKeys = [];
   var busca  = (document.getElementById('usr-busca')  ? document.getElementById('usr-busca').value  : '').toLowerCase();
@@ -1509,39 +1496,40 @@ function cfgExportar() {
     </div>
     <div class="modal-body">
 
-      <!-- BUSCA DE CLIENTE DA CARTEIRA -->
       <div class="mfield">
-        <label>Cliente da Carteira *</label>
-        <div style="position:relative">
-          <input id="vnd-cli-busca" placeholder="🔍 Buscar cliente da carteira..." autocomplete="off"
-            oninput="vndBuscarCliente()"
-            style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
-          <div id="vnd-cli-lista" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:999;
-            background:var(--s2);border:1px solid var(--line);border-radius:9px;margin-top:4px;
-            max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.4)"></div>
-        </div>
-        <!-- Cliente selecionado -->
-        <div id="vnd-cli-sel" style="display:none;margin-top:8px;padding:10px 13px;
-          background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.2);border-radius:9px;
-          display:none;align-items:center;justify-content:space-between;gap:8px">
-          <div>
-            <div id="vnd-cli-sel-nome" style="font-size:13px;font-weight:600;color:var(--txt)"></div>
-            <div id="vnd-cli-sel-doc" style="font-size:10px;color:var(--txt3)"></div>
-          </div>
-          <button onclick="vndLimparCliente()" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:16px">✕</button>
-        </div>
-        <input type="hidden" id="vnd-cli-nome">
+        <label>Buscar Cliente da Carteira *</label>
+        <input id="vnd-busca-inp" placeholder="Digite o nome do cliente..."
+          style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;
+          padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none"
+          oninput="vndFiltrar()">
+        <div id="vnd-lista-drop" style="display:none;border:1px solid var(--line);border-radius:9px;
+          margin-top:4px;background:var(--s2);max-height:180px;overflow-y:auto"></div>
       </div>
+
+      <div id="vnd-cli-card" style="display:none;padding:10px 13px;background:rgba(37,99,235,.08);
+        border:1px solid rgba(37,99,235,.2);border-radius:9px;margin-bottom:12px;
+        display:none;align-items:center;justify-content:space-between">
+        <div>
+          <div id="vnd-cli-nm" style="font-size:13px;font-weight:600"></div>
+          <div id="vnd-cli-dc" style="font-size:10px;color:var(--txt3)"></div>
+        </div>
+        <button onclick="vndLimparCliente()"
+          style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:18px;padding:0 4px">✕</button>
+      </div>
+      <input type="hidden" id="vnd-cli-nome">
 
       <div class="mfield">
         <label>Valor (R$) *</label>
-        <input id="vnd-val" placeholder="0,00" type="number" step="0.01" min="0"
-          style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
+        <input id="vnd-val" type="number" step="0.01" min="0" placeholder="0,00"
+          style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;
+          padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
       </div>
 
       <div class="mfield">
         <label>Forma de Pagamento</label>
-        <select id="vnd-pgto" style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
+        <select id="vnd-pgto"
+          style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;
+          padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
           <option>Boleto</option>
           <option>Cartão de Crédito</option>
           <option>Cartão de Débito</option>
@@ -1555,7 +1543,8 @@ function cfgExportar() {
       <div class="mfield">
         <label>Observação</label>
         <input id="vnd-obs" placeholder="Observação opcional"
-          style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
+          style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;
+          padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
       </div>
 
     </div>
