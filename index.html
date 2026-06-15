@@ -1007,22 +1007,79 @@ function retRender() {
 }
 
 function retNovo() {
+  // Popular select com clientes da carteira
+  var sel = document.getElementById('ret-cli');
+  if(sel) {
+    sel.innerHTML = '<option value="">-- Selecione um cliente --</option>';
+    var carteira = (me && me.role === 'rep')
+      ? CLI_DB.filter(function(c){ return c.representante === me.name; })
+      : CLI_DB;
+    for(var i=0; i<carteira.length; i++){
+      var c = carteira[i];
+      var opt = document.createElement('option');
+      opt.value = c.nome;
+      // Mostrar telefone para facilitar identificação
+      opt.textContent = c.nome + (c.cidade ? ' — '+c.cidade : '') + (c.telefne||c.telefone ? ' · '+(c.telefne||c.telefone) : '');
+      sel.appendChild(opt);
+    }
+    // Adicionar opção para digitar manualmente se não tiver na carteira
+    var optManual = document.createElement('option');
+    optManual.value = '__manual__';
+    optManual.textContent = '✏️ Digitar manualmente...';
+    sel.appendChild(optManual);
+  }
+
   // Data de hoje
   var hoje = new Date();
   var dd = String(hoje.getDate()).padStart(2,'0');
   var mm = String(hoje.getMonth()+1).padStart(2,'0');
   var yyyy = hoje.getFullYear();
   document.getElementById('ret-dat').value = yyyy+'-'+mm+'-'+dd;
-  document.getElementById('ret-cli').value = '';
   document.getElementById('ret-tel').value = '';
   document.getElementById('ret-hor').value = '09:00';
   document.getElementById('ret-obs').value = '';
+
+  // Esconder campo manual por padrão
+  var manualDiv = document.getElementById('ret-cli-manual-div');
+  if(manualDiv) manualDiv.style.display = 'none';
+
   document.getElementById('ret-modal').style.display = 'flex';
-  setTimeout(function(){ document.getElementById('ret-cli').focus(); }, 100);
+
+  // Quando selecionar cliente, preencher telefone automaticamente
+  if(sel) {
+    sel.onchange = function(){
+      if(sel.value === '__manual__'){
+        var manDiv = document.getElementById('ret-cli-manual-div');
+        if(manDiv) manDiv.style.display = '';
+      } else {
+        var manDiv = document.getElementById('ret-cli-manual-div');
+        if(manDiv) manDiv.style.display = 'none';
+        // Preencher telefone automaticamente
+        var carteira2 = (me && me.role === 'rep')
+          ? CLI_DB.filter(function(c){ return c.representante === me.name; })
+          : CLI_DB;
+        var cli = carteira2.find(function(c){ return c.nome === sel.value; });
+        if(cli) {
+          var tel = cli.telefne || cli.telefone || '';
+          var telEl = document.getElementById('ret-tel');
+          if(telEl) telEl.value = tel;
+        }
+      }
+    };
+  }
 }
 
 function retSalvar() {
-  var cli = document.getElementById('ret-cli') ? document.getElementById('ret-cli').value.trim() : '';
+  var sel = document.getElementById('ret-cli');
+  var cli = '';
+  if(sel) {
+    if(sel.value === '__manual__') {
+      var manInp = document.getElementById('ret-cli-manual');
+      cli = manInp ? manInp.value.trim() : '';
+    } else {
+      cli = sel.value;
+    }
+  }
   var tel = document.getElementById('ret-tel') ? document.getElementById('ret-tel').value.trim() : '';
   var dat = document.getElementById('ret-dat') ? document.getElementById('ret-dat').value        : '';
   var hor = document.getElementById('ret-hor') ? document.getElementById('ret-hor').value        : '';
@@ -1704,7 +1761,16 @@ function vndSelecionarIdx(i) {
       <button class="modal-close" onclick="document.getElementById('ret-modal').style.display='none'">✕</button>
     </div>
     <div class="modal-body">
-      <div class="mfield"><label>Cliente *</label><input id="ret-cli" placeholder="Nome do cliente"></div>
+      <div class="mfield">
+        <label>Cliente *</label>
+        <select id="ret-cli" style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none;cursor:pointer">
+          <option value="">-- Selecione um cliente --</option>
+        </select>
+      </div>
+      <div class="mfield" id="ret-cli-manual-div" style="display:none">
+        <label>Nome do Cliente (manual)</label>
+        <input id="ret-cli-manual" placeholder="Digite o nome do cliente">
+      </div>
       <div class="mfield"><label>Telefone</label><input id="ret-tel" placeholder="(98) 99999-9999" type="tel"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div class="mfield"><label>Data *</label><input id="ret-dat" type="date"></div>
