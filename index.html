@@ -371,6 +371,15 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 </div>
 
 <script>
+// Capturar erros JS
+window.onerror = function(msg, src, line, col, err) {
+  var d = document.createElement('div');
+  d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:8px 12px;z-index:99999;font-size:12px;font-family:monospace;cursor:pointer';
+  d.textContent = 'JS ERRO linha '+line+': '+msg+' (clique para fechar)';
+  d.onclick = function(){ d.remove(); };
+  document.body.appendChild(d);
+};
+
 // ═══ CONFIGURAÇÃO ═══════════════════════════════════════
 var _URL_PADRAO = 'https://script.google.com/macros/s/AKfycbzAcf1JapNJVNVUZtHtglIWo8crSe_ipNY-aOi2hp2xDV-r5N2KoDTnzTgfaVGgOCiP/exec';
 var APPS_URL = lsGet('nxr_url') || _URL_PADRAO;
@@ -1314,6 +1323,7 @@ function cliNovoManual() {
 }
 
 function cliSalvarManual() {
+  console.log("cliSalvarManual chamada");
   var nome  = document.getElementById('cli-nome')  ? document.getElementById('cli-nome').value.trim()  : '';
   var doc   = document.getElementById('cli-doc')   ? document.getElementById('cli-doc').value.trim()   : '';
   var tel   = document.getElementById('cli-tel')   ? document.getElementById('cli-tel').value.trim()   : '';
