@@ -1336,6 +1336,46 @@ function cliSalvarManual() {
 }
 
 // ═══ SINCRONIZAÇÃO ════════════════════════════════════════
+function usrSalvarPlanilha() {
+  var btn = document.querySelector('.btn-save');
+  if(btn){ btn.textContent='⏳...'; btn.disabled=true; }
+
+  var ordem = {adm:0, ger:1, rep:2};
+  var lista = USR_DB.slice().sort(function(a,b){
+    var ra = ordem[a.role]||9;
+    var rb = ordem[b.role]||9;
+    if(ra !== rb) return ra - rb;
+    return (a.name||'').localeCompare(b.name||'');
+  });
+
+  var i = 0;
+  function inserirProximo() {
+    if(i >= lista.length) {
+      if(btn){ btn.textContent='✅ Salvo!'; btn.disabled=false; 
+        setTimeout(function(){ btn.textContent='☁️ Salvar'; }, 3000); }
+      return;
+    }
+    var u = lista[i]; i++;
+    var row = encodeURIComponent(JSON.stringify(u));
+    fetch(APPS_URL + '?action=inserirLinha&sheet=Usuarios&row=' + row)
+      .then(function(){ inserirProximo(); })
+      .catch(function(){
+        if(btn){ btn.textContent='❌ Falhou'; btn.disabled=false;
+          setTimeout(function(){ btn.textContent='☁️ Salvar'; }, 3000); }
+      });
+  }
+
+  // Limpar aba e depois inserir
+  fetch(APPS_URL + '?action=limpar&sheet=Usuarios')
+    .then(function(r){ return r.json(); })
+    .then(function(){ inserirProximo(); })
+    .catch(function(){
+      if(btn){ btn.textContent='❌ Sem conexão'; btn.disabled=false;
+        setTimeout(function(){ btn.textContent='☁️ Salvar'; }, 3000); }
+    });
+}
+
+
 function carregarDoSheets() {
   var url = lsGet('nxr_url') || APPS_URL;
   fetch(url + '?action=getUsuarios')
@@ -1369,6 +1409,45 @@ function carregarDoSheets() {
 document.addEventListener('DOMContentLoaded', function(){
   showScreen('screen-home');
 });
+
+function cfgCarregar() {
+  var el = document.getElementById('cfg-url');
+  if(el) el.value = lsGet('nxr_url') || APPS_URL;
+}
+
+function cfgSalvar() {
+  var el  = document.getElementById('cfg-url');
+  var url = el ? el.value.trim() : '';
+  if(!url){ alert('Informe a URL.'); return; }
+  APPS_URL = url;
+  lsSet('nxr_url', url);
+  var st = document.getElementById('cfg-status');
+  if(st){ st.textContent='✅ URL salva!'; st.style.color='var(--green)'; setTimeout(function(){ st.textContent=''; },3000); }
+}
+
+function cfgTestar() {
+  var el  = document.getElementById('cfg-url');
+  var url = el ? el.value.trim() : APPS_URL;
+  var st  = document.getElementById('cfg-status');
+  if(st){ st.textContent='🔄 Testando...'; st.style.color='var(--amber)'; }
+  fetch(url+'?action=ping')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(st){ st.textContent=d.ok?'✅ Conectado!':'❌ Erro: '+d.msg; st.style.color=d.ok?'var(--green)':'var(--red)'; }
+    })
+    .catch(function(){
+      if(st){ st.textContent='❌ Falha na conexão'; st.style.color='var(--red)'; }
+    });
+}
+
+function cfgExportar() {
+  var data = JSON.stringify({clientes:CLI_DB,vendas:VND_DB,retornos:RET_DB,usuarios:USR_DB,exportado:new Date().toISOString()},null,2);
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([data],{type:'application/json'}));
+  a.download = 'nexora-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+}
+
 </script>
 
 <!-- MODAL RETORNO -->
