@@ -602,7 +602,11 @@ function buildPage(id) {
     },
     clientes: function(){
       return {eye:'Clientes',title:'Clientes',sub:'Sua carteira de clientes',
-        body:'<div style="margin-bottom:12px"><input class="usr-search" id="cli-busca" placeholder="🔍 Buscar..." oninput="cliRender()"></div>'
+        body:'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">'
+          +'<input class="usr-search" id="cli-busca" placeholder="🔍 Buscar por nome, CPF, CNPJ..." oninput="cliRender()" style="flex:1;min-width:160px">'
+          +'<button class="btn-new" onclick="cliNovoManual()">+ Cadastro Manual</button>'
+          +'</div>'
+          +'<div id="cli-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px"></div>'
           +'<div id="cli-lista"></div>'};
     },
     retornos: function(){
@@ -792,22 +796,44 @@ function capAdicionar(btn) {
 // ═══ CLIENTES ════════════════════════════════════════════
 function cliRender() {
   var busca = (document.getElementById('cli-busca') ? document.getElementById('cli-busca').value : '').toLowerCase();
-  var lista = me && me.role==='rep' ? CLI_DB.filter(function(c){ return c.representante===me.name; }) : CLI_DB;
-  if(busca) lista = lista.filter(function(c){ return (c.nome||'').toLowerCase().indexOf(busca) > -1 || (c.cnpj||'').indexOf(busca) > -1; });
+  var todos = me && me.role==='rep' ? CLI_DB.filter(function(c){ return c.representante===me.name; }) : CLI_DB;
+  var lista = todos;
+  if(busca) lista = lista.filter(function(c){
+    return (c.nome||'').toLowerCase().indexOf(busca) > -1
+      || (c.cnpj||'').indexOf(busca) > -1
+      || (c.cpf||'').indexOf(busca) > -1
+      || (c.telefone||'').indexOf(busca) > -1;
+  });
+
+  // Stats
+  var st = document.getElementById('cli-stats');
+  if(st) st.innerHTML = '<div class="usr-stat"><div class="usr-stat-val">'+todos.length+'</div><div class="usr-stat-label">Total</div></div>'
+    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--green)">'+todos.filter(function(c){ return c.status==='Ativo'; }).length+'</div><div class="usr-stat-label">Ativos</div></div>'
+    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--amber)">'+todos.filter(function(c){ return c.status==='Novo'||c.status==='Negociação'; }).length+'</div><div class="usr-stat-label">Em Prospecção</div></div>';
+
   var el = document.getElementById('cli-lista');
   if(!el) return;
-  if(!lista.length){ el.innerHTML='<div class="empty-state">Nenhum cliente. Use a Captação para adicionar.</div>'; return; }
-  var html = '';
+  if(!lista.length){ el.innerHTML='<div class="empty-state">Nenhum cliente encontrado.</div>'; return; }
+
+  var STATUS_COR = {Ativo:'tag-ativo',Novo:'tag-rep',Negociação:'tag-ger','Aguardando Retorno':'tag-ger',Inativo:'tag-inativo'};
+  var html = '<div class="usr-table">';
   for(var i=0;i<lista.length;i++){
     var c = lista[i];
     var tel = (c.telefone||'').replace(/\D/g,'');
-    html += '<div class="cli-row">'
-      +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">'+c.nome+'</div>'
-      +'<div style="font-size:11px;color:var(--txt2)">'+(c.cidade||'')+(c.uf?' - '+c.uf:'')+(c.telefone?' · '+c.telefone:'')+'</div></div>'
-      +(tel.length>=10?'<a class="link-btn link-wa" href="https://wa.me/55'+tel+'" target="_blank" style="text-decoration:none">💬</a>':'')
-      +'<span class="tag '+(c.status==='Ativo'?'tag-ativo':'tag-rep')+'">'+(c.status||'Novo')+'</span>'
+    var doc = c.cnpj ? c.cnpj : (c.cpf||'');
+    var docLabel = c.cnpj ? 'CNPJ' : (c.cpf ? 'CPF' : '');
+    var ini = (c.nome||'?').split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
+    html += '<div class="usr-row">'
+      +'<div class="usr-av" style="background:var(--blue)">'+(c.tipo==='pf'?'👤':ini)+'</div>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div class="usr-name">'+c.nome+'</div>'
+      +'<div class="usr-login">'+(docLabel&&doc?docLabel+': '+doc+' · ':'')+(c.cidade||'')+(c.uf?' - '+c.uf:'')+'</div>'
+      +'</div>'
+      +(tel.length>=10?'<a class="link-btn link-wa" href="https://wa.me/55'+tel+'" target="_blank" style="text-decoration:none;font-size:13px">💬</a>':'')
+      +'<span class="tag '+(STATUS_COR[c.status]||'tag-rep')+'">'+(c.status||'Novo')+'</span>'
       +'</div>';
   }
+  html += '</div>';
   el.innerHTML = html;
 }
 
@@ -1117,6 +1143,100 @@ function cfgExportar() {
   a.click();
 }
 
+
+// ═══ CADASTRO MANUAL CLIENTE ══════════════════════════════
+var cliTipoAtual = 'pj';
+
+function cliTipo(tipo) {
+  cliTipoAtual = tipo;
+  var btnPj = document.getElementById('cli-tipo-pj');
+  var btnPf = document.getElementById('cli-tipo-pf');
+  var docLbl  = document.getElementById('cli-doc-label');
+  var nomeLbl = document.getElementById('cli-nome-label');
+  var docInp  = document.getElementById('cli-doc');
+
+  if(tipo === 'pj') {
+    btnPj.style.borderWidth = '2px';
+    btnPj.style.borderColor = 'var(--blue)';
+    btnPj.style.background  = 'rgba(37,99,235,.1)';
+    btnPj.style.color       = 'var(--blue-h)';
+    btnPf.style.borderWidth = '1px';
+    btnPf.style.borderColor = 'var(--line2)';
+    btnPf.style.background  = 'none';
+    btnPf.style.color       = 'var(--txt2)';
+    if(docLbl)  docLbl.textContent  = 'CNPJ';
+    if(nomeLbl) nomeLbl.textContent = 'Razão Social / Nome Fantasia *';
+    if(docInp)  docInp.placeholder  = '00.000.000/0001-00';
+  } else {
+    btnPf.style.borderWidth = '2px';
+    btnPf.style.borderColor = 'var(--blue)';
+    btnPf.style.background  = 'rgba(37,99,235,.1)';
+    btnPf.style.color       = 'var(--blue-h)';
+    btnPj.style.borderWidth = '1px';
+    btnPj.style.borderColor = 'var(--line2)';
+    btnPj.style.background  = 'none';
+    btnPj.style.color       = 'var(--txt2)';
+    if(docLbl)  docLbl.textContent  = 'CPF';
+    if(nomeLbl) nomeLbl.textContent = 'Nome Completo *';
+    if(docInp)  docInp.placeholder  = '000.000.000-00';
+  }
+}
+
+function cliNovoManual() {
+  cliTipoAtual = 'pj';
+  var fields = ['cli-doc','cli-nome','cli-tel','cli-email','cli-cid','cli-end','cli-obs'];
+  for(var i=0;i<fields.length;i++){
+    var el = document.getElementById(fields[i]);
+    if(el){ el.value=''; el.style.borderColor=''; }
+  }
+  var st = document.getElementById('cli-status');
+  if(st) st.value = 'Novo';
+  cliTipo('pj');
+  document.getElementById('cli-modal').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('cli-nome').focus(); }, 150);
+}
+
+function cliSalvarManual() {
+  var nome  = document.getElementById('cli-nome').value.trim();
+  var doc   = document.getElementById('cli-doc').value.trim();
+  var tel   = document.getElementById('cli-tel').value.trim();
+  var email = document.getElementById('cli-email').value.trim();
+  var cid   = document.getElementById('cli-cid').value.trim();
+  var uf    = document.getElementById('cli-uf').value;
+  var end   = document.getElementById('cli-end').value.trim();
+  var obs   = document.getElementById('cli-obs').value.trim();
+  var status= document.getElementById('cli-status').value;
+
+  if(!nome) {
+    var el = document.getElementById('cli-nome');
+    el.style.borderColor = 'var(--red)';
+    el.focus();
+    return;
+  }
+
+  var novo = {
+    nome:    nome,
+    tipo:    cliTipoAtual,
+    cnpj:    cliTipoAtual==='pj' ? doc : '',
+    cpf:     cliTipoAtual==='pf' ? doc : '',
+    telefone:tel,
+    email:   email,
+    cidade:  cid,
+    uf:      uf,
+    endereco:end,
+    obs:     obs,
+    status:  status,
+    representante: me ? me.name : '',
+    criado_em: new Date().toLocaleDateString('pt-BR'),
+  };
+
+  CLI_DB.push(novo);
+  lsSet('nxr_cli', JSON.stringify(CLI_DB));
+  audLog('cadastro', 'Cliente cadastrado manualmente', nome);
+  document.getElementById('cli-modal').style.display = 'none';
+  navigate('clientes');
+}
+
 // ═══ SINCRONIZAÇÃO ════════════════════════════════════════
 function carregarDoSheets() {
   var url = lsGet('nxr_url') || APPS_URL;
@@ -1210,6 +1330,106 @@ document.addEventListener('DOMContentLoaded', function(){
     <div class="modal-foot">
       <button class="btn-cancel" onclick="document.getElementById('vnd-modal').style.display='none'">Cancelar</button>
       <button class="btn-save2" onclick="vndSalvar()">✓ Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CADASTRO MANUAL CLIENTE -->
+<div class="modal-bg" id="cli-modal" style="display:none">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-head">
+      <div class="modal-head-title">👤 Cadastro Manual de Cliente</div>
+      <button class="modal-close" onclick="document.getElementById('cli-modal').style.display='none'">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Tipo: PF ou PJ -->
+      <div class="mfield">
+        <label>Tipo de Pessoa *</label>
+        <div style="display:flex;gap:8px">
+          <button id="cli-tipo-pj" onclick="cliTipo('pj')"
+            style="flex:1;height:38px;border-radius:9px;border:2px solid var(--blue);background:rgba(37,99,235,.1);color:var(--blue-h);font-weight:700;cursor:pointer;font-family:var(--ff);font-size:13px">
+            🏢 Pessoa Jurídica
+          </button>
+          <button id="cli-tipo-pf" onclick="cliTipo('pf')"
+            style="flex:1;height:38px;border-radius:9px;border:1px solid var(--line2);background:none;color:var(--txt2);font-weight:600;cursor:pointer;font-family:var(--ff);font-size:13px">
+            👤 Pessoa Física
+          </button>
+        </div>
+      </div>
+
+      <div class="mfield">
+        <label id="cli-doc-label">CNPJ</label>
+        <input id="cli-doc" placeholder="00.000.000/0001-00" maxlength="20">
+      </div>
+
+      <div class="mfield">
+        <label id="cli-nome-label">Razão Social / Nome Fantasia *</label>
+        <input id="cli-nome" placeholder="Nome da empresa ou cliente">
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="mfield">
+          <label>Telefone</label>
+          <input id="cli-tel" placeholder="(98) 99999-9999" type="tel">
+        </div>
+        <div class="mfield">
+          <label>E-mail</label>
+          <input id="cli-email" placeholder="email@exemplo.com" type="email">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="mfield">
+          <label>Cidade</label>
+          <input id="cli-cid" placeholder="Ex: São Luís">
+        </div>
+        <div class="mfield">
+          <label>UF</label>
+          <select id="cli-uf" style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
+            <option value="MA">MA</option>
+            <option value="AC">AC</option><option value="AL">AL</option>
+            <option value="AM">AM</option><option value="AP">AP</option>
+            <option value="BA">BA</option><option value="CE">CE</option>
+            <option value="DF">DF</option><option value="ES">ES</option>
+            <option value="GO">GO</option><option value="MG">MG</option>
+            <option value="MS">MS</option><option value="MT">MT</option>
+            <option value="PA">PA</option><option value="PB">PB</option>
+            <option value="PE">PE</option><option value="PI">PI</option>
+            <option value="PR">PR</option><option value="RJ">RJ</option>
+            <option value="RN">RN</option><option value="RO">RO</option>
+            <option value="RR">RR</option><option value="RS">RS</option>
+            <option value="SC">SC</option><option value="SE">SE</option>
+            <option value="SP">SP</option><option value="TO">TO</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mfield">
+        <label>Endereço</label>
+        <input id="cli-end" placeholder="Rua, número, bairro">
+      </div>
+
+      <div class="mfield">
+        <label>Status</label>
+        <select id="cli-status" style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
+          <option value="Novo">Novo</option>
+          <option value="Ativo">Ativo</option>
+          <option value="Negociação">Negociação</option>
+          <option value="Aguardando Retorno">Aguardando Retorno</option>
+          <option value="Inativo">Inativo</option>
+        </select>
+      </div>
+
+      <div class="mfield">
+        <label>Observação</label>
+        <input id="cli-obs" placeholder="Observação opcional">
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="document.getElementById('cli-modal').style.display='none'">Cancelar</button>
+      <button class="btn-save2" onclick="cliSalvarManual()">✓ Cadastrar</button>
     </div>
   </div>
 </div>
