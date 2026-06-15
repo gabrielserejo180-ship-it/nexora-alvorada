@@ -374,33 +374,16 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 // ═══ CONFIGURAÇÃO ═══════════════════════════════════════
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbz5OKxXDWpF_YeZ5JpE3jUsXqSQzMwpwmGV1-Rat7SzIqyEPZ-VAEX8r4jH8RQzImmb/exec';
 
+// Usuário ADM de emergência — só usado se a planilha estiver inacessível
 var USERS_BASE = [
-  {user:'rep001',pin:'123456',name:'Carlos Silva',  role:'rep',status:'active'},
-  {user:'rep002',pin:'654321',name:'Ana Ferreira',  role:'rep',status:'active'},
-  {user:'ger001',pin:'111111',name:'Marcos Souza',  role:'ger',status:'active'},
-  {user:'adm001',pin:'000000',name:'Administrador', role:'adm',status:'active'},
+  {user:'adm001',pin:'000000',name:'Administrador',role:'adm',status:'active'},
 ];
 
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 
+// Carregar usuários do localStorage (cache da planilha)
 var USR_DB = JSON.parse(lsGet('nxr_usr') || '[]');
-// Garantir que usuários base sempre existem no USR_DB
-(function(){
-  var mudou = false;
-  for(var bi=0; bi<USERS_BASE.length; bi++){
-    var base = USERS_BASE[bi];
-    var existe = false;
-    for(var ui=0; ui<USR_DB.length; ui++){
-      if(USR_DB[ui].user === base.user){ existe=true; break; }
-    }
-    if(!existe){ USR_DB.push(base); mudou=true; }
-  }
-  if(mudou || USR_DB.length === 0){
-    if(USR_DB.length === 0) USR_DB = USERS_BASE.slice();
-    lsSet('nxr_usr', JSON.stringify(USR_DB));
-  }
-})();
 
 var CLI_DB = JSON.parse(lsGet('nxr_cli') || '[]');
 var VND_DB = JSON.parse(lsGet('nxr_vnd') || '[]');
@@ -435,6 +418,19 @@ function goLogin(p) {
   var el = document.getElementById('login-role-lbl');
   if(el) el.textContent = labels[p] || p;
   showScreen('screen-login');
+
+  // Carregar usuários da planilha em background ao abrir login
+  fetch(APPS_URL + '?action=getUsuarios')
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.ok && d.data && d.data.length > 0){
+        USR_DB = d.data;
+        lsSet('nxr_usr', JSON.stringify(USR_DB));
+        console.log('Usuários carregados da planilha:', USR_DB.length);
+      }
+    })
+    .catch(function(){ /* usar cache local */ });
+
   var inp = document.getElementById('inp-user');
   if(inp) setTimeout(function(){ inp.focus(); }, 200);
 }
@@ -449,19 +445,32 @@ function doLogin() {
   pin = String(pin).trim();
   if(pin.length < 6){ alertEl.textContent = 'Senha deve ter 6 dígitos.'; alertEl.className = 'alert show'; return; }
 
-  // Montar lista: USERS_BASE + usuários extras do USR_DB
-  var todos = USERS_BASE.slice();
-  for(var bi=0; bi<USR_DB.length; bi++){
-    var existeBase = false;
-    for(var bj=0; bj<todos.length; bj++){
-      if(todos[bj].user === USR_DB[bi].user){ 
-        // Atualizar com dados mais recentes (ex: senha alterada)
-        todos[bj] = USR_DB[bi];
-        existeBase = true; break; 
-      }
-    }
-    if(!existeBase) todos.push(USR_DB[bi]);
+  // Se não tem usuários carregados ainda, tentar buscar da planilha primeiro
+  if(USR_DB.length === 0) {
+    alertEl.textContent = '🔄 Carregando usuários da planilha...';
+    alertEl.className = 'alert show';
+    alertEl.style.color = 'var(--amber)';
+    fetch(APPS_URL + '?action=getUsuarios')
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d.ok && d.data && d.data.length > 0){
+          USR_DB = d.data;
+          lsSet('nxr_usr', JSON.stringify(USR_DB));
+        }
+        alertEl.style.color = '';
+        alertEl.className = 'alert';
+        doLogin(); // tentar novamente
+      })
+      .catch(function(){
+        alertEl.textContent = '⚠️ Sem conexão com a planilha. Verifique o URL do Apps Script.';
+        alertEl.className = 'alert show';
+      });
+    return;
   }
+
+  // Buscar apenas nos usuários carregados da planilha
+  // Se não tem nenhum ainda, usar só o ADM de emergência
+  var todos = USR_DB.length > 0 ? USR_DB : USERS_BASE;
   var found = null;
   for(var i=0;i<todos.length;i++){
     var u = todos[i];
@@ -473,7 +482,7 @@ function doLogin() {
     }
   }
 
-  if(!found){ alertEl.textContent = 'Usuário ou senha incorretos. ('+user+'/'+profile+')'; alertEl.className = 'alert show'; document.getElementById('inp-pin').value=''; return; }
+  if(!found){ alertEl.textContent = 'Usuário ou senha incorretos. Verifique os dados cadastrados na planilha.'; alertEl.className = 'alert show'; document.getElementById('inp-pin').value=''; return; }
   if(found.status === 'inactive'){ alertEl.textContent = 'Usuário inativo.'; alertEl.className = 'alert show'; return; }
 
   me = found;
