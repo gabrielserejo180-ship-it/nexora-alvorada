@@ -194,7 +194,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
     <!-- LEFT -->
     <div class="home-left">
       <div>
-        <div class="brand-v">v1.4 — Alvorada Motocicletas</div>
+        <div class="brand-v">v1.5 — Alvorada Motocicletas</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestão comercial centralizada</div>
@@ -492,12 +492,10 @@ function doLoginVerificar(user, pin, alertEl) {
     }
   }
   if(!found) {
-    alertEl.textContent = 'Erro: '+debug+'| buscando: '+user+'/'+pin+'/'+profile;
+    alertEl.textContent = 'DIAG: '+debug+' | buscando: '+user+'/'+pin+'/'+profile;
     alertEl.className = 'alert show';
     return;
   }
-
-  if(!found){ alertEl.textContent = 'Usuário ou senha incorretos. Verifique os dados cadastrados na planilha.'; alertEl.className = 'alert show'; document.getElementById('inp-pin').value=''; return; }
   if(found.status === 'inactive'){ alertEl.textContent = 'Usuário inativo.'; alertEl.className = 'alert show'; return; }
 
   me = found;
