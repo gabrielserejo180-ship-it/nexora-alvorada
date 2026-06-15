@@ -1014,35 +1014,39 @@ function vndNova() {
 }
 
 function vndSalvar() {
-  var sel  = document.getElementById('vnd-cli-sel');
-  var cli  = sel ? sel.value : '';
-  var val  = document.getElementById('vnd-val').value;
-  var pgto = document.getElementById('vnd-pgto').value;
-  var obs  = document.getElementById('vnd-obs').value.trim();
+  try {
+    var sel  = document.getElementById('vnd-cli-sel');
+    var cli  = sel ? sel.value : '';
+    var val  = document.getElementById('vnd-val').value;
+    var pgto = document.getElementById('vnd-pgto').value;
+    var obs  = document.getElementById('vnd-obs').value.trim();
 
-  if(!cli){
-    sel.style.borderColor='var(--red)';
-    alert('Selecione um cliente da carteira.');
-    return;
-  }
-  if(!val || Number(val)<=0){
-    document.getElementById('vnd-val').style.borderColor='var(--red)';
-    alert('Informe o valor da venda.');
-    return;
-  }
+    if(!cli){
+      sel.style.borderColor='var(--red)';
+      alert('Selecione um cliente da carteira.');
+      return;
+    }
+    if(!val || Number(val)<=0){
+      document.getElementById('vnd-val').style.borderColor='var(--red)';
+      alert('Informe o valor da venda.');
+      return;
+    }
 
-  VND_DB.push({
-    cliente: cli,
-    representante: me ? me.name : '',
-    data: new Date().toLocaleDateString('pt-BR'),
-    valor: Number(val),
-    pgto: pgto,
-    obs: obs
-  });
-  lsSet('nxr_vnd', JSON.stringify(VND_DB));
-  audLog('venda','Venda registrada',cli+' · R$ '+Number(val).toLocaleString('pt-BR'));
-  document.getElementById('vnd-modal').style.display='none';
-  vndRender();
+    VND_DB.push({
+      cliente: cli,
+      representante: me ? me.name : '',
+      data: new Date().toLocaleDateString('pt-BR'),
+      valor: Number(val),
+      pgto: pgto,
+      obs: obs
+    });
+    lsSet('nxr_vnd', JSON.stringify(VND_DB));
+    audLog('venda','Venda registrada',cli+' · R$ '+Number(val).toLocaleString('pt-BR'));
+    document.getElementById('vnd-modal').style.display='none';
+    navigate('vendas');
+  } catch(e) {
+    alert('Erro ao salvar: ' + e.message);
+  }
 }
 
 
