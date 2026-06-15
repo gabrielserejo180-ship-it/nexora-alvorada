@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nexora Connect v1.7</title>
+<title>Nexora Connect v2.0</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 :root{
@@ -194,7 +194,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
     <!-- LEFT -->
     <div class="home-left">
       <div>
-        <div class="brand-v">v1.7 — Alvorada Motocicletas</div>
+        <div class="brand-v">v2.0 — Alvorada Motocicletas</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestão comercial centralizada</div>
@@ -656,7 +656,13 @@ function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; 
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 
 // Carregar usuários do localStorage (cache da planilha)
-var USR_DB = JSON.parse(lsGet('nxr_usr') || '[]');
+var USR_DB = (function(){
+  try {
+    var saved = lsGet('nxr_usr');
+    if(saved){ var arr = JSON.parse(saved); if(Array.isArray(arr) && arr.length > 0) return arr; }
+  } catch(e){}
+  return [];
+})();
 
 var CLI_DB = JSON.parse(lsGet('nxr_cli') || '[]');
 var VND_DB = JSON.parse(lsGet('nxr_vnd') || '[]');
@@ -2005,5 +2011,4 @@ function vndSalvar() {
 function usrRender() {
   var busca  = document.getElementById('usr-busca')  ? document.getElementById('usr-busca').value.toLowerCase()  : '';
   var filtro = document.getElementById('usr-filtro') ? document.getElementById('usr-filtro').value : '';
-  var lista  = USR_DB.slice();
-  if(busca)  lista=lista.filter(function(u){return (u.name||'').toLowerCase().indexOf(busca)>-1||(u.user||'').indexOf(busca)>-1;})
+  var lista
