@@ -1003,33 +1003,31 @@ function vndBuscarCliente() {
   var busca = (document.getElementById('vnd-cli-busca').value || '').toLowerCase();
   var lista = document.getElementById('vnd-cli-lista');
   if(!lista) return;
+  if(busca.length < 1) { lista.style.display='none'; return; }
 
-  if(busca.length < 1) { lista.style.display = 'none'; return; }
-
-  // Filtrar carteira do representante
-  var carteira = me && me.role === 'rep'
-    ? CLI_DB.filter(function(c){ return c.representante === me.name; })
+  var carteira = (me && me.role==='rep')
+    ? CLI_DB.filter(function(c){ return c.representante===me.name; })
     : CLI_DB;
 
   var filtrado = carteira.filter(function(c){
-    return (c.nome||'').toLowerCase().indexOf(busca) > -1
-      || (c.cnpj||'').indexOf(busca) > -1
-      || (c.cpf||'').indexOf(busca) > -1;
+    return (c.nome||'').toLowerCase().indexOf(busca)>-1
+      || (c.cnpj||'').indexOf(busca)>-1
+      || (c.cpf||'').indexOf(busca)>-1;
   });
 
-  if(!filtrado.length) {
-    lista.innerHTML = '<div style="padding:12px 14px;font-size:12px;color:var(--txt2)">Nenhum cliente encontrado na carteira.</div>';
-    lista.style.display = 'block';
+  if(!filtrado.length){
+    lista.innerHTML='<div style="padding:12px 14px;font-size:12px;color:var(--txt2)">Nenhum cliente na carteira.</div>';
+    lista.style.display='block';
     return;
   }
 
+  // Usar índice em array global para evitar problema de aspas
+  window._vndClientes = filtrado;
   var html = '';
-  for(var i=0; i<Math.min(filtrado.length, 8); i++) {
+  for(var i=0; i<Math.min(filtrado.length,10); i++){
     var c = filtrado[i];
-    var doc = c.cnpj ? 'CNPJ: '+c.cnpj : (c.cpf ? 'CPF: '+c.cpf : '');
-    var nomeEsc = (c.nome||'').replace(/"/g,'&quot;');
-    var docEsc  = (doc||'').replace(/"/g,'&quot;');
-    html += '<div class="vnd-item" onclick="vndSelecionarCliente(\"'+nomeEsc+'\",\"'+docEsc+'\")">'
+    var doc = c.cnpj ? 'CNPJ: '+c.cnpj : (c.cpf?'CPF: '+c.cpf:'');
+    html += '<div class="vnd-item" onclick="vndSelecionarIdx('+i+')">'
       +'<div style="font-size:13px;font-weight:600;color:var(--txt)">'+c.nome+'</div>'
       +'<div style="font-size:10px;color:var(--txt3)">'+(doc||c.cidade||'')+(c.uf?' - '+c.uf:'')+'</div>'
       +'</div>';
@@ -1038,20 +1036,40 @@ function vndBuscarCliente() {
   lista.style.display = 'block';
 }
 
+
+function vndSelecionarIdx(i) {
+  var c = window._vndClientes && window._vndClientes[i];
+  if(!c) return;
+  var doc = c.cnpj ? 'CNPJ: '+c.cnpj : (c.cpf?'CPF: '+c.cpf:'');
+  vndSelecionarCliente(c.nome, doc);
+}
+
 function vndSelecionarCliente(nome, doc) {
-  document.getElementById('vnd-cli-nome').value  = nome;
-  document.getElementById('vnd-cli-busca').value = '';
-  document.getElementById('vnd-cli-busca').style.display = 'none';
+  // Salvar nome no campo hidden
+  var inp = document.getElementById('vnd-cli-nome');
+  if(inp) inp.value = nome;
+
+  // Esconder busca
+  var busca = document.getElementById('vnd-cli-busca');
+  if(busca){ busca.value=''; busca.style.display='none'; }
+
+  // Esconder lista
   var lista = document.getElementById('vnd-cli-lista');
-  if(lista) lista.style.display = 'none';
-  var sel = document.getElementById('vnd-cli-sel');
+  if(lista) lista.style.display='none';
+
+  // Mostrar card selecionado
+  var sel     = document.getElementById('vnd-cli-sel');
   var selNome = document.getElementById('vnd-cli-sel-nome');
   var selDoc  = document.getElementById('vnd-cli-sel-doc');
-  if(sel)     { sel.style.display = 'flex'; }
+  if(sel)     sel.style.display='flex';
   if(selNome) selNome.textContent = nome;
-  if(selDoc)  selDoc.textContent  = doc;
-  setTimeout(function(){ document.getElementById('vnd-val').focus(); }, 100);
+  if(selDoc)  selDoc.textContent  = doc||'';
+
+  // Focar no valor
+  var val = document.getElementById('vnd-val');
+  if(val) setTimeout(function(){ val.focus(); }, 100);
 }
+
 
 function vndLimparCliente() {
   document.getElementById('vnd-cli-nome').value = '';
