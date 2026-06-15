@@ -182,7 +182,18 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 /* ── UTILITÁRIOS ── */
 .sc.pointer{cursor:pointer;transition:border-color .2s}
 .sc.pointer:hover{border-color:var(--blue)}
-@media(max-width:650px){.home-left,.moto-col,.sidebar{display:none!important}.main{padding:16px}}
+@media(max-width:768px){
+  .home-left{ display:none!important; }
+  .moto-col{ display:none!important; }
+  .sidebar{ display:none!important; }
+  .home-right{ flex-direction:column!important; }
+  .home-cards{ padding:24px 20px!important; width:100%!important; }
+  .home-wrap{ max-width:100%!important; border-radius:16px!important; margin:12px!important; width:calc(100% - 24px)!important; }
+  .screen{ padding:12px!important; }
+  .pcard{ padding:14px 16px!important; }
+  .main{ padding:16px!important; }
+  .login-wrap{ border-radius:16px!important; }
+}
 .vnd-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--line);}
 .vnd-item:hover{background:var(--s3);}
 </style>
@@ -2002,13 +2013,4 @@ function vndSalvar() {
     try{document.getElementById('vnd-modal').style.display='none';}catch(e){}
     setTimeout(function(){
       showToast('✅ Venda de R$ '+Number(val).toLocaleString('pt-BR')+' registrada!');
-      var el=document.getElementById('vnd-lista'); if(el){vndRender();}else{navigate('vendas');}
-    },100);
-  } catch(e){ alert('Erro: '+e.message); }
-}
-
-// ═══ USUÁRIOS ════════════════════════════════════════════
-function usrRender() {
-  var busca  = document.getElementById('usr-busca')  ? document.getElementById('usr-busca').value.toLowerCase()  : '';
-  var filtro = document.getElementById('usr-filtro') ? document.getElementById('usr-filtro').value : '';
-  var lista
+      var el=documen
