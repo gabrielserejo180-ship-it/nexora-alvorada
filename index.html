@@ -475,21 +475,26 @@ function doLogin() {
 }
 
 function doLoginVerificar(user, pin, alertEl) {
-
-  // Buscar apenas nos usuários carregados da planilha
-  // Se não tem nenhum ainda, usar só o ADM de emergência
   var todos = USR_DB.length > 0 ? USR_DB : USERS_BASE;
   var found = null;
+
+  // DEBUG: mostrar o que está sendo comparado
+  var debug = 'DB('+todos.length+'): ';
   for(var i=0;i<todos.length;i++){
     var u = todos[i];
     var uUser = String(u.user||'').toLowerCase().trim();
     var uRole = String(u.role||'').trim();
-    // Comparar pin como string E como número (Sheets converte 000000 → 0)
     var uPin  = String(u.pin||'').trim();
-    var pinOk = (uPin === pin) || (Number(u.pin) === Number(pin));
+    var pinOk = (uPin === pin) || (String(Number(u.pin)) === String(Number(pin)));
+    debug += '['+uUser+'/'+uPin+'/'+uRole+(pinOk&&uUser===user?'✓':'')+'] ';
     if(uUser === user && pinOk && uRole === profile){
       found = u; break;
     }
+  }
+  if(!found) {
+    alertEl.textContent = 'Erro: '+debug+'| buscando: '+user+'/'+pin+'/'+profile;
+    alertEl.className = 'alert show';
+    return;
   }
 
   if(!found){ alertEl.textContent = 'Usuário ou senha incorretos. Verifique os dados cadastrados na planilha.'; alertEl.className = 'alert show'; document.getElementById('inp-pin').value=''; return; }
