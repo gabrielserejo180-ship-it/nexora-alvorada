@@ -371,6 +371,57 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 </div>
 
 <script>
+
+// ═══ AUDITORIA ════════════════════════════════════════════
+var AUD_DB = JSON.parse(lsGet('nxr_aud') || '[]');
+
+function audLog(tipo, descricao, detalhe) {
+  try {
+    var registro = {
+      tipo:      tipo || 'acao',
+      descricao: descricao || '',
+      detalhe:   detalhe || '',
+      usuario:   me ? me.name : 'Sistema',
+      role:      me ? me.role : '',
+      data:      new Date().toLocaleDateString('pt-BR'),
+      hora:      new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})
+    };
+    AUD_DB.unshift(registro);
+    if(AUD_DB.length > 200) AUD_DB = AUD_DB.slice(0, 200);
+    lsSet('nxr_aud', JSON.stringify(AUD_DB));
+  } catch(e) {}
+}
+
+function audRender() {
+  var busca = document.getElementById('aud-busca') ? document.getElementById('aud-busca').value.toLowerCase() : '';
+  var lista = AUD_DB.slice();
+  if(busca) lista = lista.filter(function(a){
+    return (a.descricao||'').toLowerCase().indexOf(busca) > -1
+      || (a.usuario||'').toLowerCase().indexOf(busca) > -1
+      || (a.detalhe||'').toLowerCase().indexOf(busca) > -1;
+  });
+
+  var el = document.getElementById('aud-lista');
+  if(!el) return;
+  if(!lista.length){ el.innerHTML='<div class="aud-row">Nenhum registro.</div>'; return; }
+
+  var icons = {login:'🔐',logout:'🚪',cadastro:'➕',edicao:'✏️',venda:'💰',retorno:'🔔',acao:'📋'};
+  var html = '<div class="usr-table">';
+  for(var i=0; i<lista.length; i++){
+    var a = lista[i];
+    html += '<div class="aud-row">'
+      +'<span style="flex-shrink:0;font-size:16px">'+(icons[a.tipo]||'📋')+'</span>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:13px;font-weight:600">'+a.usuario+'</div>'
+      +'<div style="font-size:11px;color:var(--txt2)">'+a.descricao+(a.detalhe?' · '+a.detalhe:'')+'</div>'
+      +'</div>'
+      +'<span style="font-size:10px;color:var(--txt3);flex-shrink:0">'+a.data+' '+a.hora+'</span>'
+      +'</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+
 // Capturar erros JS
 window.onerror = function(msg, src, line, col, err) {
   var d = document.createElement('div');
