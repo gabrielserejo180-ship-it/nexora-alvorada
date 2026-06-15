@@ -788,7 +788,7 @@ function capNorm(d){
     tel:     telFmt,
     telNum:  tel1,
     email:   d.email||'',
-    cnae:    d.cnae_fiscal_descricao||d.atividade_principal?.[0]?.text||d.cnae_descricao||d.atividade||'',
+    cnae:    d.cnae_fiscal_descricao||(d.atividade_principal && d.atividade_principal[0] && d.atividade_principal[0].text)||d.cnae_descricao||d.atividade||'',
     capital: d.capital_social ? 'R$ '+Number(d.capital_social).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '',
     porte:   d.descricao_porte||d.porte||'',
     abertura:d.data_inicio_atividade||d.abertura||'',
@@ -930,9 +930,9 @@ async function capBuscarCNPJ(){
 
 /* ── Buscar por Nome/Cidade — via Apps Script proxy ── */
 async function capBuscarNome(){
-  const nome  = (document.getElementById('cap-nome')?.value||'').trim();
-  const cidade= (document.getElementById('cap-cidade')?.value||'').trim();
-  const uf    = (document.getElementById('cap-uf')?.value||'').trim().toUpperCase();
+  const nome  = ((document.getElementById('cap-nome') ? document.getElementById('cap-nome').value : '')||'').trim();
+  const cidade= ((document.getElementById('cap-cidade') ? document.getElementById('cap-cidade').value : '')||'').trim();
+  const uf    = ((document.getElementById('cap-uf') ? document.getElementById('cap-uf').value : '')||'').trim().toUpperCase();
   const res   = document.getElementById('cap-resultado-nome');
   const btn   = document.getElementById('btn-cap-nome');
 
@@ -1020,8 +1020,8 @@ let usrEditIdx=null;
 
 function usrRender(){
   const isAdm=me&&me.role==='adm';
-  const role=document.getElementById('usr-filtro-role')?.value||'';
-  const busca=(document.getElementById('usr-busca')?.value||'').toLowerCase();
+  const role=(document.getElementById('usr-filtro-role') ? document.getElementById('usr-filtro-role').value : '')||'';
+  const busca=((document.getElementById('usr-busca') ? document.getElementById('usr-busca').value : '')||'').toLowerCase();
   let lista=isAdm?[...USR_DB]:USR_DB.filter(u=>u.role==='rep');
   if(role) lista=lista.filter(u=>u.role===role);
   if(busca) lista=lista.filter(u=>(u.name||'').toLowerCase().includes(busca)||(u.user||'').includes(busca));
@@ -1077,11 +1077,11 @@ function usrAbrirEditar(idx){
 }
 
 async function usrSalvar(){
-  const nome=document.getElementById('um-nome')?.value.trim();
-  const user=document.getElementById('um-user')?.value.trim().toLowerCase();
-  const pin=document.getElementById('um-pin')?.value.trim();
-  const role=document.getElementById('um-role')?.value||'rep';
-  const status=document.getElementById('um-status')?.value||'active';
+  const nome=(document.getElementById('um-nome') ? document.getElementById('um-nome').value : '').trim();
+  const user=(document.getElementById('um-user') ? document.getElementById('um-user').value : '').trim().toLowerCase();
+  const pin=(document.getElementById('um-pin') ? document.getElementById('um-pin').value : '').trim();
+  const role=(document.getElementById('um-role') ? document.getElementById('um-role').value : '')||'rep';
+  const status=(document.getElementById('um-status') ? document.getElementById('um-status').value : '')||'active';
   if(!nome){alert('Informe o nome.');return;}
   if(!user){alert('Informe o usuário.');return;}
   const dup=USR_DB.findIndex((u,i)=>u.user===user&&i!==usrEditIdx);
@@ -1115,8 +1115,8 @@ function usrExcluir(idx){
 
 /* ═══ AUDITORIA ════════════════════════════════════════════════════════ */
 function audRender(){
-  const busca=(document.getElementById('aud-busca')?.value||'').toLowerCase();
-  const tipo=document.getElementById('aud-filtro-tipo')?.value||'';
+  const busca=((document.getElementById('aud-busca') ? document.getElementById('aud-busca').value : '')||'').toLowerCase();
+  const tipo=(document.getElementById('aud-filtro-tipo') ? document.getElementById('aud-filtro-tipo').value : '')||'';
   let lista=[...AUD_DB];
   if(busca) lista=lista.filter(a=>(a.descricao||'').toLowerCase().includes(busca)||(a.usuario||'').toLowerCase().includes(busca));
   if(tipo) lista=lista.filter(a=>a.tipo===tipo);
@@ -1148,14 +1148,14 @@ function cfgCarregar(){
 }
 
 function cfgSalvarSheets(){
-  CFG.sheetsUrl=document.getElementById('cfg-sheets-url')?.value.trim()||'';
+  CFG.sheetsUrl=(document.getElementById('cfg-sheets-url') ? document.getElementById('cfg-sheets-url').value : '').trim()||'';
   try{localStorage.setItem('nexora_config',JSON.stringify(CFG));}catch(e){}
   const el=document.getElementById('cfg-sheets-saved');
   if(el){el.style.display='inline';setTimeout(()=>el.style.display='none',2500);}
 }
 
 async function cfgTestarSheets(){
-  const url=document.getElementById('cfg-sheets-url')?.value.trim();
+  const url=(document.getElementById('cfg-sheets-url') ? document.getElementById('cfg-sheets-url').value : '').trim();
   const st=document.getElementById('cfg-sheets-status');
   if(!url){alert('Informe a URL.');return;}
   if(st) st.innerHTML='<span style="font-size:12px;padding:5px 12px;border-radius:99px;background:var(--s3);color:var(--txt2)">Testando…</span>';
@@ -1335,8 +1335,8 @@ function buildClientesSimples(){
 }
 
 function cliRender(){
-  const busca = (document.getElementById('cli-busca')?.value||'').toLowerCase();
-  const filtro = document.getElementById('cli-filtro')?.value||'';
+  const busca = ((document.getElementById('cli-busca') ? document.getElementById('cli-busca').value : '')||'').toLowerCase();
+  const filtro = (document.getElementById('cli-filtro') ? document.getElementById('cli-filtro').value : '')||'';
   let lista = me.role==='rep' ? CLI_DB.filter(c=>c.representante===me.name) : CLI_DB;
   if(busca) lista = lista.filter(c=>(c.nome||'').toLowerCase().includes(busca)||(c.cnpj||'').includes(busca));
   if(filtro) lista = lista.filter(c=>c.status===filtro);
@@ -1601,12 +1601,4 @@ function buildConfig(){
     +'<input id="cfg-sheets-url" style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:DM Sans,sans-serif;outline:none" placeholder="https://script.google.com/macros/s/.../exec"></div>'
     +'</div>'
     +'<div style="display:flex;align-items:center;gap:10px;padding:14px 20px;border-top:1px solid var(--line);background:var(--s2)">'
-    +'<button onclick="cfgTestarSheets()" style="height:38px;padding:0 16px;background:none;border:1px solid var(--line2);color:var(--txt2);border-radius:9px;font-size:13px;cursor:pointer;font-family:DM Sans,sans-serif">🔌 Testar conexão</button>'
-    +'<button onclick="cfgSalvarSheets()" style="height:38px;padding:0 20px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif">💾 Salvar</button>'
-    +'<span id="cfg-sheets-saved" style="font-size:12px;color:var(--green);display:none">✓ Salvo!</span>'
-    +'</div></div>'
-    +'<div style="background:var(--s1);border:1px solid var(--line);border-radius:14px;overflow:hidden">'
-    +'<div style="display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);background:var(--s2)">'
-    +'<span style="font-size:18px">💾</span><div><div style="font-size:14px;font-weight:600">Dados e Backup</div></div>'
-    +'</div>'
-    +'<div style="padding:20px;display:
+    +'<button onclick="cfgTestarSheets()" style="height:38px;padding:0 16px;background:none;border:1px solid var(--line2);color:var(--txt2);border-radius:9px;font-size:13px;cursor:pointer;font-family:DM Sans,sans-serif">🔌 Testar conexão</button>
