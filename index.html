@@ -415,6 +415,7 @@ function doLogin() {
   alertEl.className = 'alert';
 
   if(!user){ alertEl.textContent = 'Informe o usuário.'; alertEl.className = 'alert show'; return; }
+  pin = String(pin).trim();
   if(pin.length < 6){ alertEl.textContent = 'Senha deve ter 6 dígitos.'; alertEl.className = 'alert show'; return; }
 
   // Buscar em USR_DB e USERS_BASE (garantir que adm/ger padrão sempre funcione)
@@ -430,12 +431,15 @@ function doLogin() {
   var found = null;
   for(var i=0;i<todos.length;i++){
     var u = todos[i];
-    if(String(u.user||'').toLowerCase() === user && String(u.pin||'') === pin && (u.role||'') === profile){
+    var uPin = String(u.pin||'').trim();
+    var uUser = String(u.user||'').toLowerCase().trim();
+    var uRole = String(u.role||'').trim();
+    if(uUser === user && uPin === pin && uRole === profile){
       found = u; break;
     }
   }
 
-  if(!found){ alertEl.textContent = 'Usuário ou senha incorretos.'; alertEl.className = 'alert show'; document.getElementById('inp-pin').value=''; return; }
+  if(!found){ alertEl.textContent = 'Usuário ou senha incorretos. ('+user+'/'+profile+')'; alertEl.className = 'alert show'; document.getElementById('inp-pin').value=''; return; }
   if(found.status === 'inactive'){ alertEl.textContent = 'Usuário inativo.'; alertEl.className = 'alert show'; return; }
 
   me = found;
