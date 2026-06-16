@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nexora Connect v4.4</title>
+<title>Nexora Connect v4.5</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 :root{
@@ -167,7 +167,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 <body>
 
 <div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999;display:none">
-  JavaScript nao carregou — v4.4
+  JavaScript nao carregou — v4.5
 </div>
 
 <!-- MODAL VER/EDITAR RETORNO -->
@@ -210,7 +210,7 @@ document.getElementById('js-status').style.display='none';
   <div class="home-wrap">
     <div class="home-left">
       <div>
-        <div class="brand-v">v4.4</div>
+        <div class="brand-v">v4.5</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestao comercial centralizada</div>
@@ -510,7 +510,7 @@ document.getElementById('js-status').style.display='none';
 
 <script>
 // ═══════════════════════════════════════════
-// NEXORA CONNECT v4.4 - ES5 PURO
+// NEXORA CONNECT v4.5 - ES5 PURO
 // ═══════════════════════════════════════════
 
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbzAcf1JapNJVNVUZtHtglIWo8crSe_ipNY-aOi2hp2xDV-r5N2KoDTnzTgfaVGgOCiP/exec';
@@ -575,10 +575,23 @@ function sheetsPost(action, sheet, row) {
   var url = APPS_URL + '?action=' + action + '&sheet=' + sheet + '&' + r;
   fetch(url).catch(function() {});
 }
-function sheetsSalvarLinha(sheet, obj) {
+function sheetsSalvarLinha(sheet, obj, cb) {
   var encoded = encodeURIComponent(JSON.stringify(obj));
   var url = APPS_URL + '?action=inserirLinha&sheet=' + sheet + '&row=' + encoded;
-  fetch(url).catch(function() {});
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d && d.ok) {
+        if (cb) cb(true);
+      } else {
+        console.error('Erro ao salvar em ' + sheet + ':', d ? d.msg : 'resposta vazia');
+        if (cb) cb(false, d ? d.msg : 'erro');
+      }
+    })
+    .catch(function(e) {
+      console.error('Falha de conexao ao salvar em ' + sheet + ':', e);
+      if (cb) cb(false, 'sem conexao');
+    });
 }
 function sheetsLimpar(sheet) {
   return fetch(APPS_URL + '?action=limpar&sheet=' + sheet);
@@ -1405,6 +1418,14 @@ function cliSalvarManual() {
   lsSet('nxr_cli', JSON.stringify(CLI_DB));
   var modal = document.getElementById('cli-modal');
   if (modal) modal.style.display = 'none';
+  // Salvar na planilha com feedback
+  sheetsSalvarLinha('Clientes', novo, function(ok, err) {
+    if (ok) {
+      showToast('Cliente salvo na planilha!');
+    } else {
+      showToast('Salvo localmente. Planilha: ' + (err || 'erro'), 'erro');
+    }
+  });
   setTimeout(cliRender, 100);
 }
 
@@ -1731,7 +1752,9 @@ function retSalvar() {
   };
   RET_DB.push(novo);
   lsSet('nxr_ret', JSON.stringify(RET_DB));
-  sheetsSalvarLinha('Retornos', novo);
+  sheetsSalvarLinha('Retornos', novo, function(ok, err) {
+    if (!ok) showToast('Retorno salvo localmente. Planilha: ' + (err || 'erro'), 'erro');
+  });
   var modal = document.getElementById('ret-modal');
   if (modal) modal.style.display = 'none';
   showToast('Retorno agendado!');
@@ -1804,7 +1827,9 @@ function vndSalvar() {
   };
   VND_DB.push(novo);
   lsSet('nxr_vnd', JSON.stringify(VND_DB));
-  sheetsSalvarLinha('Vendas', novo);
+  sheetsSalvarLinha('Vendas', novo, function(ok, err) {
+    if (!ok) showToast('Venda salva localmente. Planilha: ' + (err || 'erro'), 'erro');
+  });
   var modal = document.getElementById('vnd-modal');
   if (modal) modal.style.display = 'none';
   showToast('Venda registrada!');
