@@ -223,7 +223,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
     <div class="home-cards">
       <div class="home-label">Selecione seu perfil de acesso</div>
 
-      <button class="pcard" onclick="goLogin('rep')">
+      <button class="pcard" id="btn-rep">
         <div class="pcard-icon" style="background:rgba(16,185,129,.12)">🧑‍💼</div>
         <div>
           <div class="pcard-title">Representante</div>
@@ -232,7 +232,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
         <div class="pcard-arrow">›</div>
       </button>
 
-      <button class="pcard" onclick="goLogin('ger')">
+      <button class="pcard" id="btn-ger">
         <div class="pcard-icon" style="background:rgba(37,99,235,.12)">📊</div>
         <div>
           <div class="pcard-title">Gerente</div>
@@ -241,7 +241,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
         <div class="pcard-arrow">›</div>
       </button>
 
-      <button class="pcard" onclick="goLogin('adm')">
+      <button class="pcard" id="btn-adm">
         <div class="pcard-icon" style="background:rgba(99,102,241,.12)">⚙️</div>
         <div>
           <div class="pcard-title">Administrador</div>
@@ -298,7 +298,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 <div class="screen hidden" id="screen-login">
   <div class="login-wrap">
     <div class="login-head">
-      <button class="login-back" onclick="goHome()">‹</button>
+      <button class="login-back" id="btn-back-login">‹</button>
       <div>
         <div class="login-role" id="login-role-lbl">Perfil</div>
         <div class="login-title">Acesso ao sistema</div>
@@ -314,7 +314,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
         <label>Senha (6 dígitos)</label>
         <input type="password" id="inp-pin" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="current-password">
       </div>
-      <button class="btn-blue" onclick="doLogin()">Entrar</button>
+      <button class="btn-blue" id="btn-entrar">Entrar</button>
       <div class="login-hint">Dúvidas? Fale com o administrador.</div>
     </div>
   </div>
@@ -1473,6 +1473,29 @@ function carregarDoSheets() {
 // ═══ INICIALIZAÇÃO ════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', function(){
   showScreen('screen-home');
+
+  // Adicionar eventos nos cards via addEventListener
+  var btnRep = document.getElementById('btn-rep');
+  var btnGer = document.getElementById('btn-ger');
+  var btnAdm = document.getElementById('btn-adm');
+
+  if(btnRep) btnRep.addEventListener('click', function(){ goLogin('rep'); });
+  if(btnGer) btnGer.addEventListener('click', function(){ goLogin('ger'); });
+  if(btnAdm) btnAdm.addEventListener('click', function(){ goLogin('adm'); });
+
+  // Botão voltar do login
+  var btnBack = document.getElementById('btn-back-login');
+  if(btnBack) btnBack.addEventListener('click', function(){ goHome(); });
+
+  // Botão entrar
+  var btnEntrar = document.getElementById('btn-entrar');
+  if(btnEntrar) btnEntrar.addEventListener('click', function(){ doLogin(); });
+
+  // Enter no campo de senha
+  var inpPin = document.getElementById('inp-pin');
+  if(inpPin) inpPin.addEventListener('keypress', function(e){
+    if(e.key==='Enter'||e.keyCode===13) doLogin();
+  });
 });
 
 function cfgCarregar() {
@@ -2017,17 +2040,4 @@ function vndNova() {
   document.getElementById('vnd-modal').style.display='flex';
 }
 
-function vndSalvar() {
-  try {
-    var sel=document.getElementById('vnd-cli-sel');
-    var cli=sel?sel.value:'';
-    var val=document.getElementById('vnd-val').value;
-    var pgto=document.getElementById('vnd-pgto').value;
-    var obs=document.getElementById('vnd-obs').value.trim();
-    if(!cli){ sel.style.borderColor='var(--red)'; alert('Selecione um cliente.'); return; }
-    if(!val||Number(val)<=0){ document.getElementById('vnd-val').style.borderColor='var(--red)'; alert('Informe o valor.'); return; }
-    var nova={id:'VND-'+Date.now(),cliente:cli,representante:me?me.name:'',data:new Date().toLocaleDateString('pt-BR'),valor:Number(val),pgto:pgto,obs:obs};
-    VND_DB.push(nova);
-    lsSet('nxr_vnd', JSON.stringify(VND_DB));
-    audLog('venda','Venda registrada',cli+' · R$ '+Number(val).toLocaleString('pt-BR'));
-    fetch(APPS_URL+'?action=inserirLinha&sheet=Vendas&row='+encodeURIComponent(JSON.stringify(nova))).catch(functi
+function vndSalvar(
