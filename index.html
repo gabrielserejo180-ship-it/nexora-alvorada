@@ -201,7 +201,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 <body>
 <div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;
   padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999;display:block">
-  ⚠️ JavaScript não carregou — versão 2.1
+  ⚠️ JavaScript não carregou — versão 2.3
 </div>
 
 <div class="screen" id="screen-home">
@@ -209,7 +209,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
     <!-- LEFT -->
     <div class="home-left">
       <div>
-        <div class="brand-v">v2.1 — Alvorada Motocicletas</div>
+        <div class="brand-v">v2.3 — Alvorada Motocicletas</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestão comercial centralizada</div>
@@ -597,94 +597,50 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 </div>
 
 <script>
-
-// ═══ AUDITORIA ════════════════════════════════════════════
-var AUD_DB = JSON.parse(lsGet('nxr_aud') || '[]');
-
-function audLog(tipo, descricao, detalhe) {
-  try {
-    var registro = {
-      tipo:      tipo || 'acao',
-      descricao: descricao || '',
-      detalhe:   detalhe || '',
-      usuario:   me ? me.name : 'Sistema',
-      role:      me ? me.role : '',
-      data:      new Date().toLocaleDateString('pt-BR'),
-      hora:      new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'})
-    };
-    AUD_DB.unshift(registro);
-    if(AUD_DB.length > 200) AUD_DB = AUD_DB.slice(0, 200);
-    lsSet('nxr_aud', JSON.stringify(AUD_DB));
-  } catch(e) {}
-}
-
-function audRender() {
-  var busca = document.getElementById('aud-busca') ? document.getElementById('aud-busca').value.toLowerCase() : '';
-  var lista = AUD_DB.slice();
-  if(busca) lista = lista.filter(function(a){
-    return (a.descricao||'').toLowerCase().indexOf(busca) > -1
-      || (a.usuario||'').toLowerCase().indexOf(busca) > -1
-      || (a.detalhe||'').toLowerCase().indexOf(busca) > -1;
-  });
-
-  var el = document.getElementById('aud-lista');
-  if(!el) return;
-  if(!lista.length){ el.innerHTML='<div class="aud-row">Nenhum registro.</div>'; return; }
-
-  var icons = {login:'🔐',logout:'🚪',cadastro:'➕',edicao:'✏️',venda:'💰',retorno:'🔔',acao:'📋'};
-  var html = '<div class="usr-table">';
-  for(var i=0; i<lista.length; i++){
-    var a = lista[i];
-    html += '<div class="aud-row">'
-      +'<span style="flex-shrink:0;font-size:16px">'+(icons[a.tipo]||'📋')+'</span>'
-      +'<div style="flex:1;min-width:0">'
-      +'<div style="font-size:13px;font-weight:600">'+a.usuario+'</div>'
-      +'<div style="font-size:11px;color:var(--txt2)">'+a.descricao+(a.detalhe?' · '+a.detalhe:'')+'</div>'
-      +'</div>'
-      +'<span style="font-size:10px;color:var(--txt3);flex-shrink:0">'+a.data+' '+a.hora+'</span>'
-      +'</div>';
-  }
-  html += '</div>';
-  el.innerHTML = html;
-}
-
-// Capturar erros JS
-window.onerror = function(msg, src, line, col, err) {
-  var d = document.createElement('div');
-  d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:10px 14px;z-index:99999;font-size:13px;font-family:monospace;cursor:pointer;font-weight:bold';
-  d.textContent = '⚠️ ERRO linha '+line+': '+msg+' — clique para fechar';
-  d.onclick = function(){ document.body.removeChild(d); };
-  document.body.appendChild(d);
-  return false;
-};
-
-// ═══ CONFIGURAÇÃO ═══════════════════════════════════════
-var _URL_PADRAO = 'https://script.google.com/macros/s/AKfycbzAcf1JapNJVNVUZtHtglIWo8crSe_ipNY-aOi2hp2xDV-r5N2KoDTnzTgfaVGgOCiP/exec';
-var APPS_URL = lsGet('nxr_url') || _URL_PADRAO;
-
-// Sem fallback local — todos os usuários vêm da planilha
-var USERS_BASE = [];
-
+// ═══ UTILITÁRIOS ═══════════════════════════════════════
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function sanitize(s){
+  var r='', str=String(s||'');
+  for(var i=0;i<str.length;i++){
+    var c=str[i];
+    if(c!=='"' && c!=="'") r+=c;
+  }
+  return r;
+}
 
-// Carregar usuários do localStorage (cache da planilha)
+// ═══ VARIÁVEIS GLOBAIS ═════════════════════════════════
+var _URL_PADRAO = 'https://script.google.com/macros/s/AKfycbzAcf1JapNJVNVUZtHtglIWo8crSe_ipNY-aOi2hp2xDV-r5N2KoDTnzTgfaVGgOCiP/exec';
+var APPS_URL    = lsGet('nxr_url') || _URL_PADRAO;
+var USERS_BASE  = [];
 var USR_DB = (function(){
-  try {
-    var saved = lsGet('nxr_usr');
-    if(saved){ var arr = JSON.parse(saved); if(Array.isArray(arr) && arr.length > 0) return arr; }
-  } catch(e){}
+  try{
+    var s=lsGet('nxr_usr');
+    if(s){var a=JSON.parse(s);if(Array.isArray(a)&&a.length>0)return a;}
+  }catch(e){}
   return [];
 })();
-
 var CLI_DB = JSON.parse(lsGet('nxr_cli') || '[]');
 var VND_DB = JSON.parse(lsGet('nxr_vnd') || '[]');
 var RET_DB = JSON.parse(lsGet('nxr_ret') || '[]');
 var AUD_DB = JSON.parse(lsGet('nxr_aud') || '[]');
-
-var me = null;
-var profile = null;
+var me         = null;
+var profile    = null;
 var usrEditIdx = null;
+var cliTipoAtual = 'pj';
+var _cliAtualIdx = -1;
+var _usrKeys   = [];
+
+// ═══ CAPTURA DE ERROS ══════════════════════════════════
+window.onerror = function(msg, src, line){
+  var d = document.createElement('div');
+  d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;'
+    +'padding:10px;z-index:99999;font-size:12px;font-family:monospace;cursor:pointer';
+  d.textContent = 'ERRO JS linha '+line+': '+msg+' (clique fechar)';
+  d.onclick = function(){ document.body.removeChild(d); };
+  document.body.appendChild(d);
+  return false;
+};
 
 // ═══ TELAS ═══════════════════════════════════════════════
 function showScreen(id) {
@@ -1200,7 +1156,7 @@ function capBuscarCNPJ() {
 
         +'<button class="btn-add" style="margin-top:12px;width:100%;height:40px;font-size:14px" '
         +'onclick="capAdicionar(this)" '
-        +'data-nome="'+(d.razao_social||'').replace(/"/g,'').replace(/'/g,'')+'" '
+        +'data-nome="'+sanitize(d.razao_social)+'" '
         +'data-cnpj="'+cnpj+'" '
         +'data-cid="'+(d.municipio||'')+'" '
         +'data-uf="'+(d.uf||'')+'" '
@@ -1234,12 +1190,19 @@ function capBuscarNome() {
       var html = '<p style="font-size:12px;color:var(--txt2);margin-bottom:10px">'+d.data.length+' empresa(s) encontrada(s)</p>';
       for(var i=0;i<d.data.length;i++){
         var e = capNorm(d.data[i]);
+        var nomeSeguro = sanitize(e.nome);
         html += '<div class="card-emp">'
           +'<div class="card-emp-title">'+e.nome+'</div>'
           +'<div class="card-emp-sub">'+(e.cnpj?e.cnpj+' · ':'')+e.cidade+(e.uf?' - '+e.uf:'')+'</div>'
           +(e.tel?'<div class="card-emp-info">📞 '+e.tel+'</div>':'')
           +(e.cnae?'<div class="card-emp-info">🏭 '+e.cnae+'</div>':'')
-          +'<button class="btn-add" onclick="capAdicionar(this)" data-nome="'+e.nome.replace(/"/g,'').replace(/'/g,'')+'" data-cnpj="'+e.cnpj+'" data-cid="'+e.cidade+'" data-uf="'+e.uf+'" data-tel="'+e.tel+'" data-email="'+e.email+'">➕ Adicionar</button>'
+          +'<button class="btn-add" onclick="capAdicionar(this)"'
+          +' data-nome="'+nomeSeguro+'"'
+          +' data-cnpj="'+e.cnpj+'"'
+          +' data-cid="'+e.cidade+'"'
+          +' data-uf="'+e.uf+'"'
+          +' data-tel="'+e.tel+'"'
+          +' data-email="'+e.email+'">➕ Adicionar</button>'
           +'</div>';
       }
       res.innerHTML = html;
@@ -1743,8 +1706,6 @@ function vndSelecionarIdx(i) {
 
 
 // ═══ VER / EDITAR / EXCLUIR CLIENTE ══════════════════════
-var _cliAtualIdx = -1;
-var cliTipoAtual = 'pj';
 
 function cliVerIdx(idx) {
   var lista = window._cliLista || [];
@@ -2038,4 +1999,37 @@ function vndNova() {
     for(var i=0;i<carteira.length;i++){
       var opt=document.createElement('option');
       opt.value=carteira[i].nome;
-      opt.tex
+      opt.textContent=carteira[i].nome+(carteira[i].cidade?' — '+carteira[i].cidade:'');
+      sel.appendChild(opt);
+    }
+  }
+  if(document.getElementById('vnd-val')) document.getElementById('vnd-val').value='';
+  if(document.getElementById('vnd-obs')) document.getElementById('vnd-obs').value='';
+  document.getElementById('vnd-modal').style.display='flex';
+}
+
+function vndSalvar() {
+  try {
+    var sel=document.getElementById('vnd-cli-sel');
+    var cli=sel?sel.value:'';
+    var val=document.getElementById('vnd-val').value;
+    var pgto=document.getElementById('vnd-pgto').value;
+    var obs=document.getElementById('vnd-obs').value.trim();
+    if(!cli){ sel.style.borderColor='var(--red)'; alert('Selecione um cliente.'); return; }
+    if(!val||Number(val)<=0){ document.getElementById('vnd-val').style.borderColor='var(--red)'; alert('Informe o valor.'); return; }
+    var nova={id:'VND-'+Date.now(),cliente:cli,representante:me?me.name:'',data:new Date().toLocaleDateString('pt-BR'),valor:Number(val),pgto:pgto,obs:obs};
+    VND_DB.push(nova);
+    lsSet('nxr_vnd', JSON.stringify(VND_DB));
+    audLog('venda','Venda registrada',cli+' · R$ '+Number(val).toLocaleString('pt-BR'));
+    fetch(APPS_URL+'?action=inserirLinha&sheet=Vendas&row='+encodeURIComponent(JSON.stringify(nova))).catch(function(){});
+    try{document.getElementById('vnd-modal').style.display='none';}catch(e){}
+    setTimeout(function(){
+      showToast('✅ Venda de R$ '+Number(val).toLocaleString('pt-BR')+' registrada!');
+      var el=document.getElementById('vnd-lista'); if(el){vndRender();}else{navigate('vendas');}
+    },100);
+  } catch(e){ alert('Erro: '+e.message); }
+}
+
+// ═══ USUÁRIOS ════════════════════════════════════════════
+function usrRender() {
+  var busca  = document.getElementById('usr-busca')  ? document
