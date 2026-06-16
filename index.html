@@ -167,7 +167,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 <body>
 
 <div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999;display:none">
-  JavaScript nao carregou — v3.9
+  JavaScript nao carregou — v4.0
 </div>
 
 <!-- MODAL VER/EDITAR RETORNO -->
@@ -210,7 +210,7 @@ document.getElementById('js-status').style.display='none';
   <div class="home-wrap">
     <div class="home-left">
       <div>
-        <div class="brand-v">v3.9</div>
+        <div class="brand-v">v4.0</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestao comercial centralizada</div>
@@ -510,7 +510,7 @@ document.getElementById('js-status').style.display='none';
 
 <script>
 // ═══════════════════════════════════════════
-// NEXORA CONNECT v3.9 - ES5 PURO
+// NEXORA CONNECT v4.0 - ES5 PURO
 // ═══════════════════════════════════════════
 
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbzAcf1JapNJVNVUZtHtglIWo8crSe_ipNY-aOi2hp2xDV-r5N2KoDTnzTgfaVGgOCiP/exec';
@@ -1200,75 +1200,95 @@ function cliDoRep() {
   return r;
 }
 function cliRender() {
-  var busca = document.getElementById('cli-busca') ? document.getElementById('cli-busca').value.toLowerCase() : '';
-  // rep vê só os seus; ger e adm vêem todos
-  var todos = (me && me.role === 'rep') ? cliDoRep() : CLI_DB;
-  var lista = busca ? [] : todos;
-  if (busca) {
-    for (var i = 0; i < todos.length; i++) {
-      var c = todos[i];
-      if ((c.nome || '').toLowerCase().indexOf(busca) > -1 || (c.cnpj || '').indexOf(busca) > -1 || (c.cpf || '').indexOf(busca) > -1) {
-        lista.push(c);
-      }
+  var el = document.getElementById('cli-lista');
+  var st = document.getElementById('cli-stats');
+  var dbg = document.getElementById('cli-debug');
+
+  var isRep = me && me.role === 'rep';
+  var todos = isRep ? cliDoRep() : CLI_DB;
+
+  var busca = '';
+  var bc = document.getElementById('cli-busca');
+  if (bc) busca = bc.value.toLowerCase().trim();
+
+  var lista = [];
+  for (var i = 0; i < todos.length; i++) {
+    var c = todos[i];
+    if (!busca) { lista.push(c); continue; }
+    if ((c.nome || '').toLowerCase().indexOf(busca) > -1 ||
+        (c.cnpj || '').indexOf(busca) > -1 ||
+        (c.cpf || '').indexOf(busca) > -1) {
+      lista.push(c);
     }
   }
   _cliListaAtual = lista;
 
-  // DEBUG temporário - remover depois
-  var dbg = document.getElementById('cli-debug');
+  // Debug info
   if (dbg) {
-    dbg.textContent = 'CLI_DB=' + CLI_DB.length + ' | role=' + (me ? me.role : '?') + ' | name=' + (me ? me.name : '?') + ' | lista=' + lista.length;
+    dbg.textContent = 'CLI_DB=' + CLI_DB.length + ' | role=' + (me ? me.role : '?') + ' | lista=' + lista.length;
   }
 
-  var st = document.getElementById('cli-stats');
+  // Stats
   if (st) {
-    var ativos = 0;
-    for (var j = 0; j < todos.length; j++) { if (todos[j].status === 'Ativo') ativos++; }
-    var prosp = 0;
-    for (var k = 0; k < todos.length; k++) { if (todos[k].status === 'Novo' || todos[k].status === 'Negociacao') prosp++; }
-    st.innerHTML = '<div class="usr-stat"><div class="usr-stat-val">' + todos.length + '</div><div class="usr-stat-label">Total</div></div>' +
+    var ativos = 0, prosp = 0;
+    for (var j = 0; j < todos.length; j++) {
+      if (String(todos[j].status || '') === 'Ativo') ativos++;
+      if (String(todos[j].status || '') === 'Novo' || String(todos[j].status || '') === 'Negociacao') prosp++;
+    }
+    st.innerHTML =
+      '<div class="usr-stat"><div class="usr-stat-val">' + todos.length + '</div><div class="usr-stat-label">Total</div></div>' +
       '<div class="usr-stat"><div class="usr-stat-val" style="color:var(--green)">' + ativos + '</div><div class="usr-stat-label">Ativos</div></div>' +
       '<div class="usr-stat"><div class="usr-stat-val" style="color:var(--amber)">' + prosp + '</div><div class="usr-stat-label">Em Prospeccao</div></div>';
   }
 
-  var el = document.getElementById('cli-lista');
   if (!el) return;
-  if (!lista.length) { el.innerHTML = '<div class="empty-state">Nenhum cliente encontrado.</div>'; return; }
 
-  var corStatus = { 'Ativo': 'tag-ativo', 'Novo': 'tag-rep', 'Negociacao': 'tag-ger', 'Aguardando Retorno': 'tag-ger', 'Inativo': 'tag-inativo' };
-  var html = '<div class="usr-table">';
+  if (lista.length === 0) {
+    el.innerHTML = '<div class="empty-state">Nenhum cliente encontrado.</div>';
+    return;
+  }
+
+  // Construir tabela
+  var rows = '';
   for (var m = 0; m < lista.length; m++) {
-    var c2 = lista[m];
-    var tel2 = (c2.telefne || c2.telefone || '').replace(/\D/g, '');
-    html += '<div class="usr-row" data-cli-idx="' + m + '" style="cursor:pointer">' +
-      '<div class="usr-av">' + (c2.nome || '?')[0].toUpperCase() + '</div>' +
-      '<div style="flex:1;min-width:0"><div class="usr-name">' + (c2.nome || '') + '</div>' +
-      '<div class="usr-login">' + (c2.cnpj || c2.cpf || '') + ' ' + (c2.cidade || '') + '</div></div>' +
-      (tel2.length >= 10 ? '<a class="link-btn link-wa" href="https://wa.me/55' + tel2 + '" target="_blank" onclick="event.stopPropagation()">WA</a>' : '') +
-      '<span class="tag ' + (corStatus[c2.status] || 'tag-rep') + '">' + (c2.status || 'Novo') + '</span>' +
+    var cli = lista[m];
+    var telRaw = String(cli.telefne || cli.telefone || '').replace(/\D/g, '');
+    var primeiraLetra = String(cli.nome || '?').charAt(0).toUpperCase();
+    var statusStr = String(cli.status || 'Novo');
+    var tagCls = 'tag-rep';
+    if (statusStr === 'Ativo') tagCls = 'tag-ativo';
+    else if (statusStr === 'Inativo') tagCls = 'tag-inativo';
+    else if (statusStr === 'Negociacao' || statusStr === 'Aguardando Retorno') tagCls = 'tag-ger';
+
+    rows +=
+      '<div class="usr-row" data-idx="' + m + '" style="cursor:pointer">' +
+        '<div class="usr-av">' + primeiraLetra + '</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div class="usr-name">' + String(cli.nome || '') + '</div>' +
+          '<div class="usr-login">' + String(cli.cnpj || cli.cpf || '') + ' ' + String(cli.cidade || '') + (cli.uf ? ' - ' + cli.uf : '') + '</div>' +
+          (!isRep && cli.representante ? '<div style="font-size:10px;color:var(--txt3)">' + cli.representante + '</div>' : '') +
+        '</div>' +
+        (telRaw.length >= 10 ? '<a class="link-btn link-wa" href="https://wa.me/55' + telRaw + '" target="_blank" onclick="event.stopPropagation()">WA</a>' : '') +
+        '<span class="tag ' + tagCls + '">' + statusStr + '</span>' +
       '</div>';
   }
-  html += '</div>';
-  el.innerHTML = html;
 
-  // Evento clique
-  var rows = el.querySelectorAll('[data-cli-idx]');
-  for (var n = 0; n < rows.length; n++) {
-    (function(row) {
-      row.addEventListener('click', function() {
-        cliVerIdx(parseInt(row.getAttribute('data-cli-idx')));
-      });
-    })(rows[n]);
+  el.innerHTML = '<div class="usr-table">' + rows + '</div>';
+
+  // Eventos de clique
+  var rowEls = el.getElementsByClassName('usr-row');
+  for (var n = 0; n < rowEls.length; n++) {
+    (function(row, idx) {
+      row.onclick = function(e) {
+        cliVerIdx(idx);
+      };
+    })(rowEls[n], n);
   }
 
   // Busca
-  var bc = document.getElementById('cli-busca');
   if (bc) bc.oninput = cliRender;
-
-  // Botao novo
-  var novoBtn = document.getElementById('cli-novo-btn');
-  if (novoBtn) novoBtn.addEventListener('click', cliNovoManual);
 }
+
 
 function cliVerIdx(idx) {
   var c = _cliListaAtual[idx];
