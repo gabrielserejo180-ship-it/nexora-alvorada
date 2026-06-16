@@ -658,10 +658,8 @@ window.onerror = function(msg, src, line, col, err) {
 var _URL_PADRAO = 'https://script.google.com/macros/s/AKfycbzAcf1JapNJVNVUZtHtglIWo8crSe_ipNY-aOi2hp2xDV-r5N2KoDTnzTgfaVGgOCiP/exec';
 var APPS_URL = lsGet('nxr_url') || _URL_PADRAO;
 
-// Usuário ADM de emergência — só usado se a planilha estiver inacessível
-var USERS_BASE = [
-  {user:'adm001',pin:'000000',name:'Administrador',role:'adm',status:'active'},
-];
+// Sem fallback local — todos os usuários vêm da planilha
+var USERS_BASE = [];
 
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
@@ -736,89 +734,98 @@ function goLogin(p) {
 }
 
 function doLogin() {
-  var user = document.getElementById('inp-user').value.trim().toLowerCase();
-  var pin  = document.getElementById('inp-pin').value.trim();
+  var user    = document.getElementById('inp-user').value.trim().toLowerCase();
+  var pin     = String(document.getElementById('inp-pin').value.trim());
   var alertEl = document.getElementById('login-alert');
   alertEl.className = 'alert';
+  alertEl.style.color = '';
 
-  if(!user){ alertEl.textContent = 'Informe o usuário.'; alertEl.className = 'alert show'; return; }
-  pin = String(pin).trim();
-  if(pin.length < 6){ alertEl.textContent = 'Senha deve ter 6 dígitos.'; alertEl.className = 'alert show'; return; }
+  if(!user){ alertEl.textContent='Informe o usuário.'; alertEl.className='alert show'; return; }
+  if(pin.length < 6){ alertEl.textContent='Senha deve ter 6 dígitos.'; alertEl.className='alert show'; return; }
 
-  // Sempre buscar da planilha antes de verificar
-  alertEl.textContent = '🔄 Verificando...';
-  alertEl.className = 'alert show';
-  alertEl.style.color = 'var(--amber)';
+  // Mostrar loading
+  alertEl.textContent='🔄 Verificando...';
+  alertEl.className='alert show';
+  alertEl.style.color='var(--amber)';
 
-  fetch(APPS_URL + '?action=getUsuarios')
+  // Buscar usuários da planilha
+  var url = lsGet('nxr_url') || _URL_PADRAO;
+  fetch(url + '?action=getUsuarios')
     .then(function(r){ return r.json(); })
     .then(function(d){
-      if(d.ok && d.data && d.data.length > 0){
-        USR_DB = d.data;
-        lsSet('nxr_usr', JSON.stringify(USR_DB));
-      }
-      alertEl.style.color = '';
-      alertEl.className = 'alert';
-      doLoginVerificar(user, pin, alertEl);
-    })
-    .catch(function(){
-      // Se falhou a conexão, usar cache local
-      alertEl.style.color = '';
-      alertEl.className = 'alert';
-      if(USR_DB.length === 0){
-        alertEl.textContent = '⚠️ Sem conexão com a planilha. Tente novamente.';
-        alertEl.className = 'alert show';
+      alertEl.style.color='';
+      alertEl.className='alert';
+
+      if(!d.ok || !d.data || d.data.length === 0){
+        alertEl.textContent='⚠️ Nenhum usuário encontrado na planilha. Verifique a aba USUARIOS.';
+        alertEl.className='alert show';
         return;
       }
+
+      // Atualizar cache
+      USR_DB = d.data;
+      lsSet('nxr_usr', JSON.stringify(USR_DB));
+
+      // Verificar login
       doLoginVerificar(user, pin, alertEl);
+    })
+    .catch(function(err){
+      alertEl.style.color='';
+      alertEl.textContent='❌ Sem conexão com a planilha. Verifique sua internet e a URL do Apps Script.';
+      alertEl.className='alert show';
     });
 }
 
+
 function doLoginVerificar(user, pin, alertEl) {
-  // Normalizar status de todos os usuários antes de verificar
-  var todos = (USR_DB.length > 0 ? USR_DB : USERS_BASE).map(function(u){
-    var st = String(u.status||'').toLowerCase().trim();
-    return {
-      user:   String(u.user||'').trim(),
-      pin:    u.pin,
-      name:   String(u.name||'').trim(),
-      role:   String(u.role||'').toLowerCase().trim(),
-      status: (st==='active'||st==='ativo'||st==='true'||st==='1') ? 'active' : 'inactive',
-    };
-  });
   var found = null;
 
-  // DEBUG: mostrar o que está sendo comparado
-  var debug = 'DB('+todos.length+'): ';
-  for(var i=0;i<todos.length;i++){
-    var u = todos[i];
-    var uUser = String(u.user||'').toLowerCase().trim();
-    var uRole = String(u.role||'').trim();
-    var uPin  = String(u.pin||'').trim();
-    var pinOk = (uPin === pin) || (String(Number(u.pin)) === String(Number(pin)));
-    debug += '['+uUser+'/'+uPin+'/'+uRole+(pinOk&&uUser===user?'✓':'')+'] ';
-    if(uUser === user && pinOk && uRole === profile){
-      found = u; break;
+  for(var i=0; i<USR_DB.length; i++){
+    var u = USR_DB[i];
+    var uUser   = String(u.user||'').toLowerCase().trim();
+    var uRole   = String(u.role||'').toLowerCase().trim();
+    var uPin    = (u.pin===null||u.pin===undefined) ? '' : String(u.pin).trim();
+    var uStatus = String(u.status||'').toLowerCase().trim();
+
+    // Comparar usuário e perfil
+    if(uUser !== user || uRole !== profile) continue;
+
+    // Comparar pin — aceita string '000000' ou número 0 do Sheets
+    // uPin pode ser '0' (Sheets converte 000000→0→'0')
+    var pinOk = (uPin === pin) ||
+                (Number(u.pin) === Number(pin));
+
+    if(pinOk){
+      found = {
+        user:   uUser,
+        pin:    uPin,
+        name:   String(u.name||'').trim(),
+        role:   uRole,
+        status: (uStatus==='active'||uStatus==='ativo') ? 'active' : 'inactive'
+      };
+      break;
     }
   }
-  if(!found) {
-    // Verificar se o usuário existe mas a senha está errada
-    var usuarioExiste = false;
-    for(var xi=0; xi<todos.length; xi++){
-      if(String(todos[xi].user||'').toLowerCase().trim() === user && String(todos[xi].role||'').trim() === profile){
-        usuarioExiste = true; break;
+
+  if(!found){
+    // Verificar se o usuário existe com outro perfil
+    var existeOutroPerfil = false;
+    for(var j=0; j<USR_DB.length; j++){
+      if(String(USR_DB[j].user||'').toLowerCase().trim() === user){
+        existeOutroPerfil = true; break;
       }
     }
-    if(usuarioExiste){
-      alertEl.textContent = '❌ Senha incorreta. Verifique sua senha.';
+    if(existeOutroPerfil){
+      alertEl.textContent = '❌ Usuário ou senha incorretos.';
     } else {
-      alertEl.textContent = '❌ Usuário não encontrado. Verifique o login e o perfil selecionado.';
+      alertEl.textContent = '❌ Usuário "'+user+'" não encontrado na planilha.';
     }
     alertEl.className = 'alert show';
-    document.getElementById('inp-pin').value = '';
-    document.getElementById('inp-pin').focus();
+    var pinEl = document.getElementById('inp-pin');
+    if(pinEl){ pinEl.value=''; try{ pinEl.focus(); }catch(e){} }
     return;
   }
+
   if(found.status === 'inactive'){
     alertEl.textContent = '⚠️ Usuário inativo. Contate o administrador.';
     alertEl.className = 'alert show';
@@ -828,6 +835,7 @@ function doLoginVerificar(user, pin, alertEl) {
   me = found;
   launchApp();
 }
+
 
 function launchApp() {
   document.querySelectorAll('.screen').forEach(function(s){ s.style.display='none'; });
@@ -2013,4 +2021,9 @@ function vndSalvar() {
     try{document.getElementById('vnd-modal').style.display='none';}catch(e){}
     setTimeout(function(){
       showToast('✅ Venda de R$ '+Number(val).toLocaleString('pt-BR')+' registrada!');
-      var el=documen
+      var el=document.getElementById('vnd-lista'); if(el){vndRender();}else{navigate('vendas');}
+    },100);
+  } catch(e){ alert('Erro: '+e.message); }
+}
+
+// ═══ USUÁRIOS ═════════════════════════════════════════
