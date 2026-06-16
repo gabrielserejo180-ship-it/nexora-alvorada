@@ -684,13 +684,18 @@ var usrEditIdx = null;
 
 // ═══ TELAS ═══════════════════════════════════════════════
 function showScreen(id) {
-  var screens = document.querySelectorAll('.screen');
-  for(var i=0;i<screens.length;i++){
-    screens[i].className = 'screen hidden';
-    screens[i].style.display = '';
+  // Esconder todas as screens
+  var all = ['screen-home','screen-login'];
+  for(var i=0;i<all.length;i++){
+    var s = document.getElementById(all[i]);
+    if(s){ s.style.display='none'; }
   }
+  // Esconder app-shell
+  var shell = document.getElementById('app-shell');
+  if(shell){ shell.style.display='none'; shell.className='app-shell'; }
+  // Mostrar a screen correta
   var el = document.getElementById(id);
-  if(el){ el.className = 'screen'; el.style.display = ''; }
+  if(el){ el.style.display='flex'; }
   var shell = document.getElementById('app-shell');
   if(shell) shell.classList.remove('on');
 }
@@ -715,9 +720,11 @@ function goLogin(p) {
         // Normalizar dados da planilha
         USR_DB = d.data.map(function(u){
           var st = String(u.status||'').toLowerCase().trim();
+          // pin: usar String(u.pin) sem || para não perder o 0
+          var pinRaw = (u.pin===null||u.pin===undefined) ? '' : String(u.pin).trim();
           return {
             user:   String(u.user||'').trim(),
-            pin:    String(u.pin||'').trim(),
+            pin:    pinRaw,
             name:   String(u.name||'').trim(),
             role:   String(u.role||'rep').toLowerCase().trim(),
             status: (st==='active'||st==='ativo'||st==='true'||st==='1') ? 'active' : 'inactive',
@@ -2019,11 +2026,4 @@ function vndSalvar() {
     audLog('venda','Venda registrada',cli+' · R$ '+Number(val).toLocaleString('pt-BR'));
     fetch(APPS_URL+'?action=inserirLinha&sheet=Vendas&row='+encodeURIComponent(JSON.stringify(nova))).catch(function(){});
     try{document.getElementById('vnd-modal').style.display='none';}catch(e){}
-    setTimeout(function(){
-      showToast('✅ Venda de R$ '+Number(val).toLocaleString('pt-BR')+' registrada!');
-      var el=document.getElementById('vnd-lista'); if(el){vndRender();}else{navigate('vendas');}
-    },100);
-  } catch(e){ alert('Erro: '+e.message); }
-}
-
-// ═══ USUÁRIOS ═════════════════════════════════════════
+    setTimeout(fun
