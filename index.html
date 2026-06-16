@@ -155,9 +155,14 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 </head>
 <body>
 
-<div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999">
-  JavaScript nao carregou — v2.8
+<div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999;display:none">
+  JavaScript nao carregou — v2.9
 </div>
+<script>
+// Se JS carregar, garantir que o aviso fica oculto
+// Se der erro, window.onerror vai mostrar
+document.getElementById('js-status').style.display='none';
+</script>
 
 <div id="toast"></div>
 
@@ -166,7 +171,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
   <div class="home-wrap">
     <div class="home-left">
       <div>
-        <div class="brand-v">v2.8</div>
+        <div class="brand-v">v2.9</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestao comercial centralizada</div>
@@ -182,17 +187,17 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
     <div class="home-right">
       <div class="home-cards">
         <div class="home-label">Selecione seu perfil de acesso</div>
-        <button class="pcard" id="btn-rep">
+        <button class="pcard" id="btn-rep" onclick="goLogin('rep')">
           <div class="pcard-icon" style="background:rgba(16,185,129,.12)">&#128084;</div>
           <div><div class="pcard-title">Representante</div><div class="pcard-desc">Carteira de clientes, captacao e vendas</div></div>
           <div class="pcard-arrow">&#8250;</div>
         </button>
-        <button class="pcard" id="btn-ger">
+        <button class="pcard" id="btn-ger" onclick="goLogin('ger')">
           <div class="pcard-icon" style="background:rgba(37,99,235,.12)">&#128202;</div>
           <div><div class="pcard-title">Gerente</div><div class="pcard-desc">Equipes, metas e indicadores gerenciais</div></div>
           <div class="pcard-arrow">&#8250;</div>
         </button>
-        <button class="pcard" id="btn-adm">
+        <button class="pcard" id="btn-adm" onclick="goLogin('adm')">
           <div class="pcard-icon" style="background:rgba(99,102,241,.12)">&#9881;</div>
           <div><div class="pcard-title">Administrador</div><div class="pcard-desc">Usuarios, permissoes e configuracoes</div></div>
           <div class="pcard-arrow">&#8250;</div>
@@ -235,7 +240,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 <div class="screen hidden" id="screen-login">
   <div class="login-wrap">
     <div class="login-head">
-      <button class="login-back" id="btn-back-login">&#8249;</button>
+      <button class="login-back" id="btn-back-login" onclick="goHome()">&#8249;</button>
       <div>
         <div class="login-role" id="login-role-lbl">Perfil</div>
         <div class="login-title">Acesso ao sistema</div>
@@ -251,7 +256,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
         <label>Senha (6 digitos)</label>
         <input type="password" id="inp-pin" inputmode="numeric" maxlength="6" placeholder="......" autocomplete="current-password">
       </div>
-      <button class="btn-blue" id="btn-entrar">Entrar</button>
+      <button class="btn-blue" id="btn-entrar" onclick="doLogin()">Entrar</button>
       <div class="login-hint">Duvidas? Fale com o administrador.</div>
     </div>
   </div>
@@ -275,7 +280,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
       </div>
     </div>
     <div class="tb-divider"></div>
-    <button class="tb-out" id="btn-sair">Sair</button>
+    <button class="tb-out" id="btn-sair" onclick="goHome()">Sair</button>
   </div>
   <div class="app-body">
     <div class="sidebar" id="sidebar"></div>
@@ -465,7 +470,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 
 <script>
 // ═══════════════════════════════════════════
-// NEXORA CONNECT v2.8 - ES5 PURO
+// NEXORA CONNECT v2.9 - ES5 PURO
 // ═══════════════════════════════════════════
 
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbzAcf1JapNJVNVUZtHtglIWo8crSe_ipNY-aOi2hp2xDV-r5N2KoDTnzTgfaVGgOCiP/exec';
@@ -1663,7 +1668,7 @@ function cfgExportar() {
 // ═══════════════════════════════════════════
 // INIT - Registrar todos os eventos aqui
 // ═══════════════════════════════════════════
-window.onload = function() {
+document.addEventListener('DOMContentLoaded', function() {
   lsLoad();
 
   // Remover barra de erro
@@ -1735,7 +1740,7 @@ window.onload = function() {
   var pfBtn = document.getElementById('cli-tipo-pf');
   if (pjBtn) pjBtn.onclick = function() { cliTipo('pj'); };
   if (pfBtn) pfBtn.onclick = function() { cliTipo('pf'); };
-};
+});
 </script>
 </body>
 </html>
