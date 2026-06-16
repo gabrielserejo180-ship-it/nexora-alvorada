@@ -201,7 +201,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 <body>
 <div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;
   padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999;display:block">
-  ⚠️ JavaScript não carregou — versao 2.5
+  ⚠️ JavaScript não carregou — versao 2.6
 </div>
 
 <div class="screen" id="screen-home">
@@ -209,7 +209,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
     <!-- LEFT -->
     <div class="home-left">
       <div>
-        <div class="brand-v">v2.5</div>
+        <div class="brand-v">v2.6</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestão comercial centralizada</div>
@@ -684,19 +684,20 @@ function goLogin(p) {
     .then(function(d){
       if(d.ok && d.data && d.data.length > 0){
         // Normalizar dados da planilha
-        USR_DB = d.data.map(function(u){
-          var st = String(u.status||'').toLowerCase().trim();
-          // pin: usar String(u.pin) sem || para nao perder o 0
-          var pinRaw = (u.pin===null||u.pin===undefined) ? '' : String(u.pin).trim();
-          return {
-            user:   String(u.user||'').trim(),
-            pin:    pinRaw,
-            name:   String(u.name||'').trim(),
-            role:   String(u.role||'rep').toLowerCase().trim(),
-            status: (st==='active'||st==='ativo'||st==='true'||st==='1') ? 'active' : 'inactive',
-            criado: String(u.criado||'').trim(),
-          };
-        });
+        USR_DB = [];
+        for(var _ui=0;_ui<d.data.length;_ui++){
+          var _u=d.data[_ui];
+          var _st=String(_u.status||'').toLowerCase().trim();
+          var _pin=(_u.pin===null||_u.pin===undefined)?'':String(_u.pin).trim();
+          USR_DB.push({
+            user:   String(_u.user||'').trim(),
+            pin:    _pin,
+            name:   String(_u.name||'').trim(),
+            role:   String(_u.role||'rep').toLowerCase().trim(),
+            status: (_st==='active'||_st==='ativo'||_st==='true'||_st==='1')?'active':'inactive',
+            criado: String(_u.criado||'').trim()
+          });
+        }
         lsSet('nxr_usr', JSON.stringify(USR_DB));
       }
     })
@@ -811,11 +812,15 @@ function doLoginVerificar(user, pin, alertEl) {
 
 
 function launchApp() {
-  document.querySelectorAll('.screen').forEach(function(s){ s.style.display='none'; });
+  var _screens = document.querySelectorAll('.screen');
+  for(var _si=0; _si<_screens.length; _si++){ _screens[_si].style.display='none'; }
   var shell = document.getElementById('app-shell');
   shell.className = 'app-shell on';
   var roleLabels = {rep:'Representante',ger:'Gerente',adm:'Administrador'};
-  var ini = me.name.split(' ').map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
+  var _words = me.name.split(' ');
+  var ini = '';
+  for(var _wi=0; _wi<_words.length; _wi++){ if(_words[_wi]) ini += _words[_wi][0]; }
+  ini = ini.slice(0,2).toUpperCase();
   var av = document.getElementById('tb-avatar');
   var tnm = document.getElementById('tb-name');
   var trl = document.getElementById('tb-role');
@@ -1084,11 +1089,19 @@ function capBuscarCNPJ() {
       var atividades = [];
       if(d.cnae_fiscal_descricao) atividades.push(d.cnae_fiscal_descricao);
       if(d.cnaes_secundarios && d.cnaes_secundarios.length){
-        d.cnaes_secundarios.slice(0,2).forEach(function(c){ if(c.descricao) atividades.push(c.descricao); });
+        var _cn=d.cnaes_secundarios.slice(0,2);
+      for(var _ci=0;_ci<_cn.length;_ci++){ if(_cn[_ci].descricao) atividades.push(_cn[_ci].descricao); }
       }
       var capitalFmt = d.capital_social ? 'R$ '+Number(d.capital_social).toLocaleString('pt-BR',{minimumFractionDigits:2}) : '';
       var dataAbertura = d.data_inicio_atividade ? d.data_inicio_atividade.split('-').reverse().join('/') : '';
-      var socios = d.qsa && d.qsa.length ? d.qsa.map(function(s){ return s.nome_socio+(s.qualificacao_socio?' ('+s.qualificacao_socio+')':''); }).join('<br>') : '';
+      var socios = '';
+      if(d.qsa && d.qsa.length){
+        var _sq=[];
+        for(var _si2=0;_si2<d.qsa.length;_si2++){
+          _sq.push(d.qsa[_si2].nome_socio+(d.qsa[_si2].qualificacao_socio?' ('+d.qsa[_si2].qualificacao_socio+')':''));
+        }
+        socios=_sq.join('<br>');
+      }
 
       var html = '<div class="card-emp">'
         // Cabecalho
@@ -1276,7 +1289,9 @@ function cliRender() {
     var doc = c.cnpj||'';
     var docLabel = doc ? 'CNPJ' : (c.cpf?'CPF':'');
     if(!doc && c.cpf) doc = c.cpf;
-    var ini = (c.nome||'?').split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+    var _ws=(c.nome||'?').split(' '); var ini='';
+    for(var _wi2=0;_wi2<_ws.length;_wi2++){if(_ws[_wi2])ini+=_ws[_wi2][0];}
+    ini=ini.slice(0,2).toUpperCase();
 
     html += '<div class="usr-row" style="cursor:pointer" data-cli-idx="'+i+'">'
       +'<div class="usr-av" style="background:'+(c.tipo==='pf'?'#10B981':'#2563EB')+'">'+(c.tipo==='pf'?'PF':ini)+'</div>'
@@ -1382,9 +1397,9 @@ function cliSalvarManual() {
     var allRows = encodeURIComponent(JSON.stringify(CLI_DB));
     fetch(APPS_URL+'?action=limpar&sheet=Clientes')
       .then(function(){
-        CLI_DB.forEach(function(cl){
-          fetch(APPS_URL+'?action=inserirLinha&sheet=Clientes&row='+encodeURIComponent(JSON.stringify(cl))).catch(function(){});
-        });
+        for(var _cfi2=0;_cfi2<CLI_DB.length;_cfi2++){
+          fetch(APPS_URL+'?action=inserirLinha&sheet=Clientes&row='+encodeURIComponent(JSON.stringify(CLI_DB[_cfi2]))).catch(function(){});
+        }
       }).catch(function(){});
     window._cliEditIdx = -1;
   } else {
@@ -1859,9 +1874,9 @@ function cliExcluirAtual() {
   // Sincronizar exclusao na planilha
   fetch(APPS_URL+'?action=limpar&sheet=Clientes')
     .then(function(){
-      CLI_DB.forEach(function(cl){
-        fetch(APPS_URL+'?action=inserirLinha&sheet=Clientes&row='+encodeURIComponent(JSON.stringify(cl))).catch(function(){});
-      });
+      for(var _cfi=0;_cfi<CLI_DB.length;_cfi++){
+        fetch(APPS_URL+'?action=inserirLinha&sheet=Clientes&row='+encodeURIComponent(JSON.stringify(CLI_DB[_cfi]))).catch(function(){});
+      }
     }).catch(function(){});
   showToast('[OK] Cliente excluido!');
   var vm = document.getElementById('cli-view-modal');
@@ -1915,7 +1930,8 @@ function retNovo() {
       var manDiv = document.getElementById('ret-cli-manual-div');
       if(manDiv) manDiv.style.display = sel.value==='__manual__' ? '' : 'none';
       if(sel.value && sel.value!=='__manual__'){
-        var cli = carteira.find(function(c){ return c.nome===sel.value; });
+        var cli=null;
+    for(var _fi=0;_fi<carteira.length;_fi++){if(carteira[_fi].nome===sel.value){cli=carteira[_fi];break;}}
         if(cli){ var telEl=document.getElementById('ret-tel'); if(telEl) telEl.value=cli.telefne||cli.telefone||''; }
       }
     };
@@ -2038,7 +2054,4 @@ function usrRender() {
   if(busca)  lista=lista.filter(function(u){return (u.name||'').toLowerCase().indexOf(busca)>-1||(u.user||'').indexOf(busca)>-1;});
   if(filtro) lista=lista.filter(function(u){return u.role===filtro;});
 
-  var stats=document.getElementById('usr-stats');
-  if(stats) stats.innerHTML='<div class="usr-stat"><div class="usr-stat-val">'+USR_DB.length+'</div><div class="usr-stat-label">Total</div></div>'
-    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--green)">'+USR_DB.filter(function(u){return u.status==='active';}).length+'</div><div class="usr-stat-label">Ativos</div></div>'
-    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--red)">'+USR_DB.filt
+  var stats=document.getElementById
