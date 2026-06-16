@@ -167,7 +167,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 <body>
 
 <div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999;display:none">
-  JavaScript nao carregou — v3.2
+  JavaScript nao carregou — v3.4
 </div>
 
 <!-- MODAL VER/EDITAR RETORNO -->
@@ -183,6 +183,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
       <button class="btn-save2" id="ret-view-concluir" style="background:var(--green)">Concluir</button>
       <button class="btn-save2" id="ret-view-editar">Editar</button>
     </div>
+    <!-- Botoes escondidos para gerente via JS -->
   </div>
 </div>
 
@@ -209,7 +210,7 @@ document.getElementById('js-status').style.display='none';
   <div class="home-wrap">
     <div class="home-left">
       <div>
-        <div class="brand-v">v3.2</div>
+        <div class="brand-v">v3.4</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestao comercial centralizada</div>
@@ -509,7 +510,7 @@ document.getElementById('js-status').style.display='none';
 
 <script>
 // ═══════════════════════════════════════════
-// NEXORA CONNECT v3.2 - ES5 PURO
+// NEXORA CONNECT v3.4 - ES5 PURO
 // ═══════════════════════════════════════════
 
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbzAcf1JapNJVNVUZtHtglIWo8crSe_ipNY-aOi2hp2xDV-r5N2KoDTnzTgfaVGgOCiP/exec';
@@ -721,6 +722,40 @@ function launchApp() {
   if (shell) {
     shell.style.cssText = '';
     shell.className = 'app-shell on';
+  }
+
+  // Verificar se o usuario logado mudou - se sim, limpar dados locais
+  // para nao misturar dados de representantes diferentes
+  var ultimoUser = lsGet('nxr_ultimo_user');
+  if (ultimoUser && ultimoUser !== me.user) {
+    // Outro usuario logou - limpar dados locais (nao usuarios)
+    CLI_DB = []; VND_DB = []; RET_DB = [];
+    lsSet('nxr_cli', '[]');
+    lsSet('nxr_vnd', '[]');
+    lsSet('nxr_ret', '[]');
+  }
+  lsSet('nxr_ultimo_user', me.user);
+
+  // Se for rep, carregar dados da planilha para garantir dados corretos
+  if (me.role === 'rep') {
+    sheetsGet('getClientes', function(d) {
+      if (d && d.ok && d.data) {
+        CLI_DB = d.data;
+        lsSet('nxr_cli', JSON.stringify(CLI_DB));
+      }
+    });
+    sheetsGet('getRetornos', function(d) {
+      if (d && d.ok && d.data) {
+        RET_DB = d.data;
+        lsSet('nxr_ret', JSON.stringify(RET_DB));
+      }
+    });
+    sheetsGet('getVendas', function(d) {
+      if (d && d.ok && d.data) {
+        VND_DB = d.data;
+        lsSet('nxr_vnd', JSON.stringify(VND_DB));
+      }
+    });
   }
 
   var roleColors = { rep: '#10B981', ger: '#3B82F6', adm: '#818CF8' };
@@ -1130,11 +1165,18 @@ function capAdicionar(btn) {
 // ─── CLIENTES ──────────────────────────────
 function cliDoRep() {
   var r = [];
-  for (var i = 0; i < CLI_DB.length; i++) { if (CLI_DB[i].representante === me.name) r.push(CLI_DB[i]); }
+  if (!me) return r;
+  for (var i = 0; i < CLI_DB.length; i++) {
+    // Comparar ignorando maiusculas/minusculas e espacos extras
+    var repCli = String(CLI_DB[i].representante || '').trim().toLowerCase();
+    var repMe = String(me.name || '').trim().toLowerCase();
+    if (repCli === repMe) r.push(CLI_DB[i]);
+  }
   return r;
 }
 function cliRender() {
   var busca = document.getElementById('cli-busca') ? document.getElementById('cli-busca').value.toLowerCase() : '';
+  // rep vê só os seus; ger e adm vêem todos
   var todos = (me && me.role === 'rep') ? cliDoRep() : CLI_DB;
   var lista = busca ? [] : todos;
   if (busca) {
@@ -1336,7 +1378,12 @@ function cliExcluir(idx) {
 // ─── RETORNOS ──────────────────────────────
 function retDoRep() {
   var r = [];
-  for (var i = 0; i < RET_DB.length; i++) { if (RET_DB[i].representante === me.name) r.push(RET_DB[i]); }
+  if (!me) return r;
+  for (var i = 0; i < RET_DB.length; i++) {
+    var repRet = String(RET_DB[i].representante || '').trim().toLowerCase();
+    var repMe = String(me.name || '').trim().toLowerCase();
+    if (repRet === repMe) r.push(RET_DB[i]);
+  }
   return r;
 }
 var _retListaAtual = [];
@@ -1398,9 +1445,16 @@ function retVerIdx(idx) {
       (r.telefone ? '<div style="margin-top:14px"><a class="link-btn link-wa" href="https://wa.me/55' + r.telefone.replace(/\D/g, '') + '" target="_blank">WhatsApp</a></div>' : '');
   }
 
-  // Esconder botao concluir se ja concluido
+  // Esconder botoes para gerente (so pode visualizar)
+  var editarBtn = document.getElementById('ret-view-editar');
+  var isGer = me && me.role === 'ger';
+
   if (concluir) {
-    concluir.style.display = r.status === 'concluido' ? 'none' : '';
+    // Esconder se gerente OU se ja concluido
+    concluir.style.display = (isGer || r.status === 'concluido') ? 'none' : '';
+  }
+  if (editarBtn) {
+    editarBtn.style.display = isGer ? 'none' : '';
   }
 
   modal.style.display = 'flex';
@@ -1543,7 +1597,12 @@ function retSalvar() {
 // ─── VENDAS ────────────────────────────────
 function vndDoRep() {
   var r = [];
-  for (var i = 0; i < VND_DB.length; i++) { if (VND_DB[i].representante === me.name) r.push(VND_DB[i]); }
+  if (!me) return r;
+  for (var i = 0; i < VND_DB.length; i++) {
+    var repVnd = String(VND_DB[i].representante || '').trim().toLowerCase();
+    var repMe = String(me.name || '').trim().toLowerCase();
+    if (repVnd === repMe) r.push(VND_DB[i]);
+  }
   return r;
 }
 function vndRender() {
@@ -1991,48 +2050,4 @@ document.addEventListener('DOMContentLoaded', function() {
   if (usrSv) usrSv.onclick = usrSalvar;
 
   var retMc = document.getElementById('ret-modal-close');
-  if (retMc) retMc.onclick = function() { document.getElementById('ret-modal').style.display = 'none'; };
-  var retCn = document.getElementById('ret-modal-cancel');
-  if (retCn) retCn.onclick = function() { document.getElementById('ret-modal').style.display = 'none'; };
-  var retSv = document.getElementById('ret-modal-salvar');
-  if (retSv) retSv.onclick = retSalvar;
-
-  var retVc = document.getElementById('ret-view-close');
-  if (retVc) retVc.onclick = function() { document.getElementById('ret-view-modal').style.display = 'none'; };
-  var retVf = document.getElementById('ret-view-fechar');
-  if (retVf) retVf.onclick = function() { document.getElementById('ret-view-modal').style.display = 'none'; };
-  var retVco = document.getElementById('ret-view-concluir');
-  if (retVco) retVco.onclick = retConcluirAtual;
-  var retVe = document.getElementById('ret-view-editar');
-  if (retVe) retVe.onclick = retEditarAtual;
-
-  var vndMc = document.getElementById('vnd-modal-close');
-  if (vndMc) vndMc.onclick = function() { document.getElementById('vnd-modal').style.display = 'none'; };
-  var vndCn = document.getElementById('vnd-modal-cancel');
-  if (vndCn) vndCn.onclick = function() { document.getElementById('vnd-modal').style.display = 'none'; };
-  var vndSv = document.getElementById('vnd-modal-salvar');
-  if (vndSv) vndSv.onclick = vndSalvar;
-
-  var cliMc = document.getElementById('cli-modal-close');
-  if (cliMc) cliMc.onclick = function() { document.getElementById('cli-modal').style.display = 'none'; };
-  var cliCn = document.getElementById('cli-modal-cancel');
-  if (cliCn) cliCn.onclick = function() { document.getElementById('cli-modal').style.display = 'none'; };
-  var cliSv = document.getElementById('cli-modal-salvar');
-  if (cliSv) cliSv.onclick = cliSalvarManual;
-
-  var cliVc = document.getElementById('cli-view-close');
-  if (cliVc) cliVc.onclick = function() { document.getElementById('cli-view-modal').style.display = 'none'; };
-  var cliVf = document.getElementById('cli-view-fechar');
-  if (cliVf) cliVf.onclick = function() { document.getElementById('cli-view-modal').style.display = 'none'; };
-  var cliVe = document.getElementById('cli-view-edit-btn');
-  if (cliVe) cliVe.onclick = cliEditarAtual;
-
-  // Botoes tipo PJ/PF
-  var pjBtn = document.getElementById('cli-tipo-pj');
-  var pfBtn = document.getElementById('cli-tipo-pf');
-  if (pjBtn) pjBtn.onclick = function() { cliTipo('pj'); };
-  if (pfBtn) pfBtn.onclick = function() { cliTipo('pf'); };
-});
-</script>
-</body>
-</html>
+  if (retMc) retMc.onclick = f
