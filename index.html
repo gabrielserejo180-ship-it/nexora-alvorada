@@ -167,7 +167,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 <body>
 
 <div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999;display:none">
-  JavaScript nao carregou — v3.4
+  JavaScript nao carregou — v3.5
 </div>
 
 <!-- MODAL VER/EDITAR RETORNO -->
@@ -210,7 +210,7 @@ document.getElementById('js-status').style.display='none';
   <div class="home-wrap">
     <div class="home-left">
       <div>
-        <div class="brand-v">v3.4</div>
+        <div class="brand-v">v3.5</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestao comercial centralizada</div>
@@ -510,7 +510,7 @@ document.getElementById('js-status').style.display='none';
 
 <script>
 // ═══════════════════════════════════════════
-// NEXORA CONNECT v3.4 - ES5 PURO
+// NEXORA CONNECT v3.5 - ES5 PURO
 // ═══════════════════════════════════════════
 
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbzAcf1JapNJVNVUZtHtglIWo8crSe_ipNY-aOi2hp2xDV-r5N2KoDTnzTgfaVGgOCiP/exec';
@@ -727,8 +727,9 @@ function launchApp() {
   // Verificar se o usuario logado mudou - se sim, limpar dados locais
   // para nao misturar dados de representantes diferentes
   var ultimoUser = lsGet('nxr_ultimo_user');
-  if (ultimoUser && ultimoUser !== me.user) {
-    // Outro usuario logou - limpar dados locais (nao usuarios)
+  // Limpar dados locais apenas quando representante diferente loga
+  // para nao misturar carteiras. Ger/ADM sempre carregam tudo da planilha.
+  if (me.role === 'rep' && ultimoUser && ultimoUser !== me.user) {
     CLI_DB = []; VND_DB = []; RET_DB = [];
     lsSet('nxr_cli', '[]');
     lsSet('nxr_vnd', '[]');
@@ -736,27 +737,33 @@ function launchApp() {
   }
   lsSet('nxr_ultimo_user', me.user);
 
-  // Se for rep, carregar dados da planilha para garantir dados corretos
-  if (me.role === 'rep') {
-    sheetsGet('getClientes', function(d) {
-      if (d && d.ok && d.data) {
-        CLI_DB = d.data;
-        lsSet('nxr_cli', JSON.stringify(CLI_DB));
-      }
-    });
-    sheetsGet('getRetornos', function(d) {
-      if (d && d.ok && d.data) {
-        RET_DB = d.data;
-        lsSet('nxr_ret', JSON.stringify(RET_DB));
-      }
-    });
-    sheetsGet('getVendas', function(d) {
-      if (d && d.ok && d.data) {
-        VND_DB = d.data;
-        lsSet('nxr_vnd', JSON.stringify(VND_DB));
-      }
-    });
-  }
+  // Carregar dados da planilha para todos os perfis
+  // Rep carrega e filtra os seus; Ger/ADM carregam tudo
+  sheetsGet('getClientes', function(d) {
+    if (d && d.ok && d.data && d.data.length > 0) {
+      CLI_DB = d.data;
+      lsSet('nxr_cli', JSON.stringify(CLI_DB));
+      // Re-renderizar se estiver na pagina de clientes
+      var el = document.getElementById('cli-lista');
+      if (el) cliRender();
+    }
+  });
+  sheetsGet('getRetornos', function(d) {
+    if (d && d.ok && d.data && d.data.length > 0) {
+      RET_DB = d.data;
+      lsSet('nxr_ret', JSON.stringify(RET_DB));
+      var el = document.getElementById('ret-lista');
+      if (el) retRender();
+    }
+  });
+  sheetsGet('getVendas', function(d) {
+    if (d && d.ok && d.data && d.data.length > 0) {
+      VND_DB = d.data;
+      lsSet('nxr_vnd', JSON.stringify(VND_DB));
+      var el = document.getElementById('vnd-lista');
+      if (el) vndRender();
+    }
+  });
 
   var roleColors = { rep: '#10B981', ger: '#3B82F6', adm: '#818CF8' };
   var roleLabels = { rep: 'Representante', ger: 'Gerente', adm: 'Administrador' };
