@@ -70,13 +70,13 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 .tb-divider{width:1px;height:20px;background:var(--line2)}
 .tb-breadcrumb{font-size:13px;font-weight:600;color:var(--txt);flex:1}
 .tb-out{height:32px;padding:0 13px;background:none;border:1px solid var(--line2);border-radius:8px;color:var(--txt2);font-size:12px;cursor:pointer;font-family:var(--ff)}
-.app-body{display:flex;flex:1;overflow:hidden}
+.app-body{display:flex;flex:1;overflow:hidden;min-height:calc(100vh - 56px)}
 .sidebar{width:210px;flex-shrink:0;background:var(--s1);border-right:1px solid var(--line);padding:10px 0;overflow-y:auto;height:calc(100vh - 56px);position:sticky;top:56px}
 .sb-section{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--txt3);padding:14px 16px 4px}
 .sb-item{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13px;color:var(--txt2);cursor:pointer;border-left:2px solid transparent;background:none;width:100%;text-align:left;border-right:none;border-top:none;border-bottom:none;font-family:var(--ff)}
 .sb-item:hover{background:var(--s2);color:var(--txt)}
 .sb-item.on{color:var(--blue-h);background:rgba(37,99,235,.08);border-left-color:var(--blue);font-weight:600}
-.main{flex:1;padding:28px;overflow-y:auto;height:calc(100vh - 56px)}
+.main{flex:1;padding:28px;overflow-y:auto;min-height:0}
 .page-eye{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--blue-h);margin-bottom:4px}
 .page-title{font-size:22px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px}
 .page-sub{font-size:13px;color:var(--txt2);margin-bottom:22px}
@@ -156,7 +156,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 <body>
 
 <div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999">
-  JavaScript nao carregou — v2.7
+  JavaScript nao carregou — v2.8
 </div>
 
 <div id="toast"></div>
@@ -166,7 +166,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
   <div class="home-wrap">
     <div class="home-left">
       <div>
-        <div class="brand-v">v2.7</div>
+        <div class="brand-v">v2.8</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestao comercial centralizada</div>
@@ -465,7 +465,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 
 <script>
 // ═══════════════════════════════════════════
-// NEXORA CONNECT v2.7 - ES5 PURO
+// NEXORA CONNECT v2.8 - ES5 PURO
 // ═══════════════════════════════════════════
 
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbzAcf1JapNJVNVUZtHtglIWo8crSe_ipNY-aOi2hp2xDV-r5N2KoDTnzTgfaVGgOCiP/exec';
@@ -670,9 +670,14 @@ function doLoginVerificar(user, pin, al, db) {
 // ─── APP LAUNCH ────────────────────────────
 function launchApp() {
   var screens = document.querySelectorAll('.screen');
-  for (var i = 0; i < screens.length; i++) screens[i].style.display = 'none';
+  for (var i = 0; i < screens.length; i++) {
+    screens[i].style.cssText = 'display:none!important';
+  }
   var shell = document.getElementById('app-shell');
-  if (shell) { shell.className = 'app-shell on'; }
+  if (shell) {
+    shell.style.cssText = '';
+    shell.className = 'app-shell on';
+  }
 
   var roleColors = { rep: '#10B981', ger: '#3B82F6', adm: '#818CF8' };
   var roleLabels = { rep: 'Representante', ger: 'Gerente', adm: 'Administrador' };
