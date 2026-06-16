@@ -151,12 +151,23 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 }
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10B981;color:#fff;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;display:none;box-shadow:0 8px 32px rgba(0,0,0,.4)}
 #toast.erro{background:#EF4444}
+#notif-badge{position:fixed;top:12px;right:60px;background:var(--red);color:#fff;border-radius:99px;font-size:11px;font-weight:700;padding:4px 10px;z-index:200;cursor:pointer;display:none;box-shadow:0 4px 16px rgba(239,68,68,.4)}
+#notif-panel{position:fixed;top:50px;right:12px;width:320px;background:var(--s1);border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.6);z-index:201;display:none;max-height:400px;overflow-y:auto}
+.notif-item{padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.notif-item:last-child{border-bottom:none}
+.notif-item:hover{background:var(--s2)}
+.notif-titulo{font-size:13px;font-weight:700;color:var(--txt);margin-bottom:3px}
+.notif-sub{font-size:11px;color:var(--txt2)}
+.notif-atrasado{border-left:3px solid var(--red)}
+.notif-hoje{border-left:3px solid var(--amber)}
+.notif-head{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.notif-head-title{font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px}
 </style>
 </head>
 <body>
 
 <div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999;display:none">
-  JavaScript nao carregou — v3.1
+  JavaScript nao carregou — v3.2
 </div>
 
 <!-- MODAL VER/EDITAR RETORNO -->
@@ -175,6 +186,16 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
   </div>
 </div>
 
+
+<!-- PAINEL NOTIFICACOES -->
+<div id="notif-panel">
+  <div class="notif-head">
+    <span class="notif-head-title">Notificacoes de Retorno</span>
+    <button onclick="notifFechar()" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:16px">X</button>
+  </div>
+  <div id="notif-lista"></div>
+</div>
+
 <script>
 // Se JS carregar, garantir que o aviso fica oculto
 // Se der erro, window.onerror vai mostrar
@@ -188,7 +209,7 @@ document.getElementById('js-status').style.display='none';
   <div class="home-wrap">
     <div class="home-left">
       <div>
-        <div class="brand-v">v3.1</div>
+        <div class="brand-v">v3.2</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestao comercial centralizada</div>
@@ -297,6 +318,7 @@ document.getElementById('js-status').style.display='none';
       </div>
     </div>
     <div class="tb-divider"></div>
+    <div id="notif-badge" onclick="notifToggle()">0</div>
     <button class="tb-out" id="btn-sair" onclick="goHome()">Sair</button>
   </div>
   <div class="app-body">
@@ -487,7 +509,7 @@ document.getElementById('js-status').style.display='none';
 
 <script>
 // ═══════════════════════════════════════════
-// NEXORA CONNECT v3.1 - ES5 PURO
+// NEXORA CONNECT v3.2 - ES5 PURO
 // ═══════════════════════════════════════════
 
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbzAcf1JapNJVNVUZtHtglIWo8crSe_ipNY-aOi2hp2xDV-r5N2KoDTnzTgfaVGgOCiP/exec';
@@ -717,6 +739,10 @@ function launchApp() {
 
   renderNav();
   navigate('dashboard');
+  // Verificar notificacoes apos 800ms para dar tempo de carregar os dados
+  setTimeout(notifVerificar, 800);
+  // Reverificar a cada 5 minutos
+  setInterval(notifVerificar, 5 * 60 * 1000);
 }
 
 // ─── NAV ───────────────────────────────────
@@ -1388,6 +1414,7 @@ function retConcluirAtual() {
   if (modal) modal.style.display = 'none';
   showToast('Retorno concluido!');
   setTimeout(retRender, 100);
+  setTimeout(notifVerificar, 200);
 }
 
 function retEditarAtual() {
@@ -1458,6 +1485,7 @@ function retSalvarEdicao() {
   if (salvarBtn) { salvarBtn.textContent = 'Agendar'; salvarBtn.onclick = retSalvar; }
   showToast('Retorno atualizado!');
   setTimeout(retRender, 100);
+  setTimeout(notifVerificar, 200);
 }
 function retNovo() {
   // Popular select de clientes
@@ -1509,6 +1537,7 @@ function retSalvar() {
   if (modal) modal.style.display = 'none';
   showToast('Retorno agendado!');
   setTimeout(retRender, 100);
+  setTimeout(notifVerificar, 200);
 }
 
 // ─── VENDAS ────────────────────────────────
@@ -1809,6 +1838,119 @@ function cfgExportar() {
 // ═══════════════════════════════════════════
 // INIT - Registrar todos os eventos aqui
 // ═══════════════════════════════════════════
+
+// ─── NOTIFICACOES ──────────────────────────
+var _notifAberto = false;
+
+function notifVerificar() {
+  if (!me) return;
+  var hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  var lista = (me.role === 'rep') ? retDoRep() : RET_DB;
+  var alertas = [];
+
+  for (var i = 0; i < lista.length; i++) {
+    var r = lista[i];
+    if (r.status === 'concluido') continue;
+
+    // Converter data dd/mm/yyyy ou yyyy-mm-dd
+    var dataRet = null;
+    if (r.data) {
+      var partes = r.data.split('/');
+      if (partes.length === 3) {
+        dataRet = new Date(Number(partes[2]), Number(partes[1]) - 1, Number(partes[0]));
+      } else {
+        partes = r.data.split('-');
+        if (partes.length === 3) {
+          dataRet = new Date(Number(partes[0]), Number(partes[1]) - 1, Number(partes[2]));
+        }
+      }
+    }
+    if (!dataRet) continue;
+    dataRet.setHours(0, 0, 0, 0);
+
+    var diff = Math.round((dataRet - hoje) / (1000 * 60 * 60 * 24));
+    if (diff <= 0) {
+      alertas.push({ retorno: r, diff: diff, tipo: diff < 0 ? 'atrasado' : 'hoje' });
+    } else if (diff === 1) {
+      alertas.push({ retorno: r, diff: diff, tipo: 'amanha' });
+    }
+  }
+
+  var badge = document.getElementById('notif-badge');
+  var listaEl = document.getElementById('notif-lista');
+
+  if (badge) {
+    if (alertas.length > 0) {
+      badge.textContent = alertas.length;
+      badge.style.display = 'block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  if (listaEl) {
+    if (!alertas.length) {
+      listaEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--txt2);font-size:13px">Nenhum retorno pendente para hoje ou atrasado.</div>';
+    } else {
+      var html = '';
+      for (var j = 0; j < alertas.length; j++) {
+        var a = alertas[j];
+        var r2 = a.retorno;
+        var cls = a.tipo === 'atrasado' ? 'notif-item notif-atrasado' : a.tipo === 'hoje' ? 'notif-item notif-hoje' : 'notif-item';
+        var label = a.tipo === 'atrasado' ? 'Atrasado ' + Math.abs(a.diff) + ' dia(s)' : a.tipo === 'hoje' ? 'Hoje' : 'Amanha';
+        var labelCor = a.tipo === 'atrasado' ? 'var(--red)' : a.tipo === 'hoje' ? 'var(--amber)' : 'var(--green)';
+        html += '<div class="' + cls + '">' +
+          '<div class="notif-titulo">' + (r2.cliente || '-') + '</div>' +
+          '<div class="notif-sub">' + (r2.data || '') + ' ' + (r2.hora || '') + ' - ' + (r2.motivo || '') + '</div>' +
+          (r2.representante && me.role !== 'rep' ? '<div style="font-size:10px;color:var(--txt3);margin-top:2px">' + r2.representante + '</div>' : '') +
+          '<div style="font-size:10px;font-weight:700;color:' + labelCor + ';margin-top:4px">' + label + '</div>' +
+          '</div>';
+      }
+      listaEl.innerHTML = html;
+    }
+  }
+
+  // Mostrar toast se for a primeira vez rodando apos login
+  if (alertas.length > 0 && !notifVerificar._jaAvisou) {
+    notifVerificar._jaAvisou = true;
+    var atrasados = 0;
+    var hoje2 = 0;
+    for (var k = 0; k < alertas.length; k++) {
+      if (alertas[k].tipo === 'atrasado') atrasados++;
+      if (alertas[k].tipo === 'hoje') hoje2++;
+    }
+    var msg = '';
+    if (atrasados > 0) msg += atrasados + ' retorno(s) atrasado(s). ';
+    if (hoje2 > 0) msg += hoje2 + ' retorno(s) para hoje.';
+    if (msg) showToast(msg.trim(), 'erro');
+  }
+}
+
+function notifToggle() {
+  var panel = document.getElementById('notif-panel');
+  if (!panel) return;
+  _notifAberto = !_notifAberto;
+  panel.style.display = _notifAberto ? 'block' : 'none';
+  if (_notifAberto) notifVerificar();
+}
+
+function notifFechar() {
+  _notifAberto = false;
+  var panel = document.getElementById('notif-panel');
+  if (panel) panel.style.display = 'none';
+}
+
+// Fechar painel ao clicar fora
+document.addEventListener('click', function(e) {
+  var panel = document.getElementById('notif-panel');
+  var badge = document.getElementById('notif-badge');
+  if (!panel || !badge) return;
+  if (_notifAberto && !panel.contains(e.target) && e.target !== badge) {
+    notifFechar();
+  }
+});
+
 document.addEventListener('DOMContentLoaded', function() {
   lsLoad();
 
