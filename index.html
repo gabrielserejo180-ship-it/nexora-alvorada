@@ -199,13 +199,17 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 </style>
 </head>
 <body>
+<div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;
+  padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999;display:block">
+  ⚠️ JavaScript não carregou — versão 2.1
+</div>
 
 <div class="screen" id="screen-home">
   <div class="home-wrap">
     <!-- LEFT -->
     <div class="home-left">
       <div>
-        <div class="brand-v">v2.0 — Alvorada Motocicletas</div>
+        <div class="brand-v">v2.1 — Alvorada Motocicletas</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestão comercial centralizada</div>
@@ -1472,6 +1476,9 @@ function carregarDoSheets() {
 
 // ═══ INICIALIZAÇÃO ════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', function(){
+  // Confirmar que JS carregou
+  var jsStatus = document.getElementById('js-status');
+  if(jsStatus) jsStatus.style.display = 'none';
   showScreen('screen-home');
 
   // Adicionar eventos nos cards via addEventListener
@@ -2031,13 +2038,4 @@ function vndNova() {
     for(var i=0;i<carteira.length;i++){
       var opt=document.createElement('option');
       opt.value=carteira[i].nome;
-      opt.textContent=carteira[i].nome+(carteira[i].cidade?' — '+carteira[i].cidade:'');
-      sel.appendChild(opt);
-    }
-  }
-  if(document.getElementById('vnd-val')) document.getElementById('vnd-val').value='';
-  if(document.getElementById('vnd-obs')) document.getElementById('vnd-obs').value='';
-  document.getElementById('vnd-modal').style.display='flex';
-}
-
-function vndSalvar(
+      opt.tex
