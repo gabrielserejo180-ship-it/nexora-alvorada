@@ -2050,4 +2050,48 @@ document.addEventListener('DOMContentLoaded', function() {
   if (usrSv) usrSv.onclick = usrSalvar;
 
   var retMc = document.getElementById('ret-modal-close');
-  if (retMc) retMc.onclick = f
+  if (retMc) retMc.onclick = function() { document.getElementById('ret-modal').style.display = 'none'; };
+  var retCn = document.getElementById('ret-modal-cancel');
+  if (retCn) retCn.onclick = function() { document.getElementById('ret-modal').style.display = 'none'; };
+  var retSv = document.getElementById('ret-modal-salvar');
+  if (retSv) retSv.onclick = retSalvar;
+
+  var retVc = document.getElementById('ret-view-close');
+  if (retVc) retVc.onclick = function() { document.getElementById('ret-view-modal').style.display = 'none'; };
+  var retVf = document.getElementById('ret-view-fechar');
+  if (retVf) retVf.onclick = function() { document.getElementById('ret-view-modal').style.display = 'none'; };
+  var retVco = document.getElementById('ret-view-concluir');
+  if (retVco) retVco.onclick = retConcluirAtual;
+  var retVe = document.getElementById('ret-view-editar');
+  if (retVe) retVe.onclick = retEditarAtual;
+
+  var vndMc = document.getElementById('vnd-modal-close');
+  if (vndMc) vndMc.onclick = function() { document.getElementById('vnd-modal').style.display = 'none'; };
+  var vndCn = document.getElementById('vnd-modal-cancel');
+  if (vndCn) vndCn.onclick = function() { document.getElementById('vnd-modal').style.display = 'none'; };
+  var vndSv = document.getElementById('vnd-modal-salvar');
+  if (vndSv) vndSv.onclick = vndSalvar;
+
+  var cliMc = document.getElementById('cli-modal-close');
+  if (cliMc) cliMc.onclick = function() { document.getElementById('cli-modal').style.display = 'none'; };
+  var cliCn = document.getElementById('cli-modal-cancel');
+  if (cliCn) cliCn.onclick = function() { document.getElementById('cli-modal').style.display = 'none'; };
+  var cliSv = document.getElementById('cli-modal-salvar');
+  if (cliSv) cliSv.onclick = cliSalvarManual;
+
+  var cliVc = document.getElementById('cli-view-close');
+  if (cliVc) cliVc.onclick = function() { document.getElementById('cli-view-modal').style.display = 'none'; };
+  var cliVf = document.getElementById('cli-view-fechar');
+  if (cliVf) cliVf.onclick = function() { document.getElementById('cli-view-modal').style.display = 'none'; };
+  var cliVe = document.getElementById('cli-view-edit-btn');
+  if (cliVe) cliVe.onclick = cliEditarAtual;
+
+  // Botoes tipo PJ/PF
+  var pjBtn = document.getElementById('cli-tipo-pj');
+  var pfBtn = document.getElementById('cli-tipo-pf');
+  if (pjBtn) pjBtn.onclick = function() { cliTipo('pj'); };
+  if (pfBtn) pfBtn.onclick = function() { cliTipo('pf'); };
+});
+</script>
+</body>
+</html>
