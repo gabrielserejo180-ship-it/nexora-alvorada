@@ -156,7 +156,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 <body>
 
 <div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999;display:none">
-  JavaScript nao carregou — v3.0
+  JavaScript nao carregou — v3.1
 </div>
 
 <!-- MODAL VER/EDITAR RETORNO -->
@@ -188,7 +188,7 @@ document.getElementById('js-status').style.display='none';
   <div class="home-wrap">
     <div class="home-left">
       <div>
-        <div class="brand-v">v3.0</div>
+        <div class="brand-v">v3.1</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestao comercial centralizada</div>
@@ -487,7 +487,7 @@ document.getElementById('js-status').style.display='none';
 
 <script>
 // ═══════════════════════════════════════════
-// NEXORA CONNECT v3.0 - ES5 PURO
+// NEXORA CONNECT v3.1 - ES5 PURO
 // ═══════════════════════════════════════════
 
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbzAcf1JapNJVNVUZtHtglIWo8crSe_ipNY-aOi2hp2xDV-r5N2KoDTnzTgfaVGgOCiP/exec';
@@ -870,7 +870,7 @@ function buildPage(id) {
       eye: 'Clientes', title: 'Clientes', sub: 'Carteira de clientes',
       body: '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">' +
         '<input class="usr-search" id="cli-busca" placeholder="Buscar por nome, CNPJ, CPF...">' +
-        '<button class="btn-new" id="cli-novo-btn">+ Cadastro Manual</button>' +
+        '<button class="btn-new" id="cli-novo-btn" onclick="cliNovoManual()">+ Cadastro Manual</button>' +
         '</div>' +
         '<div id="cli-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px"></div>' +
         '<div id="cli-lista"></div>'
@@ -879,14 +879,14 @@ function buildPage(id) {
   if (id === 'retornos') {
     return {
       eye: 'Retornos', title: 'Retornos', sub: 'Retornos agendados',
-      body: '<div style="margin-bottom:12px"><button class="btn-new" id="ret-novo-btn">+ Agendar</button></div>' +
+      body: '<div style="margin-bottom:12px"><button class="btn-new" id="ret-novo-btn" onclick="retNovo()">+ Agendar</button></div>' +
         '<div id="ret-lista"></div>'
     };
   }
   if (id === 'vendas') {
     return {
       eye: 'Vendas', title: 'Minhas Vendas', sub: 'Vendas realizadas',
-      body: '<div style="margin-bottom:12px"><button class="btn-new" id="vnd-nova-btn">+ Registrar Venda</button></div>' +
+      body: '<div style="margin-bottom:12px"><button class="btn-new" id="vnd-nova-btn" onclick="vndNova()">+ Registrar Venda</button></div>' +
         '<div id="vnd-lista"></div>'
     };
   }
@@ -934,8 +934,8 @@ function buildPage(id) {
       eye: 'Administracao', title: 'Usuarios', sub: 'Gerencie os acessos',
       body: '<div class="usr-topbar">' +
         '<input class="usr-search" id="usr-busca" placeholder="Buscar...">' +
-        '<button class="btn-new" id="usr-novo-btn">+ Novo</button>' +
-        '<button class="btn-save" id="usr-salvar-btn">Salvar na Planilha</button>' +
+        '<button class="btn-new" id="usr-novo-btn" onclick="usrNovo()">+ Novo</button>' +
+        '<button class="btn-save" id="usr-salvar-btn" onclick="usrSalvarPlanilha()">Salvar na Planilha</button>' +
         '</div>' +
         '<div class="usr-stats" id="usr-stats"></div>' +
         '<div class="usr-table" id="usr-lista"></div>'
@@ -1396,26 +1396,32 @@ function retEditarAtual() {
   var vm = document.getElementById('ret-view-modal');
   if (vm) vm.style.display = 'none';
 
-  // Popular o modal de agendar com os dados atuais
+  // No modo edicao, o cliente nao muda - so edita data/hora/motivo/tel/obs
+  // Mostrar nome do cliente fixo no select
   var sel = document.getElementById('ret-cli');
   if (sel) {
-    sel.innerHTML = '<option value="">-- Selecione um cliente --</option>';
-    var lista = (me && me.role === 'rep') ? cliDoRep() : CLI_DB;
-    for (var i = 0; i < lista.length; i++) {
-      var opt = document.createElement('option');
-      opt.value = lista[i].nome;
-      opt.textContent = lista[i].nome;
-      sel.appendChild(opt);
-    }
+    sel.innerHTML = '';
+    var opt = document.createElement('option');
+    opt.value = r.cliente || '';
+    opt.textContent = r.cliente || '';
+    sel.appendChild(opt);
     sel.value = r.cliente || '';
+    sel.disabled = true;
   }
+
   var dat = document.getElementById('ret-dat'); if (dat) dat.value = r.data || '';
   var hor = document.getElementById('ret-hor'); if (hor) hor.value = r.hora || '09:00';
-  var mot = document.getElementById('ret-mot'); if (mot) mot.value = r.motivo || '';
+  var mot = document.getElementById('ret-mot');
+  if (mot) {
+    // Setar o valor correto no select de motivo
+    mot.value = r.motivo || '';
+  }
   var tel = document.getElementById('ret-tel'); if (tel) tel.value = r.telefone || '';
   var obs = document.getElementById('ret-obs'); if (obs) obs.value = r.obs || '';
 
-  // Mudar botao salvar para atualizar
+  var titulo = document.getElementById('ret-modal').querySelector('.modal-head-title');
+  if (titulo) titulo.textContent = 'Editar Retorno';
+
   var salvarBtn = document.getElementById('ret-modal-salvar');
   if (salvarBtn) {
     salvarBtn.textContent = 'Salvar Edicao';
@@ -1443,7 +1449,11 @@ function retSalvarEdicao() {
   lsSet('nxr_ret', JSON.stringify(RET_DB));
   var modal = document.getElementById('ret-modal');
   if (modal) modal.style.display = 'none';
-  // Resetar botao salvar
+  // Resetar select, titulo e botao
+  var sel = document.getElementById('ret-cli');
+  if (sel) sel.disabled = false;
+  var titulo = document.getElementById('ret-modal') ? document.getElementById('ret-modal').querySelector('.modal-head-title') : null;
+  if (titulo) titulo.textContent = 'Agendar Retorno';
   var salvarBtn = document.getElementById('ret-modal-salvar');
   if (salvarBtn) { salvarBtn.textContent = 'Agendar'; salvarBtn.onclick = retSalvar; }
   showToast('Retorno atualizado!');
