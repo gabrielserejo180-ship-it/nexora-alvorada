@@ -167,7 +167,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 <body>
 
 <div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999;display:none">
-  JavaScript nao carregou — v4.0
+  JavaScript nao carregou — v4.1
 </div>
 
 <!-- MODAL VER/EDITAR RETORNO -->
@@ -210,7 +210,7 @@ document.getElementById('js-status').style.display='none';
   <div class="home-wrap">
     <div class="home-left">
       <div>
-        <div class="brand-v">v4.0</div>
+        <div class="brand-v">v4.1</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestao comercial centralizada</div>
@@ -510,7 +510,7 @@ document.getElementById('js-status').style.display='none';
 
 <script>
 // ═══════════════════════════════════════════
-// NEXORA CONNECT v4.0 - ES5 PURO
+// NEXORA CONNECT v4.1 - ES5 PURO
 // ═══════════════════════════════════════════
 
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbzAcf1JapNJVNVUZtHtglIWo8crSe_ipNY-aOi2hp2xDV-r5N2KoDTnzTgfaVGgOCiP/exec';
@@ -951,7 +951,6 @@ function buildPage(id) {
         '<button class="btn-new" id="cli-novo-btn" onclick="cliNovoManual()">+ Cadastro Manual</button>' +
         '</div>' +
         '<div id="cli-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px"></div>' +
-        '<div id="cli-debug" style="font-size:11px;color:var(--amber);margin-bottom:8px;padding:6px;background:rgba(245,158,11,.08);border-radius:6px"></div>' +
         '<div id="cli-lista"></div>'
     };
   }
@@ -1202,7 +1201,6 @@ function cliDoRep() {
 function cliRender() {
   var el = document.getElementById('cli-lista');
   var st = document.getElementById('cli-stats');
-  var dbg = document.getElementById('cli-debug');
 
   var isRep = me && me.role === 'rep';
   var todos = isRep ? cliDoRep() : CLI_DB;
@@ -1223,10 +1221,7 @@ function cliRender() {
   }
   _cliListaAtual = lista;
 
-  // Debug info
-  if (dbg) {
-    dbg.textContent = 'CLI_DB=' + CLI_DB.length + ' | role=' + (me ? me.role : '?') + ' | lista=' + lista.length;
-  }
+
 
   // Stats
   if (st) {
