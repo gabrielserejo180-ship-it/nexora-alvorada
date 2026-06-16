@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nexora Connect v2.0</title>
+<title>Nexora Connect v4.4</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 :root{
@@ -167,7 +167,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 <body>
 
 <div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999;display:none">
-  JavaScript nao carregou — v4.3
+  JavaScript nao carregou — v4.4
 </div>
 
 <!-- MODAL VER/EDITAR RETORNO -->
@@ -210,7 +210,7 @@ document.getElementById('js-status').style.display='none';
   <div class="home-wrap">
     <div class="home-left">
       <div>
-        <div class="brand-v">v4.3</div>
+        <div class="brand-v">v4.4</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestao comercial centralizada</div>
@@ -510,10 +510,11 @@ document.getElementById('js-status').style.display='none';
 
 <script>
 // ═══════════════════════════════════════════
-// NEXORA CONNECT v4.3 - ES5 PURO
+// NEXORA CONNECT v4.4 - ES5 PURO
 // ═══════════════════════════════════════════
 
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbzAcf1JapNJVNVUZtHtglIWo8crSe_ipNY-aOi2hp2xDV-r5N2KoDTnzTgfaVGgOCiP/exec';
+var _CACHE_V = '4.4';
 var me = null;
 var profile = null;
 var CLI_DB = [];
@@ -982,8 +983,10 @@ function buildPage(id) {
       eye: 'Retornos', title: 'Retornos', sub: 'Retornos agendados',
       body: '<div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">' +
         '<input class="usr-search" id="ret-busca" placeholder="' + searchPlaceholder + '" oninput="retRender()" style="flex:1;min-width:160px">' +
+        '<button style="height:38px;padding:0 12px;background:none;border:1px solid var(--line2);color:var(--txt2);border-radius:10px;font-size:12px;cursor:pointer;font-family:var(--ff)" onclick="retRecarregar()">&#8635; Atualizar</button>' +
         '<button class="btn-new" id="ret-novo-btn" onclick="retNovo()">+ Agendar</button>' +
         '</div>' +
+        '<div id="ret-status" style="font-size:11px;color:var(--txt3);margin-bottom:6px"></div>' +
         '<div id="ret-pag-info" style="font-size:11px;color:var(--txt3);margin-bottom:8px"></div>' +
         '<div id="ret-lista"></div>' +
         '<div id="ret-pag-nav" style="display:flex;gap:6px;justify-content:center;margin-top:14px;flex-wrap:wrap"></div>'
@@ -1537,6 +1540,23 @@ function retRender() {
       navEl.innerHTML = navHtml;
     }
   }
+}
+
+function retRecarregar() {
+  var st = document.getElementById('ret-status');
+  if (st) { st.textContent = 'Buscando dados da planilha...'; st.style.color = 'var(--amber)'; }
+  sheetsGet('getRetornos', function(d) {
+    if (d && d.ok && d.data) {
+      RET_DB = d.data;
+      lsSet('nxr_ret', JSON.stringify(RET_DB));
+      if (st) { st.textContent = 'Dados atualizados: ' + RET_DB.length + ' retorno(s).'; st.style.color = 'var(--green)'; }
+      setTimeout(function() { if (st) st.textContent = ''; }, 3000);
+      retRender();
+      setTimeout(notifVerificar, 200);
+    } else {
+      if (st) { st.textContent = 'Erro ao buscar. Verifique a conexao.'; st.style.color = 'var(--red)'; }
+    }
+  });
 }
 
 function retIrPag(p) {
