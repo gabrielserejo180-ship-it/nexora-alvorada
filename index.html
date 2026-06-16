@@ -167,7 +167,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 <body>
 
 <div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999;display:none">
-  JavaScript nao carregou — v3.5
+  JavaScript nao carregou — v3.6
 </div>
 
 <!-- MODAL VER/EDITAR RETORNO -->
@@ -210,7 +210,7 @@ document.getElementById('js-status').style.display='none';
   <div class="home-wrap">
     <div class="home-left">
       <div>
-        <div class="brand-v">v3.5</div>
+        <div class="brand-v">v3.6</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestao comercial centralizada</div>
@@ -510,7 +510,7 @@ document.getElementById('js-status').style.display='none';
 
 <script>
 // ═══════════════════════════════════════════
-// NEXORA CONNECT v3.5 - ES5 PURO
+// NEXORA CONNECT v3.6 - ES5 PURO
 // ═══════════════════════════════════════════
 
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbzAcf1JapNJVNVUZtHtglIWo8crSe_ipNY-aOi2hp2xDV-r5N2KoDTnzTgfaVGgOCiP/exec';
@@ -945,10 +945,17 @@ function buildPage(id) {
     };
   }
   if (id === 'retornos') {
+    var isRep = me && me.role === 'rep';
+    var searchPlaceholder = isRep ? 'Buscar por cliente...' : 'Buscar por representante...';
     return {
       eye: 'Retornos', title: 'Retornos', sub: 'Retornos agendados',
-      body: '<div style="margin-bottom:12px"><button class="btn-new" id="ret-novo-btn" onclick="retNovo()">+ Agendar</button></div>' +
-        '<div id="ret-lista"></div>'
+      body: '<div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">' +
+        '<input class="usr-search" id="ret-busca" placeholder="' + searchPlaceholder + '" oninput="retRender()" style="flex:1;min-width:160px">' +
+        '<button class="btn-new" id="ret-novo-btn" onclick="retNovo()">+ Agendar</button>' +
+        '</div>' +
+        '<div id="ret-pag-info" style="font-size:11px;color:var(--txt3);margin-bottom:8px"></div>' +
+        '<div id="ret-lista"></div>' +
+        '<div id="ret-pag-nav" style="display:flex;gap:6px;justify-content:center;margin-top:14px;flex-wrap:wrap"></div>'
     };
   }
   if (id === 'vendas') {
@@ -1395,37 +1402,104 @@ function retDoRep() {
 }
 var _retListaAtual = [];
 var _retIdxAtual = -1;
+var _retPagAtual = 1;
+var _retPorPag = 15;
 
 function retRender() {
-  _retListaAtual = (me && me.role === 'rep') ? retDoRep() : RET_DB;
+  var isRep = me && me.role === 'rep';
+  var todos = isRep ? retDoRep() : RET_DB;
+  var busca = document.getElementById('ret-busca') ? document.getElementById('ret-busca').value.toLowerCase().trim() : '';
+
+  // Filtro: rep busca por cliente, ger/adm busca por representante
+  var filtrados = [];
+  for (var i = 0; i < todos.length; i++) {
+    var r = todos[i];
+    if (!busca) { filtrados.push(r); continue; }
+    if (isRep) {
+      // Rep filtra por nome do cliente
+      if ((r.cliente || '').toLowerCase().indexOf(busca) > -1) filtrados.push(r);
+    } else {
+      // Ger/ADM filtra por nome do representante
+      if ((r.representante || '').toLowerCase().indexOf(busca) > -1 ||
+          (r.cliente || '').toLowerCase().indexOf(busca) > -1) filtrados.push(r);
+    }
+  }
+
+  _retListaAtual = filtrados;
+
+  // Paginação
+  var total = filtrados.length;
+  var totalPags = Math.ceil(total / _retPorPag) || 1;
+  if (_retPagAtual > totalPags) _retPagAtual = 1;
+  var inicio = (_retPagAtual - 1) * _retPorPag;
+  var fim = Math.min(inicio + _retPorPag, total);
+  var pagina = filtrados.slice(inicio, fim);
+
+  // Info de paginação
+  var infoEl = document.getElementById('ret-pag-info');
+  if (infoEl) {
+    infoEl.textContent = total > 0
+      ? 'Mostrando ' + (inicio + 1) + '-' + fim + ' de ' + total + ' retorno(s)'
+      : '';
+  }
+
   var el = document.getElementById('ret-lista');
   if (!el) return;
-  if (!_retListaAtual.length) { el.innerHTML = '<div class="empty-state">Nenhum retorno agendado.</div>'; return; }
-  var html = '';
-  for (var i = 0; i < _retListaAtual.length; i++) {
-    var r = _retListaAtual[i];
-    var cor = r.status === 'concluido' ? 'var(--green)' : 'var(--blue-h)';
-    html += '<div class="ret-row" data-ret-idx="' + i + '" style="cursor:pointer">' +
-      '<div style="flex:1"><div style="font-weight:600;color:var(--txt)">' + (r.cliente || '-') + '</div>' +
-      '<div style="font-size:11px;color:var(--txt2)">' + (r.data || '') + ' ' + (r.hora || '') + ' - ' + (r.motivo || '') + '</div>' +
-      (r.representante && me && me.role !== 'rep' ? '<div style="font-size:10px;color:var(--txt3)">' + r.representante + '</div>' : '') +
+  if (!pagina.length) {
+    el.innerHTML = '<div class="empty-state">Nenhum retorno encontrado.</div>';
+    var nav = document.getElementById('ret-pag-nav');
+    if (nav) nav.innerHTML = '';
+    return;
+  }
+
+  var htmlStr = '';
+  for (var j = 0; j < pagina.length; j++) {
+    var rr = pagina[j];
+    var idxGlobal = inicio + j;
+    var cor = rr.status === 'concluido' ? 'var(--green)' : 'var(--blue-h)';
+    htmlStr += '<div class="ret-row" data-ret-idx="' + idxGlobal + '" style="cursor:pointer">' +
+      '<div style="flex:1"><div style="font-weight:600;color:var(--txt)">' + (rr.cliente || '-') + '</div>' +
+      '<div style="font-size:11px;color:var(--txt2)">' + (rr.data || '') + ' ' + (rr.hora || '') + ' - ' + (rr.motivo || '') + '</div>' +
+      (!isRep && rr.representante ? '<div style="font-size:10px;color:var(--txt3)">' + rr.representante + '</div>' : '') +
       '</div>' +
-      '<span style="font-size:10px;font-weight:700;color:' + cor + '">' + (r.status || 'pendente') + '</span>' +
+      '<span style="font-size:10px;font-weight:700;color:' + cor + '">' + (rr.status || 'pendente') + '</span>' +
       '</div>';
   }
-  el.innerHTML = html;
+  el.innerHTML = htmlStr;
 
+  // Eventos de clique nas rows
   var rows = el.querySelectorAll('[data-ret-idx]');
-  for (var j = 0; j < rows.length; j++) {
+  for (var k = 0; k < rows.length; k++) {
     (function(row) {
       row.addEventListener('click', function() {
         retVerIdx(parseInt(row.getAttribute('data-ret-idx')));
       });
-    })(rows[j]);
+    })(rows[k]);
   }
 
-  var novoBtn = document.getElementById('ret-novo-btn');
-  if (novoBtn) { novoBtn.onclick = retNovo; }
+  // Navegação de páginas
+  var navEl = document.getElementById('ret-pag-nav');
+  if (navEl) {
+    if (totalPags <= 1) { navEl.innerHTML = ''; }
+    else {
+      var navHtml = '';
+      var btnStyle = 'height:30px;padding:0 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--ff);border:1px solid var(--line2);background:var(--s3);color:var(--txt2);margin:2px';
+      var btnActiveStyle = 'height:30px;padding:0 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--ff);border:none;background:var(--blue);color:#fff;margin:2px';
+      if (_retPagAtual > 1) navHtml += '<button style="' + btnStyle + '" onclick="retIrPag(' + (_retPagAtual-1) + ')">&#8249;</button>';
+      for (var p = 1; p <= totalPags; p++) {
+        navHtml += '<button style="' + (_retPagAtual===p ? btnActiveStyle : btnStyle) + '" onclick="retIrPag(' + p + ')">' + p + '</button>';
+      }
+      if (_retPagAtual < totalPags) navHtml += '<button style="' + btnStyle + '" onclick="retIrPag(' + (_retPagAtual+1) + ')">&#8250;</button>';
+      navEl.innerHTML = navHtml;
+    }
+  }
+}
+
+function retIrPag(p) {
+  _retPagAtual = p;
+  retRender();
+  var el = document.getElementById('ret-lista');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function retVerIdx(idx) {
