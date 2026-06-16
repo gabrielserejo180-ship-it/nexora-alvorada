@@ -684,18 +684,24 @@ var usrEditIdx = null;
 
 // ═══ TELAS ═══════════════════════════════════════════════
 function showScreen(id) {
-  // Esconder todas as screens
+  // Usar classes CSS — não style inline
   var all = ['screen-home','screen-login'];
   for(var i=0;i<all.length;i++){
     var s = document.getElementById(all[i]);
-    if(s){ s.style.display='none'; }
+    if(s){
+      s.className = 'screen hidden';
+      s.style.display = '';
+    }
   }
   // Esconder app-shell
   var shell = document.getElementById('app-shell');
-  if(shell){ shell.style.display='none'; shell.className='app-shell'; }
-  // Mostrar a screen correta
+  if(shell){ shell.className='app-shell'; shell.style.display='none'; }
+  // Mostrar a screen correta — remover hidden
   var el = document.getElementById(id);
-  if(el){ el.style.display='flex'; }
+  if(el){
+    el.className = 'screen';
+    el.style.display = '';
+  }
   var shell = document.getElementById('app-shell');
   if(shell) shell.classList.remove('on');
 }
@@ -2024,6 +2030,4 @@ function vndSalvar() {
     VND_DB.push(nova);
     lsSet('nxr_vnd', JSON.stringify(VND_DB));
     audLog('venda','Venda registrada',cli+' · R$ '+Number(val).toLocaleString('pt-BR'));
-    fetch(APPS_URL+'?action=inserirLinha&sheet=Vendas&row='+encodeURIComponent(JSON.stringify(nova))).catch(function(){});
-    try{document.getElementById('vnd-modal').style.display='none';}catch(e){}
-    setTimeout(fun
+    fetch(APPS_URL+'?action=inserirLinha&sheet=Vendas&row='+encodeURIComponent(JSON.stringify(nova))).catch(functi
