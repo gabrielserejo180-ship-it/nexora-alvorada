@@ -201,7 +201,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 <body>
 <div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;
   padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999;display:block">
-  ⚠️ JavaScript não carregou — versão 2.3
+  ⚠️ JavaScript não carregou — versao 2.5
 </div>
 
 <div class="screen" id="screen-home">
@@ -209,7 +209,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
     <!-- LEFT -->
     <div class="home-left">
       <div>
-        <div class="brand-v">v2.3 — Alvorada Motocicletas</div>
+        <div class="brand-v">v2.5</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestão comercial centralizada</div>
@@ -597,7 +597,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 </div>
 
 <script>
-// ═══ UTILITÁRIOS ═══════════════════════════════════════
+//
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 function sanitize(s){
@@ -609,7 +609,7 @@ function sanitize(s){
   return r;
 }
 
-// ═══ VARIÁVEIS GLOBAIS ═════════════════════════════════
+//
 var _URL_PADRAO = 'https://script.google.com/macros/s/AKfycbzAcf1JapNJVNVUZtHtglIWo8crSe_ipNY-aOi2hp2xDV-r5N2KoDTnzTgfaVGgOCiP/exec';
 var APPS_URL    = lsGet('nxr_url') || _URL_PADRAO;
 var USERS_BASE  = [];
@@ -631,7 +631,7 @@ var cliTipoAtual = 'pj';
 var _cliAtualIdx = -1;
 var _usrKeys   = [];
 
-// ═══ CAPTURA DE ERROS ══════════════════════════════════
+//
 window.onerror = function(msg, src, line){
   var d = document.createElement('div');
   d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;'
@@ -642,9 +642,9 @@ window.onerror = function(msg, src, line){
   return false;
 };
 
-// ═══ TELAS ═══════════════════════════════════════════════
+//
 function showScreen(id) {
-  // Usar classes CSS — não style inline
+  // Usar classes CSS - nao style inline
   var all = ['screen-home','screen-login'];
   for(var i=0;i<all.length;i++){
     var s = document.getElementById(all[i]);
@@ -656,7 +656,7 @@ function showScreen(id) {
   // Esconder app-shell
   var shell = document.getElementById('app-shell');
   if(shell){ shell.className='app-shell'; shell.style.display='none'; }
-  // Mostrar a screen correta — remover hidden
+  // Mostrar a screen correta - remover hidden
   var el = document.getElementById(id);
   if(el){
     el.className = 'screen';
@@ -678,7 +678,7 @@ function goLogin(p) {
   if(el) el.textContent = labels[p] || p;
   showScreen('screen-login');
 
-  // Carregar usuários da planilha em background ao abrir login
+  // Carregar usuarios da planilha em background ao abrir login
   fetch(APPS_URL + '?action=getUsuarios')
     .then(function(r){ return r.json(); })
     .then(function(d){
@@ -686,7 +686,7 @@ function goLogin(p) {
         // Normalizar dados da planilha
         USR_DB = d.data.map(function(u){
           var st = String(u.status||'').toLowerCase().trim();
-          // pin: usar String(u.pin) sem || para não perder o 0
+          // pin: usar String(u.pin) sem || para nao perder o 0
           var pinRaw = (u.pin===null||u.pin===undefined) ? '' : String(u.pin).trim();
           return {
             user:   String(u.user||'').trim(),
@@ -713,15 +713,15 @@ function doLogin() {
   alertEl.className = 'alert';
   alertEl.style.color = '';
 
-  if(!user){ alertEl.textContent='Informe o usuário.'; alertEl.className='alert show'; return; }
-  if(pin.length < 6){ alertEl.textContent='Senha deve ter 6 dígitos.'; alertEl.className='alert show'; return; }
+  if(!user){ alertEl.textContent='Informe o usuario.'; alertEl.className='alert show'; return; }
+  if(pin.length < 6){ alertEl.textContent='Senha deve ter 6 digitos.'; alertEl.className='alert show'; return; }
 
   // Mostrar loading
-  alertEl.textContent='🔄 Verificando...';
+  alertEl.textContent='[...] Verificando...';
   alertEl.className='alert show';
   alertEl.style.color='var(--amber)';
 
-  // Buscar usuários da planilha
+  // Buscar usuarios da planilha
   var url = lsGet('nxr_url') || _URL_PADRAO;
   fetch(url + '?action=getUsuarios')
     .then(function(r){ return r.json(); })
@@ -730,7 +730,7 @@ function doLogin() {
       alertEl.className='alert';
 
       if(!d.ok || !d.data || d.data.length === 0){
-        alertEl.textContent='⚠️ Nenhum usuário encontrado na planilha. Verifique a aba USUARIOS.';
+        alertEl.textContent='[!] Nenhum usuario encontrado na planilha. Verifique a aba USUARIOS.';
         alertEl.className='alert show';
         return;
       }
@@ -744,7 +744,7 @@ function doLogin() {
     })
     .catch(function(err){
       alertEl.style.color='';
-      alertEl.textContent='❌ Sem conexão com a planilha. Verifique sua internet e a URL do Apps Script.';
+      alertEl.textContent='[X] Sem conexao com a planilha. Verifique sua internet e a URL do Apps Script.';
       alertEl.className='alert show';
     });
 }
@@ -760,11 +760,11 @@ function doLoginVerificar(user, pin, alertEl) {
     var uPin    = (u.pin===null||u.pin===undefined) ? '' : String(u.pin).trim();
     var uStatus = String(u.status||'').toLowerCase().trim();
 
-    // Comparar usuário e perfil
+    // Comparar usuario e perfil
     if(uUser !== user || uRole !== profile) continue;
 
-    // Comparar pin — aceita string '000000' ou número 0 do Sheets
-    // uPin pode ser '0' (Sheets converte 000000→0→'0')
+    // Comparar pin - aceita string '000000' ou numero 0 do Sheets
+    // uPin pode ser '0' (Sheets converte 000000->0->'0')
     var pinOk = (uPin === pin) ||
                 (Number(u.pin) === Number(pin));
 
@@ -781,7 +781,7 @@ function doLoginVerificar(user, pin, alertEl) {
   }
 
   if(!found){
-    // Verificar se o usuário existe com outro perfil
+    // Verificar se o usuario existe com outro perfil
     var existeOutroPerfil = false;
     for(var j=0; j<USR_DB.length; j++){
       if(String(USR_DB[j].user||'').toLowerCase().trim() === user){
@@ -789,9 +789,9 @@ function doLoginVerificar(user, pin, alertEl) {
       }
     }
     if(existeOutroPerfil){
-      alertEl.textContent = '❌ Usuário ou senha incorretos.';
+      alertEl.textContent = '[X] Usuario ou senha incorretos.';
     } else {
-      alertEl.textContent = '❌ Usuário "'+user+'" não encontrado na planilha.';
+      alertEl.textContent = '[X] Usuario "'+user+'" nao encontrado na planilha.';
     }
     alertEl.className = 'alert show';
     var pinEl = document.getElementById('inp-pin');
@@ -800,7 +800,7 @@ function doLoginVerificar(user, pin, alertEl) {
   }
 
   if(found.status === 'inactive'){
-    alertEl.textContent = '⚠️ Usuário inativo. Contate o administrador.';
+    alertEl.textContent = '[!] Usuario inativo. Contate o administrador.';
     alertEl.className = 'alert show';
     return;
   }
@@ -831,37 +831,37 @@ function launchApp() {
   // carregarDoSheets feita apenas no login
 }
 
-// ═══ NAVEGAÇÃO ════════════════════════════════════════════
+//
 var NAV = {
   rep:[
-    {id:'dashboard',label:'📊 Dashboard'},
-    {id:'captacao', label:'🔍 Captação'},
-    {id:'clientes', label:'👥 Meus Clientes'},
-    {id:'retornos', label:'🔔 Retornos'},
-    {id:'vendas',   label:'💰 Minhas Vendas'},
-    {id:'consultas',label:'🏛️ Consultas'},
+    {id:'dashboard',label:' Dashboard'},
+    {id:'captacao', label:' Captacao'},
+    {id:'clientes', label:' Meus Clientes'},
+    {id:'retornos', label:' Retornos'},
+    {id:'vendas',   label:' Minhas Vendas'},
+    {id:'consultas',label:' Consultas'},
   ],
   ger:[
-    {id:'dashboard',label:'📊 Dashboard'},
-    {id:'captacao', label:'🔍 Captação'},
-    {id:'clientes', label:'👥 Todos os Clientes'},
-    {id:'retornos', label:'🔔 Retornos Gerais'},
-    {id:'comercial',label:'🏆 Comercial'},
-    {id:'consultas',label:'🏛️ Consultas'},
-    {sect:'Administração'},
-    {id:'admin',    label:'👤 Usuários'},
+    {id:'dashboard',label:' Dashboard'},
+    {id:'captacao', label:' Captacao'},
+    {id:'clientes', label:' Todos os Clientes'},
+    {id:'retornos', label:' Retornos Gerais'},
+    {id:'comercial',label:' Comercial'},
+    {id:'consultas',label:' Consultas'},
+    {sect:'Administracao'},
+    {id:'admin',    label:'PF Usuarios'},
   ],
   adm:[
-    {id:'dashboard',label:'📊 Dashboard'},
-    {id:'captacao', label:'🔍 Captação'},
-    {id:'clientes', label:'👥 Todos os Clientes'},
-    {id:'retornos', label:'🔔 Retornos Gerais'},
-    {id:'comercial',label:'🏆 Comercial'},
-    {id:'consultas',label:'🏛️ Consultas'},
-    {sect:'Administração'},
-    {id:'admin',    label:'👤 Usuários'},
-    {id:'auditoria',label:'📋 Auditoria'},
-    {id:'config',   label:'⚙️ Configurações'},
+    {id:'dashboard',label:' Dashboard'},
+    {id:'captacao', label:' Captacao'},
+    {id:'clientes', label:' Todos os Clientes'},
+    {id:'retornos', label:' Retornos Gerais'},
+    {id:'comercial',label:' Comercial'},
+    {id:'consultas',label:' Consultas'},
+    {sect:'Administracao'},
+    {id:'admin',    label:'PF Usuarios'},
+    {id:'auditoria',label:' Auditoria'},
+    {id:'config',   label:' Configuracoes'},
   ],
 };
 
@@ -888,7 +888,7 @@ function navigate(id) {
 
   try {
     var pg = buildPage(id);
-    document.getElementById('pg-eye').textContent   = pg.eye   || 'Módulo';
+    document.getElementById('pg-eye').textContent   = pg.eye   || 'Modulo';
     var bc2=document.getElementById('tb-breadcrumb'); if(bc2) bc2.textContent=pg.title||id;
     document.getElementById('pg-title').textContent = pg.title || id;
     document.getElementById('pg-sub').textContent   = pg.sub   || '';
@@ -900,11 +900,11 @@ function navigate(id) {
     if(id==='retornos')  setTimeout(function(){ retRender(); }, 50);
     if(id==='vendas')    setTimeout(function(){ vndRender(); }, 50);
   } catch(e) {
-    document.getElementById('pg-body').innerHTML = '<div class="empty-state">⚠️ Erro: '+e.message+'</div>';
+    document.getElementById('pg-body').innerHTML = '<div class="empty-state">[!] Erro: '+e.message+'</div>';
   }
 }
 
-// ═══ PÁGINAS ══════════════════════════════════════════════
+//
 function buildPage(id) {
   var role = me ? me.role : 'rep';
   var pages = {
@@ -913,24 +913,24 @@ function buildPage(id) {
       var ret   = role==='rep' ? RET_DB.filter(function(r){ return r.representante===me.name; }) : RET_DB;
       var vnd   = role==='rep' ? VND_DB.filter(function(v){ return v.representante===me.name; }) : VND_DB;
       var fat   = 0; for(var i=0;i<vnd.length;i++) fat += Number(vnd[i].valor||0);
-      return {eye:'Visão Geral',title:'Dashboard',sub:'Bem-vindo, '+me.name,
+      return {eye:'Visao Geral',title:'Dashboard',sub:'Bem-vindo, '+me.name,
         body:'<div class="stat-grid">'
-          +'<div class="sc"><div class="sc-icon">👥</div><div class="sc-val">'+lista.length+'</div><div class="sc-label">Clientes</div></div>'
-          +'<div class="sc"><div class="sc-icon">🔔</div><div class="sc-val">'+ret.filter(function(r){ return r.status!=='concluido'; }).length+'</div><div class="sc-label">Retornos pendentes</div></div>'
-          +'<div class="sc"><div class="sc-icon">💰</div><div class="sc-val">'+vnd.length+'</div><div class="sc-label">Vendas</div></div>'
-          +'<div class="sc"><div class="sc-icon">📈</div><div class="sc-val">R$ '+fat.toLocaleString('pt-BR')+'</div><div class="sc-label">Faturamento</div></div>'
+          +'<div class="sc"><div class="sc-icon"></div><div class="sc-val">'+lista.length+'</div><div class="sc-label">Clientes</div></div>'
+          +'<div class="sc"><div class="sc-icon"></div><div class="sc-val">'+ret.filter(function(r){ return r.status!=='concluido'; }).length+'</div><div class="sc-label">Retornos pendentes</div></div>'
+          +'<div class="sc"><div class="sc-icon"></div><div class="sc-val">'+vnd.length+'</div><div class="sc-label">Vendas</div></div>'
+          +'<div class="sc"><div class="sc-icon"></div><div class="sc-val">R$ '+fat.toLocaleString('pt-BR')+'</div><div class="sc-label">Faturamento</div></div>'
           +'</div><div class="empty-state">Use o menu lateral para navegar.</div>'};
     },
     captacao: function(){
-      return {eye:'Captação',title:'Captação de Clientes',sub:'Pesquise e adicione empresas à sua carteira',
+      return {eye:'Captacao',title:'Captacao de Clientes',sub:'Pesquise e adicione empresas a sua carteira',
         body:'<div class="cap-wrap">'
           +'<div class="cap-tabs">'
-          +'<button class="cap-tab on" id="ctab-cnpj" onclick="capAba(\'cnpj\')">🔍 Por CNPJ</button>'
-          +'<button class="cap-tab" id="ctab-nome" onclick="capAba(\'nome\')">🏢 Por Nome/Cidade</button>'
+          +'<button class="cap-tab on" id="ctab-cnpj" onclick="capAba(\'cnpj\')"> Por CNPJ</button>'
+          +'<button class="cap-tab" id="ctab-nome" onclick="capAba(\'nome\')"> Por Nome/Cidade</button>'
           +'</div>'
           +'<div id="cap-cnpj-panel">'
           +'<div class="cap-row"><input class="cap-input" id="cap-cnpj-inp" placeholder="00.000.000/0001-00">'
-          +'<button class="btn-search" onclick="capBuscarCNPJ()">🔍 Buscar</button></div>'
+          +'<button class="btn-search" onclick="capBuscarCNPJ()"> Buscar</button></div>'
           +'<div id="cap-res-cnpj"></div>'
           +'</div>'
           +'<div id="cap-nome-panel" style="display:none">'
@@ -945,7 +945,7 @@ function buildPage(id) {
           +'<option value="RJ">RJ</option><option value="RS">RS</option><option value="SC">SC</option>'
           +'<option value="SP">SP</option><option value="TO">TO</option></select>'
           +'</div>'
-          +'<button class="btn-search" onclick="capBuscarNome()">🔍 Pesquisar</button>'
+          +'<button class="btn-search" onclick="capBuscarNome()"> Pesquisar</button>'
           +'<div id="cap-res-nome" style="margin-top:12px"></div>'
           +'</div>'
           +'</div>'};
@@ -953,7 +953,7 @@ function buildPage(id) {
     clientes: function(){
       return {eye:'Clientes',title:'Clientes',sub:'Sua carteira de clientes',
         body:'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center">'
-          +'<input class="usr-search" id="cli-busca" placeholder="🔍 Buscar por nome, CPF, CNPJ..." oninput="cliRender()" style="flex:1;min-width:160px">'
+          +'<input class="usr-search" id="cli-busca" placeholder=" Buscar por nome, CPF, CNPJ..." oninput="cliRender()" style="flex:1;min-width:160px">'
           +'<button class="btn-new" onclick="cliNovoManual()">+ Cadastro Manual</button>'
           +'</div>'
           +'<div id="cli-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px"></div>'
@@ -979,64 +979,64 @@ function buildPage(id) {
       }
       var ranking = '';
       var repArr = Object.keys(reps).sort(function(a,b){ return reps[b]-reps[a]; });
-      var medals = ['🥇','🥈','🥉'];
+      var medals = ['1o','2o','3o'];
       for(var i=0;i<repArr.length;i++){
-        ranking += '<div class="vnd-row"><span style="font-size:18px">'+(medals[i]||'📊')+'</span>'
+        ranking += '<div class="vnd-row"><span style="font-size:18px">'+(medals[i]||'')+'</span>'
           +'<span style="flex:1">'+repArr[i]+'</span>'
           +'<span style="color:var(--green);font-weight:700">R$ '+reps[repArr[i]].toLocaleString('pt-BR')+'</span></div>';
       }
       return {eye:'Comercial',title:'Painel Comercial',sub:'Desempenho da equipe',
         body:'<div class="stat-grid">'
-          +'<div class="sc"><div class="sc-icon">💰</div><div class="sc-val">R$ '+fat.toLocaleString('pt-BR')+'</div><div class="sc-label">Faturamento Total</div></div>'
-          +'<div class="sc"><div class="sc-icon">👥</div><div class="sc-val">'+CLI_DB.length+'</div><div class="sc-label">Clientes</div></div>'
-          +'<div class="sc"><div class="sc-icon">📦</div><div class="sc-val">'+VND_DB.length+'</div><div class="sc-label">Vendas</div></div>'
+          +'<div class="sc"><div class="sc-icon"></div><div class="sc-val">R$ '+fat.toLocaleString('pt-BR')+'</div><div class="sc-label">Faturamento Total</div></div>'
+          +'<div class="sc"><div class="sc-icon"></div><div class="sc-val">'+CLI_DB.length+'</div><div class="sc-label">Clientes</div></div>'
+          +'<div class="sc"><div class="sc-icon"></div><div class="sc-val">'+VND_DB.length+'</div><div class="sc-label">Vendas</div></div>'
           +'</div>'
           +'<div class="usr-table">'
-          +'<div class="aud-row" style="font-weight:700;color:var(--txt3);font-size:10px">RANKING · REPRESENTANTES</div>'
+          +'<div class="aud-row" style="font-weight:700;color:var(--txt3);font-size:10px">RANKING . REPRESENTANTES</div>'
           +(ranking||'<div class="aud-row">Nenhuma venda registrada.</div>')
           +'</div>'};
     },
     consultas: function(){
       return {eye:'Consultas',title:'Consultas',sub:'Portais oficiais',
         body:'<div class="stat-grid">'
-          +'<div class="sc" style="cursor:pointer" onclick="window.open(\'https://solucoes.receita.fazenda.gov.br/Servicos/cnpjreva/Cnpjreva_Solicitacao.asp\',\'_blank\')"><div class="sc-icon">🏛️</div><div style="font-size:13px;font-weight:600">Receita Federal</div><div class="sc-label">Consulta CNPJ</div></div>'
-          +'<div class="sc" style="cursor:pointer" onclick="window.open(\'https://consultaie.com.br/\',\'_blank\')"><div class="sc-icon">📄</div><div style="font-size:13px;font-weight:600">Inscrição Estadual</div><div class="sc-label">ConsultaIE</div></div>'
+          +'<div class="sc" style="cursor:pointer" onclick="window.open(\'https://solucoes.receita.fazenda.gov.br/Servicos/cnpjreva/Cnpjreva_Solicitacao.asp\',\'_blank\')"><div class="sc-icon"></div><div style="font-size:13px;font-weight:600">Receita Federal</div><div class="sc-label">Consulta CNPJ</div></div>'
+          +'<div class="sc" style="cursor:pointer" onclick="window.open(\'https://consultaie.com.br/\',\'_blank\')"><div class="sc-icon"></div><div style="font-size:13px;font-weight:600">Inscricao Estadual</div><div class="sc-label">ConsultaIE</div></div>'
           +'</div>'};
     },
     admin: function(){
-      return {eye:'Administração',title:'Usuários',sub:'Gerencie os acessos',
+      return {eye:'Administracao',title:'Usuarios',sub:'Gerencie os acessos',
         body:'<div class="usr-topbar">'
-          +'<input class="usr-search" id="usr-busca" placeholder="🔍 Buscar..." oninput="usrRender()">'
+          +'<input class="usr-search" id="usr-busca" placeholder=" Buscar..." oninput="usrRender()">'
           +'<select class="usr-sel" id="usr-filtro" onchange="usrRender()"><option value="">Todos</option><option value="rep">Rep.</option><option value="ger">Gerente</option><option value="adm">ADM</option></select>'
           +'<button class="btn-new" onclick="usrNovo()">+ Novo</button>'
-          +'<button class="btn-save" id="usr-salvar-btn" onclick="usrSalvarPlanilha()">☁️ Salvar</button>'
+          +'<button class="btn-save" id="usr-salvar-btn" onclick="usrSalvarPlanilha()">[nuvem] Salvar</button>'
           +'</div>'
           +'<div class="usr-stats" id="usr-stats"></div>'
           +'<div class="usr-table" id="usr-lista"></div>'};
     },
     auditoria: function(){
-      return {eye:'Administração',title:'Auditoria',sub:'Log de ações',
-        body:'<div class="usr-topbar"><input class="usr-search" id="aud-busca" placeholder="🔍 Buscar..." oninput="audRender()"></div>'
+      return {eye:'Administracao',title:'Auditoria',sub:'Log de acoes',
+        body:'<div class="usr-topbar"><input class="usr-search" id="aud-busca" placeholder=" Buscar..." oninput="audRender()"></div>'
           +'<div class="usr-table" id="aud-lista"></div>'};
     },
     config: function(){
-      return {eye:'Administração',title:'Configurações',sub:'Configurações do sistema',
+      return {eye:'Administracao',title:'Configuracoes',sub:'Configuracoes do sistema',
         body:'<div class="cap-wrap">'
-          +'<div style="font-size:13px;font-weight:600;margin-bottom:10px">⚙️ URL do Apps Script</div>'
+          +'<div style="font-size:13px;font-weight:600;margin-bottom:10px"> URL do Apps Script</div>'
           +'<input class="cap-input" id="cfg-url" style="width:100%;margin-bottom:10px" placeholder="https://script.google.com/macros/s/.../exec">'
           +'<div style="display:flex;gap:8px">'
-          +'<button class="btn-search" onclick="cfgTestar()">🔌 Testar</button>'
-          +'<button class="btn-save" onclick="cfgSalvar()">💾 Salvar</button>'
+          +'<button class="btn-search" onclick="cfgTestar()"> Testar</button>'
+          +'<button class="btn-save" onclick="cfgSalvar()"> Salvar</button>'
           +'</div>'
           +'<div id="cfg-status" style="margin-top:10px;font-size:12px;color:var(--txt2)"></div>'
           +'</div>'
           +'<div class="cap-wrap" style="margin-top:12px">'
-          +'<div style="font-size:13px;font-weight:600;margin-bottom:10px">💾 Backup e Dados</div>'
+          +'<div style="font-size:13px;font-weight:600;margin-bottom:10px"> Backup e Dados</div>'
           +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
-          +'<button class="btn-new" onclick="cfgExportar()">📥 Exportar JSON</button>'
-          +'<button onclick="cfgTesteSalvar()" style="height:38px;padding:0 14px;background:none;border:1px solid var(--amber);color:var(--amber);border-radius:9px;font-size:13px;cursor:pointer;font-family:var(--ff)">🧪 Testar Salvar</button>'
-          +'<button onclick="cfgLimparClientes()" style="height:38px;padding:0 14px;background:none;border:1px solid var(--red);color:var(--red);border-radius:9px;font-size:13px;cursor:pointer;font-family:var(--ff)">🗑️ Limpar Clientes</button>'
-          +'<button onclick="cfgLimparVendas()" style="height:38px;padding:0 14px;background:none;border:1px solid var(--red);color:var(--red);border-radius:9px;font-size:13px;cursor:pointer;font-family:var(--ff)">🗑️ Limpar Vendas</button>'
+          +'<button class="btn-new" onclick="cfgExportar()"> Exportar JSON</button>'
+          +'<button onclick="cfgTesteSalvar()" style="height:38px;padding:0 14px;background:none;border:1px solid var(--amber);color:var(--amber);border-radius:9px;font-size:13px;cursor:pointer;font-family:var(--ff)"> Testar Salvar</button>'
+          +'<button onclick="cfgLimparClientes()" style="height:38px;padding:0 14px;background:none;border:1px solid var(--red);color:var(--red);border-radius:9px;font-size:13px;cursor:pointer;font-family:var(--ff)">Del Limpar Clientes</button>'
+          +'<button onclick="cfgLimparVendas()" style="height:38px;padding:0 14px;background:none;border:1px solid var(--red);color:var(--red);border-radius:9px;font-size:13px;cursor:pointer;font-family:var(--ff)">Del Limpar Vendas</button>'
           +'</div>'
           +'</div>'};
     },
@@ -1044,10 +1044,10 @@ function buildPage(id) {
 
   var fn = pages[id];
   if(fn) return fn();
-  return {eye:'Módulo',title:id,sub:'',body:'<div class="empty-state">Módulo não encontrado.</div>'};
+  return {eye:'Modulo',title:id,sub:'',body:'<div class="empty-state">Modulo nao encontrado.</div>'};
 }
 
-// ═══ CAPTAÇÃO ════════════════════════════════════════════
+//
 function capAba(aba) {
   var isCnpj = aba === 'cnpj';
   document.getElementById('cap-cnpj-panel').style.display = isCnpj ? '' : 'none';
@@ -1060,23 +1060,23 @@ function capBuscarCNPJ() {
   var cnpj = document.getElementById('cap-cnpj-inp').value.replace(/\D/g,'');
   var res  = document.getElementById('cap-res-cnpj');
   if(cnpj.length !== 14){
-    res.innerHTML = '<div style="color:var(--red);font-size:13px;padding:10px">⚠️ CNPJ deve ter 14 dígitos.</div>';
+    res.innerHTML = '<div style="color:var(--red);font-size:13px;padding:10px">[!] CNPJ deve ter 14 digitos.</div>';
     return;
   }
-  res.innerHTML = '<div style="color:var(--txt2);font-size:13px;padding:10px;text-align:center">🔍 Buscando dados da Receita Federal...</div>';
+  res.innerHTML = '<div style="color:var(--txt2);font-size:13px;padding:10px;text-align:center"> Buscando dados da Receita Federal...</div>';
 
   fetch('https://brasilapi.com.br/api/cnpj/v1/'+cnpj)
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(!d || d.message || d.status === 'ERROR'){
-        res.innerHTML='<div style="color:var(--amber);font-size:13px;padding:10px">⚠️ CNPJ não encontrado ou inativo na Receita Federal.</div>';
+        res.innerHTML='<div style="color:var(--amber);font-size:13px;padding:10px">[!] CNPJ nao encontrado ou inativo na Receita Federal.</div>';
         return;
       }
 
       var tel1 = ((d.ddd_telefone_1||'')+(d.telefone_1||'')).replace(/\D/g,'');
       var tel2 = ((d.ddd_telefone_2||'')+(d.telefone_2||'')).replace(/\D/g,'');
       var endCompleto = [d.logradouro, d.numero, d.complemento, d.bairro].filter(Boolean).join(', ');
-      var endCidadeUF = (d.municipio||'') + (d.uf?' - '+d.uf:'') + (d.cep?' · CEP '+d.cep:'');
+      var endCidadeUF = (d.municipio||'') + (d.uf?' - '+d.uf:'') + (d.cep?' . CEP '+d.cep:'');
       var endMapa = encodeURIComponent([endCompleto, d.municipio, d.uf, 'Brasil'].filter(Boolean).join(', '));
       var cnpjFmt = cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5');
       var situacao = (d.descricao_situacao_cadastral||'').toUpperCase();
@@ -1091,10 +1091,10 @@ function capBuscarCNPJ() {
       var socios = d.qsa && d.qsa.length ? d.qsa.map(function(s){ return s.nome_socio+(s.qualificacao_socio?' ('+s.qualificacao_socio+')':''); }).join('<br>') : '';
 
       var html = '<div class="card-emp">'
-        // Cabeçalho
+        // Cabecalho
         +'<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:12px">'
         +'<div>'
-        +'<div style="font-size:16px;font-weight:700;color:var(--txt);line-height:1.3">'+( d.razao_social||'—')+'</div>'
+        +'<div style="font-size:16px;font-weight:700;color:var(--txt);line-height:1.3">'+( d.razao_social||'-')+'</div>'
         +(d.nome_fantasia&&d.nome_fantasia!==d.razao_social?'<div style="font-size:12px;color:var(--txt2);margin-top:2px">'+d.nome_fantasia+'</div>':'')
         +'</div>'
         +'<span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:'+(situacao==='ATIVA'?'rgba(16,185,129,.12)':'rgba(239,68,68,.12)')+';color:'+corSit+'">'+situacao+'</span>'
@@ -1104,7 +1104,7 @@ function capBuscarCNPJ() {
         +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'
         +'<div><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">CNPJ</div>'
         +'<div style="font-size:13px;font-family:monospace">'+cnpjFmt+'</div></div>'
-        +(d.natureza_juridica?'<div><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Natureza Jurídica</div>'
+        +(d.natureza_juridica?'<div><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Natureza Juridica</div>'
         +'<div style="font-size:12px">'+d.natureza_juridica+'</div></div>':'<div></div>')
         +(dataAbertura?'<div><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Abertura</div>'
         +'<div style="font-size:13px">'+dataAbertura+'</div></div>':'<div></div>')
@@ -1113,12 +1113,12 @@ function capBuscarCNPJ() {
         +(d.porte?'<div><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Porte</div>'
         +'<div style="font-size:13px">'+d.porte+'</div></div>':'<div></div>')
         +(d.opcao_pelo_simples!==undefined?'<div><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Simples Nacional</div>'
-        +'<div style="font-size:13px">'+(d.opcao_pelo_simples?'✅ Optante':'❌ Não optante')+'</div></div>':'<div></div>')
+        +'<div style="font-size:13px">'+(d.opcao_pelo_simples?'[OK] Optante':'[X] Nao optante')+'</div></div>':'<div></div>')
         +'</div>'
 
-        // Endereço + mini mapa
+        // Endereco + mini mapa
         +(endCompleto?'<div style="margin-bottom:14px">'
-        +'<div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">📍 Endereço</div>'
+        +'<div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px"> Endereco</div>'
         +'<div style="font-size:13px;margin-bottom:4px">'+endCompleto+'</div>'
         +'<div style="font-size:12px;color:var(--txt2);margin-bottom:10px">'+endCidadeUF+'</div>'
         +'<iframe src="https://maps.google.com/maps?q='+endMapa+'&output=embed&z=15" '
@@ -1127,31 +1127,31 @@ function capBuscarCNPJ() {
 
         // Contatos
         +((tel1||tel2||d.email)?'<div style="margin-bottom:14px">'
-        +'<div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📞 Contato</div>'
+        +'<div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Tel Contato</div>'
         +'<div style="display:flex;flex-wrap:wrap;gap:8px">'
-        +(tel1?'<a class="link-btn link-call" href="tel:+55'+tel1+'">📞 '+tel1.replace(/(\d{2})(\d{4,5})(\d{4})/,'($1) $2-$3')+'</a>':'')
-        +(tel1?'<a class="link-btn link-wa" href="https://wa.me/55'+tel1+'" target="_blank">💬 WhatsApp</a>':'')
-        +(tel2&&tel2!==tel1?'<a class="link-btn link-call" href="tel:+55'+tel2+'">📞 '+tel2+'</a>':'')
-        +(d.email?'<a class="link-btn link-map" href="mailto:'+d.email+'">✉️ '+d.email+'</a>':'')
+        +(tel1?'<a class="link-btn link-call" href="tel:+55'+tel1+'">Tel '+tel1.replace(/(\d{2})(\d{4,5})(\d{4})/,'($1) $2-$3')+'</a>':'')
+        +(tel1?'<a class="link-btn link-wa" href="https://wa.me/55'+tel1+'" target="_blank">Wa WhatsApp</a>':'')
+        +(tel2&&tel2!==tel1?'<a class="link-btn link-call" href="tel:+55'+tel2+'">Tel '+tel2+'</a>':'')
+        +(d.email?'<a class="link-btn link-map" href="mailto:'+d.email+'"> '+d.email+'</a>':'')
         +'</div></div>':'')
 
         // Atividades
         +(atividades.length?'<div style="margin-bottom:14px">'
-        +'<div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🏭 Atividade Principal</div>'
+        +'<div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px"> Atividade Principal</div>'
         +'<div style="font-size:12px;color:var(--txt2)">'+atividades[0]+'</div>'
-        +(atividades.length>1?'<div style="font-size:11px;color:var(--txt3);margin-top:4px">Secundárias: '+atividades.slice(1).join(', ')+'</div>':'')
+        +(atividades.length>1?'<div style="font-size:11px;color:var(--txt3);margin-top:4px">Secundarias: '+atividades.slice(1).join(', ')+'</div>':'')
         +'</div>':'')
 
-        // Sócios
+        // Socios
         +(socios?'<div style="margin-bottom:14px">'
-        +'<div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">👥 Quadro Societário</div>'
+        +'<div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px"> Quadro Societario</div>'
         +'<div style="font-size:12px;color:var(--txt2);line-height:1.8">'+socios+'</div>'
         +'</div>':'')
 
-        // Botão adicionar
+        // Botao adicionar
         +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
-        +'<a class="link-btn link-map" href="https://maps.google.com/?q='+endMapa+'" target="_blank">🗺️ Ver no Google Maps</a>'
-        +'<a class="link-btn link-map" href="https://solucoes.receita.fazenda.gov.br/Servicos/cnpjreva/Cnpjreva_Solicitacao.asp?cnpj='+cnpj+'" target="_blank">🏛️ Receita Federal</a>'
+        +'<a class="link-btn link-map" href="https://maps.google.com/?q='+endMapa+'" target="_blank">Map Ver no Google Maps</a>'
+        +'<a class="link-btn link-map" href="https://solucoes.receita.fazenda.gov.br/Servicos/cnpjreva/Cnpjreva_Solicitacao.asp?cnpj='+cnpj+'" target="_blank"> Receita Federal</a>'
         +'</div>'
 
         +'<button class="btn-add" style="margin-top:12px;width:100%;height:40px;font-size:14px" '
@@ -1161,13 +1161,13 @@ function capBuscarCNPJ() {
         +'data-cid="'+(d.municipio||'')+'" '
         +'data-uf="'+(d.uf||'')+'" '
         +'data-tel="'+tel1+'" '
-        +'data-email="'+(d.email||'')+'">➕ Adicionar à carteira</button>'
+        +'data-email="'+(d.email||'')+'">+ Adicionar a carteira</button>'
         +'</div>';
 
       res.innerHTML = html;
     })
     .catch(function(e){
-      res.innerHTML='<div style="color:var(--red);font-size:13px;padding:10px">⚠️ Erro ao buscar. Verifique o CNPJ e a conexão.</div>';
+      res.innerHTML='<div style="color:var(--red);font-size:13px;padding:10px">[!] Erro ao buscar. Verifique o CNPJ e a conexao.</div>';
     });
 }
 
@@ -1177,14 +1177,14 @@ function capBuscarNome() {
   var cid   = (document.getElementById('cap-cid-inp').value  || '').trim().toUpperCase();
   var uf    = (document.getElementById('cap-uf-inp').value   || '').trim().toUpperCase();
   var res   = document.getElementById('cap-res-nome');
-  if(!nome && !cid){ res.innerHTML='<p style="color:var(--amber);font-size:13px">⚠ Informe o nome ou cidade.</p>'; return; }
-  res.innerHTML = '<p style="color:var(--txt2);font-size:13px">🔍 Consultando 4 APIs via servidor...</p>';
+  if(!nome && !cid){ res.innerHTML='<p style="color:var(--amber);font-size:13px">! Informe o nome ou cidade.</p>'; return; }
+  res.innerHTML = '<p style="color:var(--txt2);font-size:13px"> Consultando 4 APIs via servidor...</p>';
   var params = encodeURIComponent(JSON.stringify({nome:nome, cidade:cid, uf:uf}));
   fetch(APPS_URL + '?action=buscarEmpresas&params=' + params)
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(!d.ok || !d.data || !d.data.length){
-        res.innerHTML='<p style="color:var(--amber);font-size:13px">⚠ Nenhuma empresa encontrada. Tente sem acento (PECAS, SAO LUIS).</p>';
+        res.innerHTML='<p style="color:var(--amber);font-size:13px">! Nenhuma empresa encontrada. Tente sem acento (PECAS, SAO LUIS).</p>';
         return;
       }
       var html = '<p style="font-size:12px;color:var(--txt2);margin-bottom:10px">'+d.data.length+' empresa(s) encontrada(s)</p>';
@@ -1193,28 +1193,28 @@ function capBuscarNome() {
         var nomeSeguro = sanitize(e.nome);
         html += '<div class="card-emp">'
           +'<div class="card-emp-title">'+e.nome+'</div>'
-          +'<div class="card-emp-sub">'+(e.cnpj?e.cnpj+' · ':'')+e.cidade+(e.uf?' - '+e.uf:'')+'</div>'
-          +(e.tel?'<div class="card-emp-info">📞 '+e.tel+'</div>':'')
-          +(e.cnae?'<div class="card-emp-info">🏭 '+e.cnae+'</div>':'')
+          +'<div class="card-emp-sub">'+(e.cnpj?e.cnpj+' . ':'')+e.cidade+(e.uf?' - '+e.uf:'')+'</div>'
+          +(e.tel?'<div class="card-emp-info">Tel '+e.tel+'</div>':'')
+          +(e.cnae?'<div class="card-emp-info"> '+e.cnae+'</div>':'')
           +'<button class="btn-add" onclick="capAdicionar(this)"'
           +' data-nome="'+nomeSeguro+'"'
           +' data-cnpj="'+e.cnpj+'"'
           +' data-cid="'+e.cidade+'"'
           +' data-uf="'+e.uf+'"'
           +' data-tel="'+e.tel+'"'
-          +' data-email="'+e.email+'">➕ Adicionar</button>'
+          +' data-email="'+e.email+'">+ Adicionar</button>'
           +'</div>';
       }
       res.innerHTML = html;
     })
-    .catch(function(){ res.innerHTML='<p style="color:var(--red);font-size:13px">⚠ Erro de conexão. Verifique a internet.</p>'; });
+    .catch(function(){ res.innerHTML='<p style="color:var(--red);font-size:13px">! Erro de conexao. Verifique a internet.</p>'; });
 }
 
 function capNorm(d) {
   var tel = d.ddd_telefone_1 ? (d.ddd_telefone_1+(d.telefone_1||'')).replace(/\D/g,'') : (d.telefone||'').replace(/\D/g,'');
   return {
     cnpj:   (d.cnpj||'').replace(/\D/g,''),
-    nome:   d.razao_social||d.nome||'—',
+    nome:   d.razao_social||d.nome||'-',
     cidade: d.municipio||d.cidade||'',
     uf:     d.uf||d.estado||'',
     tel:    tel,
@@ -1231,17 +1231,17 @@ function capAdicionar(btn) {
   var tel   = btn.getAttribute('data-tel');
   var email = btn.getAttribute('data-email');
   if(cnpj && CLI_DB.filter(function(c){ return (c.cnpj||'').replace(/\D/g,'')===cnpj; }).length > 0){
-    alert('Cliente já está na carteira!'); return;
+    alert('Cliente ja esta na carteira!'); return;
   }
   CLI_DB.push({nome:nome,cnpj:cnpj,status:'Novo',cidade:cid,uf:uf,telefone:tel,email:email,representante:me?me.name:'',criado_em:new Date().toLocaleDateString('pt-BR'),obs:''});
   lsSet('nxr_cli', JSON.stringify(CLI_DB));
   audLog('cadastro','Cliente captado',nome);
-  btn.textContent = '✅ Adicionado!';
+  btn.textContent = '[OK] Adicionado!';
   btn.disabled = true;
   btn.style.background = 'var(--green)';
 }
 
-// ═══ CLIENTES ════════════════════════════════════════════
+//
 function cliRender() {
   var busca = document.getElementById('cli-busca') ? document.getElementById('cli-busca').value.toLowerCase() : '';
   var todos = (me && me.role==='rep')
@@ -1259,16 +1259,16 @@ function cliRender() {
   if(st) st.innerHTML =
     '<div class="usr-stat"><div class="usr-stat-val">'+todos.length+'</div><div class="usr-stat-label">Total</div></div>'
     +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--green)">'+todos.filter(function(c){return c.status==='Ativo';}).length+'</div><div class="usr-stat-label">Ativos</div></div>'
-    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--amber)">'+todos.filter(function(c){return c.status==='Novo'||c.status==='Negociação';}).length+'</div><div class="usr-stat-label">Em Prospecção</div></div>';
+    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--amber)">'+todos.filter(function(c){return c.status==='Novo'||c.status==='Negociacao';}).length+'</div><div class="usr-stat-label">Em Prospeccao</div></div>';
 
   var el = document.getElementById('cli-lista');
   if(!el) return;
   if(!lista.length){ el.innerHTML='<div class="empty-state">Nenhum cliente encontrado.</div>'; return; }
 
-  // Guardar lista atual para referência por índice
+  // Guardar lista atual para referencia por indice
   window._cliLista = lista;
 
-  var STATUS_COR = {Ativo:'tag-ativo',Novo:'tag-rep',Negociação:'tag-ger','Aguardando Retorno':'tag-ger',Inativo:'tag-inativo'};
+  var STATUS_COR = {Ativo:'tag-ativo',Novo:'tag-rep',Negociacao:'tag-ger','Aguardando Retorno':'tag-ger',Inativo:'tag-inativo'};
   var html = '<div class="usr-table">';
   for(var i=0; i<lista.length; i++){
     var c = lista[i];
@@ -1279,12 +1279,12 @@ function cliRender() {
     var ini = (c.nome||'?').split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
 
     html += '<div class="usr-row" style="cursor:pointer" data-cli-idx="'+i+'">'
-      +'<div class="usr-av" style="background:'+(c.tipo==='pf'?'#10B981':'#2563EB')+'">'+(c.tipo==='pf'?'👤':ini)+'</div>'
+      +'<div class="usr-av" style="background:'+(c.tipo==='pf'?'#10B981':'#2563EB')+'">'+(c.tipo==='pf'?'PF':ini)+'</div>'
       +'<div style="flex:1;min-width:0">'
       +'<div class="usr-name">'+c.nome+'</div>'
-      +'<div class="usr-login">'+(docLabel&&doc?docLabel+': '+doc+' · ':'')+(c.cidade||'')+(c.uf?' - '+c.uf:'')+'</div>'
+      +'<div class="usr-login">'+(docLabel&&doc?docLabel+': '+doc+' . ':'')+(c.cidade||'')+(c.uf?' - '+c.uf:'')+'</div>'
       +'</div>'
-      +(tel.length>=10?'<a class="link-btn link-wa" href="https://wa.me/55'+tel+'" target="_blank" style="text-decoration:none" onclick="event.stopPropagation()">💬</a>':'')
+      +(tel.length>=10?'<a class="link-btn link-wa" href="https://wa.me/55'+tel+'" target="_blank" style="text-decoration:none" onclick="event.stopPropagation()">Wa</a>':'')
       +'<span class="tag '+(STATUS_COR[c.status]||'tag-rep')+'">'+(c.status||'Novo')+'</span>'
       +'</div>';
   }
@@ -1316,7 +1316,7 @@ function cliTipo(tipo) {
     if(btnPj){ btnPj.style.borderWidth='2px'; btnPj.style.borderColor='var(--blue)'; btnPj.style.background='rgba(37,99,235,.1)'; btnPj.style.color='var(--blue-h)'; }
     if(btnPf){ btnPf.style.borderWidth='1px'; btnPf.style.borderColor='var(--line2)'; btnPf.style.background='none'; btnPf.style.color='var(--txt2)'; }
     if(docLbl)  docLbl.textContent  = 'CNPJ';
-    if(nomeLbl) nomeLbl.textContent = 'Razão Social / Nome Fantasia *';
+    if(nomeLbl) nomeLbl.textContent = 'Razao Social / Nome Fantasia *';
     if(docInp)  docInp.placeholder  = '00.000.000/0001-00';
   } else {
     if(btnPf){ btnPf.style.borderWidth='2px'; btnPf.style.borderColor='var(--blue)'; btnPf.style.background='rgba(37,99,235,.1)'; btnPf.style.color='var(--blue-h)'; }
@@ -1353,10 +1353,10 @@ function cliSalvarManual() {
   var obs   = document.getElementById('cli-obs')   ? document.getElementById('cli-obs').value.trim()   : '';
   var status= document.getElementById('cli-status')? document.getElementById('cli-status').value       : 'Novo';
 
-  if(!nome){ showToast('⚠️ Informe o nome.','erro'); return; }
-  if(!tel){  showToast('⚠️ Informe o telefone.','erro'); return; }
-  if(!cid){  showToast('⚠️ Informe a cidade.','erro'); return; }
-  if(!end){  showToast('⚠️ Informe o endereço.','erro'); return; }
+  if(!nome){ showToast('[!] Informe o nome.','erro'); return; }
+  if(!tel){  showToast('[!] Informe o telefone.','erro'); return; }
+  if(!cid){  showToast('[!] Informe a cidade.','erro'); return; }
+  if(!end){  showToast('[!] Informe o endereco.','erro'); return; }
 
   var novo = {
     nome:           nome,
@@ -1374,11 +1374,11 @@ function cliSalvarManual() {
   };
 
   if(window._cliEditIdx !== undefined && window._cliEditIdx >= 0){
-    // Edição
+    // Edicao
     CLI_DB[window._cliEditIdx] = novo;
     lsSet('nxr_cli', JSON.stringify(CLI_DB));
     audLog('edicao','Cliente editado',nome);
-    // Atualizar na planilha — limpar e reinserir todos
+    // Atualizar na planilha - limpar e reinserir todos
     var allRows = encodeURIComponent(JSON.stringify(CLI_DB));
     fetch(APPS_URL+'?action=limpar&sheet=Clientes')
       .then(function(){
@@ -1401,7 +1401,7 @@ function cliSalvarManual() {
   
   // Aguardar modal fechar antes de mostrar toast e atualizar lista
   setTimeout(function(){
-    showToast('✅ '+nome+' cadastrado com sucesso!');
+    showToast('[OK] '+nome+' cadastrado com sucesso!');
     var lista = document.getElementById('cli-lista');
     if(lista){ cliRender(); } else { navigate('clientes'); }
   }, 100);
@@ -1414,15 +1414,15 @@ function carregarDoSheets() {
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(d.ok && d.data && d.data.length > 0) {
-        // Mesclar: começar com USERS_BASE e adicionar usuários da planilha
-        // que não existem no USERS_BASE (sem duplicar)
+        // Mesclar: comecar com USERS_BASE e adicionar usuarios da planilha
+        // que nao existem no USERS_BASE (sem duplicar)
         var merged = USERS_BASE.slice();
         for(var i=0; i<d.data.length; i++){
           var u = d.data[i];
           var existe = false;
           for(var j=0; j<merged.length; j++){
             if(merged[j].user === u.user){ 
-              // Atualizar dados mas manter posição
+              // Atualizar dados mas manter posicao
               merged[j] = u;
               existe = true; 
               break; 
@@ -1437,7 +1437,7 @@ function carregarDoSheets() {
     .catch(function(){});
 }
 
-// ═══ INICIALIZAÇÃO ════════════════════════════════════════
+//
 document.addEventListener('DOMContentLoaded', function(){
   // Confirmar que JS carregou
   var jsStatus = document.getElementById('js-status');
@@ -1453,11 +1453,11 @@ document.addEventListener('DOMContentLoaded', function(){
   if(btnGer) btnGer.addEventListener('click', function(){ goLogin('ger'); });
   if(btnAdm) btnAdm.addEventListener('click', function(){ goLogin('adm'); });
 
-  // Botão voltar do login
+  // Botao voltar do login
   var btnBack = document.getElementById('btn-back-login');
   if(btnBack) btnBack.addEventListener('click', function(){ goHome(); });
 
-  // Botão entrar
+  // Botao entrar
   var btnEntrar = document.getElementById('btn-entrar');
   if(btnEntrar) btnEntrar.addEventListener('click', function(){ doLogin(); });
 
@@ -1480,21 +1480,21 @@ function cfgSalvar() {
   APPS_URL = url;
   lsSet('nxr_url', url);
   var st = document.getElementById('cfg-status');
-  if(st){ st.textContent='✅ URL salva!'; st.style.color='var(--green)'; setTimeout(function(){ st.textContent=''; },3000); }
+  if(st){ st.textContent='[OK] URL salva!'; st.style.color='var(--green)'; setTimeout(function(){ st.textContent=''; },3000); }
 }
 
 function cfgTestar() {
   var el  = document.getElementById('cfg-url');
   var url = el ? el.value.trim() : APPS_URL;
   var st  = document.getElementById('cfg-status');
-  if(st){ st.textContent='🔄 Testando...'; st.style.color='var(--amber)'; }
+  if(st){ st.textContent='[...] Testando...'; st.style.color='var(--amber)'; }
   fetch(url+'?action=ping')
     .then(function(r){ return r.json(); })
     .then(function(d){
-      if(st){ st.textContent=d.ok?'✅ Conectado!':'❌ Erro: '+d.msg; st.style.color=d.ok?'var(--green)':'var(--red)'; }
+      if(st){ st.textContent=d.ok?'[OK] Conectado!':'[X] Erro: '+d.msg; st.style.color=d.ok?'var(--green)':'var(--red)'; }
     })
     .catch(function(){
-      if(st){ st.textContent='❌ Falha na conexão'; st.style.color='var(--red)'; }
+      if(st){ st.textContent='[X] Falha na conexao'; st.style.color='var(--red)'; }
     });
 }
 
@@ -1507,7 +1507,7 @@ function cfgExportar() {
 }
 
 
-// ═══ TOAST GLOBAL ════════════════════════════════════════
+//
 function showToast(msg, tipo) {
   try {
     var cor = tipo === 'erro' ? '#EF4444' : '#10B981';
@@ -1537,23 +1537,23 @@ function showToast(msg, tipo) {
 
 
 function cfgLimparClientes() {
-  if(!confirm('Apagar TODOS os clientes do sistema? Esta ação não pode ser desfeita.')) return;
+  if(!confirm('Apagar TODOS os clientes do sistema? Esta acao nao pode ser desfeita.')) return;
   CLI_DB = [];
   lsSet('nxr_cli', '[]');
-  showToast('✅ Clientes removidos!');
+  showToast('[OK] Clientes removidos!');
 }
 
 function cfgLimparVendas() {
-  if(!confirm('Apagar TODAS as vendas do sistema? Esta ação não pode ser desfeita.')) return;
+  if(!confirm('Apagar TODAS as vendas do sistema? Esta acao nao pode ser desfeita.')) return;
   VND_DB = [];
   lsSet('nxr_vnd', '[]');
-  showToast('✅ Vendas removidas!');
+  showToast('[OK] Vendas removidas!');
 }
 
 
 function cfgTesteSalvar() {
   var st = document.getElementById('cfg-status');
-  if(st){ st.textContent = '🔄 Testando salvar...'; st.style.color='var(--amber)'; }
+  if(st){ st.textContent = '[...] Testando salvar...'; st.style.color='var(--amber)'; }
   
   var row = JSON.stringify({
     nome:'TESTE NEXORA',
@@ -1583,23 +1583,23 @@ function cfgTesteSalvar() {
       try {
         var d = JSON.parse(txt);
         if(st){ 
-          st.textContent = d.ok ? '✅ Salvo na planilha!' : '❌ Erro: '+d.msg; 
+          st.textContent = d.ok ? '[OK] Salvo na planilha!' : '[X] Erro: '+d.msg; 
           st.style.color = d.ok ? 'var(--green)' : 'var(--red)';
         }
         alert('Resposta: '+(d.ok?'SUCESSO':'ERRO: '+d.msg));
       } catch(e){
-        if(st){ st.textContent = '❌ Resposta inválida: '+txt.slice(0,50); st.style.color='var(--red)'; }
-        alert('Resposta inválida: '+txt.slice(0,100));
+        if(st){ st.textContent = '[X] Resposta invalida: '+txt.slice(0,50); st.style.color='var(--red)'; }
+        alert('Resposta invalida: '+txt.slice(0,100));
       }
     })
     .catch(function(e){
-      if(st){ st.textContent = '❌ Erro de conexão: '+e.message; st.style.color='var(--red)'; }
-      alert('Erro de conexão: '+e.message);
+      if(st){ st.textContent = '[X] Erro de conexao: '+e.message; st.style.color='var(--red)'; }
+      alert('Erro de conexao: '+e.message);
     });
 }
 
 
-// ═══ FUNÇÕES QUE ESTAVAM FALTANDO ════════════════════════
+//
 
 function usrSalvarPlanilha() {
   var btn = document.getElementById('usr-salvar-btn');
@@ -1612,22 +1612,22 @@ function usrSalvarPlanilha() {
   var i = 0;
   function next(){
     if(i>=lista.length){
-      if(btn){btn.textContent='✅ Salvo!';setTimeout(function(){btn.textContent='☁️ Salvar';},3000);}
-      showToast('✅ Usuários salvos na planilha!');
+      if(btn){btn.textContent='[OK] Salvo!';setTimeout(function(){btn.textContent='[nuvem] Salvar';},3000);}
+      showToast('[OK] Usuarios salvos na planilha!');
       return;
     }
     var u=lista[i]; i++;
     fetch(APPS_URL+'?action=inserirLinha&sheet=Usuarios&row='+encodeURIComponent(JSON.stringify(u)))
       .then(function(){next();})
       .catch(function(){
-        if(btn){btn.textContent='❌ Falhou';setTimeout(function(){btn.textContent='☁️ Salvar';},3000);}
+        if(btn){btn.textContent='[X] Falhou';setTimeout(function(){btn.textContent='[nuvem] Salvar';},3000);}
       });
   }
 
   fetch(APPS_URL+'?action=limpar&sheet=Usuarios')
     .then(function(){next();})
     .catch(function(){
-      if(btn){btn.textContent='❌ Sem conexão';setTimeout(function(){btn.textContent='☁️ Salvar';},3000);}
+      if(btn){btn.textContent='[X] Sem conexao';setTimeout(function(){btn.textContent='[nuvem] Salvar';},3000);}
     });
 }
 
@@ -1705,7 +1705,7 @@ function vndSelecionarIdx(i) {
 }
 
 
-// ═══ VER / EDITAR / EXCLUIR CLIENTE ══════════════════════
+//
 
 function cliVerIdx(idx) {
   var lista = window._cliLista || [];
@@ -1723,7 +1723,7 @@ function cliVerIdx(idx) {
   var bodyEl = document.getElementById('cli-view-body');
   var modal  = document.getElementById('cli-view-modal');
 
-  // Se não encontrou, criar o modal dinamicamente
+  // Se nao encontrou, criar o modal dinamicamente
   if(!modal){
     var div = document.createElement('div');
     div.className = 'modal-bg';
@@ -1740,7 +1740,7 @@ function cliVerIdx(idx) {
     mtitle.textContent = 'Cliente';
     var mbtn = document.createElement('button');
     mbtn.className = 'modal-close';
-    mbtn.textContent = '✕';
+    mbtn.textContent = 'x';
     mbtn.onclick = function(){ div.style.display='none'; };
     mhead.appendChild(mtitle);
     mhead.appendChild(mbtn);
@@ -1755,7 +1755,7 @@ function cliVerIdx(idx) {
     mcancel.onclick = function(){ div.style.display='none'; };
     var medit = document.createElement('button');
     medit.className = 'btn-save2';
-    medit.textContent = '✏️ Editar';
+    medit.textContent = 'Ed Editar';
     medit.onclick = function(){ cliEditarAtual(); };
     mfoot.appendChild(mcancel);
     mfoot.appendChild(medit);
@@ -1772,8 +1772,8 @@ function cliVerIdx(idx) {
 
   nomeEl.textContent = c.nome;
 
-  var doc = c.cnpj ? 'CNPJ: '+c.cnpj : (c.cpf?'CPF: '+c.cpf:'—');
-  var tel = c.telefne || c.telefone || '—';
+  var doc = c.cnpj ? 'CNPJ: '+c.cnpj : (c.cpf?'CPF: '+c.cpf:'-');
+  var tel = c.telefne || c.telefone || '-';
   var telNum = tel.replace(/\D/g,'');
 
   bodyEl.innerHTML =
@@ -1786,23 +1786,23 @@ function cliVerIdx(idx) {
     +'<div><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Telefone</div>'
     +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
     +'<span style="font-size:13px">'+tel+'</span>'
-    +(telNum.length>=10?'<a href="https://wa.me/55'+telNum+'" target="_blank" class="link-btn link-wa" style="text-decoration:none">💬 WhatsApp</a>':'')
+    +(telNum.length>=10?'<a href="https://wa.me/55'+telNum+'" target="_blank" class="link-btn link-wa" style="text-decoration:none">Wa WhatsApp</a>':'')
     +'</div></div>'
     +'<div><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Cidade / UF</div>'
-    +'<div style="font-size:13px">'+(c.cidade||'—')+(c.uf?' — '+c.uf:'')+'</div></div>'
+    +'<div style="font-size:13px">'+(c.cidade||'-')+(c.uf?' - '+c.uf:'')+'</div></div>'
     +(c.email?'<div><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">E-mail</div>'
     +'<div style="font-size:13px">'+c.email+'</div></div>':'')
-    +(c.endereco?'<div style="grid-column:1/-1"><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Endereço</div>'
+    +(c.endereco?'<div style="grid-column:1/-1"><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Endereco</div>'
     +'<div style="font-size:13px">'+c.endereco+'</div></div>':'')
     +'<div><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Representante</div>'
-    +'<div style="font-size:13px">'+(c.representante||'—')+'</div></div>'
+    +'<div style="font-size:13px">'+(c.representante||'-')+'</div></div>'
     +'<div><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Cadastrado em</div>'
-    +'<div style="font-size:13px">'+(c.criado_em||'—')+'</div></div>'
-    +(c.obs?'<div style="grid-column:1/-1"><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Observação</div>'
+    +'<div style="font-size:13px">'+(c.criado_em||'-')+'</div></div>'
+    +(c.obs?'<div style="grid-column:1/-1"><div style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Observacao</div>'
     +'<div style="font-size:13px">'+c.obs+'</div></div>':'')
     +'</div>'
     +'<div style="display:flex;gap:8px;padding-top:4px">'
-    +'<button onclick="cliExcluirAtual()" style="flex:1;height:38px;background:none;border:1px solid var(--red);color:var(--red);border-radius:9px;font-size:13px;cursor:pointer;font-family:var(--ff)">🗑️ Excluir</button>'
+    +'<button onclick="cliExcluirAtual()" style="flex:1;height:38px;background:none;border:1px solid var(--red);color:var(--red);border-radius:9px;font-size:13px;cursor:pointer;font-family:var(--ff)">Del Excluir</button>'
     +'</div>';
 
   modal.style.display = 'flex';
@@ -1814,7 +1814,7 @@ function cliEditarAtual() {
   var c = CLI_DB[_cliAtualIdx];
   if(!c) return;
 
-  // Fechar modal de visualização
+  // Fechar modal de visualizacao
   var viewModal = document.getElementById('cli-view-modal');
   if(viewModal) viewModal.style.display = 'none';
 
@@ -1840,7 +1840,7 @@ function cliEditarAtual() {
   var stEl = document.getElementById('cli-status');
   if(stEl) stEl.value = c.status || 'Novo';
 
-  // Marcar índice para edição
+  // Marcar indice para edicao
   window._cliEditIdx = _cliAtualIdx;
 
   var cliModal = document.getElementById('cli-modal');
@@ -1852,25 +1852,25 @@ function cliExcluirAtual() {
   if(_cliAtualIdx < 0) return;
   var c = CLI_DB[_cliAtualIdx];
   if(!c) return;
-  if(!confirm('Excluir "'+c.nome+'"? Esta ação não pode ser desfeita.')) return;
+  if(!confirm('Excluir "'+c.nome+'"? Esta acao nao pode ser desfeita.')) return;
   CLI_DB.splice(_cliAtualIdx, 1);
   lsSet('nxr_cli', JSON.stringify(CLI_DB));
-  audLog('exclusao','Cliente excluído',c.nome);
-  // Sincronizar exclusão na planilha
+  audLog('exclusao','Cliente excluido',c.nome);
+  // Sincronizar exclusao na planilha
   fetch(APPS_URL+'?action=limpar&sheet=Clientes')
     .then(function(){
       CLI_DB.forEach(function(cl){
         fetch(APPS_URL+'?action=inserirLinha&sheet=Clientes&row='+encodeURIComponent(JSON.stringify(cl))).catch(function(){});
       });
     }).catch(function(){});
-  showToast('✅ Cliente excluído!');
+  showToast('[OK] Cliente excluido!');
   var vm = document.getElementById('cli-view-modal');
   if(vm) vm.style.display = 'none';
   cliRender();
 }
 
 
-// ═══ RETORNOS ════════════════════════════════════════════
+//
 function retRender() {
   var lista = (me && me.role==='rep')
     ? RET_DB.filter(function(r){ return r.representante===me.name; })
@@ -1886,11 +1886,11 @@ function retRender() {
     html += '<div class="usr-row">'
       +'<div style="flex:1;min-width:0">'
       +'<div class="usr-name">'+r.cliente+'</div>'
-      +'<div class="usr-login">📅 '+r.data+(r.hora?' às '+r.hora:'')+(r.motivo?' · '+r.motivo:'')+'</div>'
+      +'<div class="usr-login"> '+r.data+(r.hora?' as '+r.hora:'')+(r.motivo?' . '+r.motivo:'')+'</div>'
       +'</div>'
-      +(tel.length>=10?'<a class="link-btn link-wa" href="https://wa.me/55'+tel+'" target="_blank" style="text-decoration:none">💬</a>':'')
-      +(r.status!=='concluido'?'<button class="btn-sm" data-ret-idx="'+idx+'" onclick="retConcluirBtn(this)">✓ Concluído</button>':'')
-      +'<span class="tag '+(r.status==='concluido'?'tag-ativo':'tag-inativo')+'">'+(r.status==='concluido'?'Concluído':'Pendente')+'</span>'
+      +(tel.length>=10?'<a class="link-btn link-wa" href="https://wa.me/55'+tel+'" target="_blank" style="text-decoration:none">Wa</a>':'')
+      +(r.status!=='concluido'?'<button class="btn-sm" data-ret-idx="'+idx+'" onclick="retConcluirBtn(this)">v Concluido</button>':'')
+      +'<span class="tag '+(r.status==='concluido'?'tag-ativo':'tag-inativo')+'">'+(r.status==='concluido'?'Concluido':'Pendente')+'</span>'
       +'</div>';
   }
   html += '</div>';
@@ -1905,11 +1905,11 @@ function retNovo() {
     for(var i=0;i<carteira.length;i++){
       var opt = document.createElement('option');
       opt.value = carteira[i].nome;
-      opt.textContent = carteira[i].nome + (carteira[i].cidade?' — '+carteira[i].cidade:'');
+      opt.textContent = carteira[i].nome + (carteira[i].cidade?' - '+carteira[i].cidade:'');
       sel.appendChild(opt);
     }
     var optM = document.createElement('option');
-    optM.value = '__manual__'; optM.textContent = '✏️ Digitar manualmente...';
+    optM.value = '__manual__'; optM.textContent = 'Ed Digitar manualmente...';
     sel.appendChild(optM);
     sel.onchange = function(){
       var manDiv = document.getElementById('ret-cli-manual-div');
@@ -1943,36 +1943,36 @@ function retSalvar() {
   var hor = document.getElementById('ret-hor') ? document.getElementById('ret-hor').value : '';
   var mot = document.getElementById('ret-mot') ? document.getElementById('ret-mot').value : '';
   var obs = document.getElementById('ret-obs') ? document.getElementById('ret-obs').value.trim() : '';
-  if(!cli){ showToast('⚠️ Selecione o cliente.','erro'); return; }
-  if(!dat){ showToast('⚠️ Informe a data.','erro'); return; }
+  if(!cli){ showToast('[!] Selecione o cliente.','erro'); return; }
+  if(!dat){ showToast('[!] Informe a data.','erro'); return; }
   var dataBR = dat.split('-').reverse().join('/');
   var novo = {cliente:cli,representante:me?me.name:'',data:dataBR,hora:hor,motivo:mot,telefone:tel,obs:obs,status:'pendente'};
   RET_DB.push(novo);
   lsSet('nxr_ret', JSON.stringify(RET_DB));
-  audLog('retorno','Retorno agendado',cli+' · '+dataBR);
+  audLog('retorno','Retorno agendado',cli+' . '+dataBR);
   fetch(APPS_URL+'?action=inserirLinha&sheet=Retornos&row='+encodeURIComponent(JSON.stringify(novo))).catch(function(){});
   document.getElementById('ret-modal').style.display='none';
-  setTimeout(function(){ showToast('✅ Retorno agendado para '+dataBR+'!'); var l=document.getElementById('ret-lista'); if(l){retRender();}else{navigate('retornos');} },100);
+  setTimeout(function(){ showToast('[OK] Retorno agendado para '+dataBR+'!'); var l=document.getElementById('ret-lista'); if(l){retRender();}else{navigate('retornos');} },100);
 }
 
 function retConcluirBtn(btn) {
   var idx = parseInt(btn.getAttribute('data-ret-idx'));
-  if(!confirm('Marcar como concluído?')) return;
+  if(!confirm('Marcar como concluido?')) return;
   RET_DB[idx].status='concluido';
   lsSet('nxr_ret', JSON.stringify(RET_DB));
-  showToast('✅ Retorno concluído!');
+  showToast('[OK] Retorno concluido!');
   retRender();
 }
 
 function retConcluir(idx) {
-  if(!confirm('Marcar como concluído?')) return;
+  if(!confirm('Marcar como concluido?')) return;
   RET_DB[idx].status='concluido';
   lsSet('nxr_ret', JSON.stringify(RET_DB));
-  showToast('✅ Retorno concluído!');
+  showToast('[OK] Retorno concluido!');
   retRender();
 }
 
-// ═══ VENDAS ══════════════════════════════════════════════
+//
 function vndRender() {
   var lista = (me && me.role==='rep') ? VND_DB.filter(function(v){ return v.representante===me.name; }) : VND_DB;
   var el = document.getElementById('vnd-lista');
@@ -1983,7 +1983,7 @@ function vndRender() {
     var v=lista[i];
     html += '<div class="usr-row">'
       +'<div style="flex:1;min-width:0"><div class="usr-name">'+v.cliente+'</div>'
-      +'<div class="usr-login">'+v.data+(v.pgto?' · '+v.pgto:'')+'</div></div>'
+      +'<div class="usr-login">'+v.data+(v.pgto?' . '+v.pgto:'')+'</div></div>'
       +'<span style="font-size:15px;font-weight:700;color:var(--green)">R$ '+Number(v.valor||0).toLocaleString('pt-BR',{minimumFractionDigits:2})+'</span>'
       +'</div>';
   }
@@ -1999,7 +1999,7 @@ function vndNova() {
     for(var i=0;i<carteira.length;i++){
       var opt=document.createElement('option');
       opt.value=carteira[i].nome;
-      opt.textContent=carteira[i].nome+(carteira[i].cidade?' — '+carteira[i].cidade:'');
+      opt.textContent=carteira[i].nome+(carteira[i].cidade?' - '+carteira[i].cidade:'');
       sel.appendChild(opt);
     }
   }
@@ -2020,16 +2020,25 @@ function vndSalvar() {
     var nova={id:'VND-'+Date.now(),cliente:cli,representante:me?me.name:'',data:new Date().toLocaleDateString('pt-BR'),valor:Number(val),pgto:pgto,obs:obs};
     VND_DB.push(nova);
     lsSet('nxr_vnd', JSON.stringify(VND_DB));
-    audLog('venda','Venda registrada',cli+' · R$ '+Number(val).toLocaleString('pt-BR'));
+    audLog('venda','Venda registrada',cli+' . R$ '+Number(val).toLocaleString('pt-BR'));
     fetch(APPS_URL+'?action=inserirLinha&sheet=Vendas&row='+encodeURIComponent(JSON.stringify(nova))).catch(function(){});
     try{document.getElementById('vnd-modal').style.display='none';}catch(e){}
     setTimeout(function(){
-      showToast('✅ Venda de R$ '+Number(val).toLocaleString('pt-BR')+' registrada!');
+      showToast('[OK] Venda de R$ '+Number(val).toLocaleString('pt-BR')+' registrada!');
       var el=document.getElementById('vnd-lista'); if(el){vndRender();}else{navigate('vendas');}
     },100);
   } catch(e){ alert('Erro: '+e.message); }
 }
 
-// ═══ USUÁRIOS ════════════════════════════════════════════
+//
 function usrRender() {
-  var busca  = document.getElementById('usr-busca')  ? document
+  var busca  = document.getElementById('usr-busca')  ? document.getElementById('usr-busca').value.toLowerCase()  : '';
+  var filtro = document.getElementById('usr-filtro') ? document.getElementById('usr-filtro').value : '';
+  var lista  = USR_DB.slice();
+  if(busca)  lista=lista.filter(function(u){return (u.name||'').toLowerCase().indexOf(busca)>-1||(u.user||'').indexOf(busca)>-1;});
+  if(filtro) lista=lista.filter(function(u){return u.role===filtro;});
+
+  var stats=document.getElementById('usr-stats');
+  if(stats) stats.innerHTML='<div class="usr-stat"><div class="usr-stat-val">'+USR_DB.length+'</div><div class="usr-stat-label">Total</div></div>'
+    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--green)">'+USR_DB.filter(function(u){return u.status==='active';}).length+'</div><div class="usr-stat-label">Ativos</div></div>'
+    +'<div class="usr-stat"><div class="usr-stat-val" style="color:var(--red)">'+USR_DB.filt
