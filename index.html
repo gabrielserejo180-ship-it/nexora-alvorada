@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nexora Connect v4.7</title>
+<title>Nexora Connect v4.8</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 :root{
@@ -167,7 +167,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 <body>
 
 <div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999;display:none">
-  JavaScript nao carregou — v4.7
+  JavaScript nao carregou — v4.8
 </div>
 
 <!-- MODAL VER/EDITAR RETORNO -->
@@ -208,6 +208,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
     <div class="modal-body" id="vnd-view-body"></div>
     <div class="modal-foot">
       <button class="btn-cancel" id="vnd-view-fechar">Fechar</button>
+      <button class="btn-save2" id="vnd-view-excluir" style="background:var(--red)">Excluir Venda</button>
     </div>
   </div>
 </div>
@@ -225,7 +226,7 @@ document.getElementById('js-status').style.display='none';
   <div class="home-wrap">
     <div class="home-left">
       <div>
-        <div class="brand-v">v4.7</div>
+        <div class="brand-v">v4.8</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestao comercial centralizada</div>
@@ -539,7 +540,7 @@ document.getElementById('js-status').style.display='none';
 
 <script>
 // ═══════════════════════════════════════════
-// NEXORA CONNECT v4.7 - ES5 PURO
+// NEXORA CONNECT v4.8 - ES5 PURO
 // ═══════════════════════════════════════════
 
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbzAcf1JapNJVNVUZtHtglIWo8crSe_ipNY-aOi2hp2xDV-r5N2KoDTnzTgfaVGgOCiP/exec';
@@ -1618,6 +1619,28 @@ function retRecarregar() {
   });
 }
 
+function vndExcluir() {
+  if (_vndIdxAtual < 0 || _vndIdxAtual >= _vndListaAtual.length) return;
+  var v = _vndListaAtual[_vndIdxAtual];
+  if (!confirm('Excluir a venda de ' + (v.cliente || '?') + ' no valor de R$ ' + Number(v.valor||0).toLocaleString('pt-BR') + '?')) return;
+
+  // Remover do VND_DB pelo cliente+data+valor
+  for (var i = 0; i < VND_DB.length; i++) {
+    if (VND_DB[i].cliente === v.cliente && VND_DB[i].data === v.data && Number(VND_DB[i].valor) === Number(v.valor)) {
+      VND_DB.splice(i, 1);
+      break;
+    }
+  }
+  lsSet('nxr_vnd', JSON.stringify(VND_DB));
+
+  // Fechar modal
+  var modal = document.getElementById('vnd-view-modal');
+  if (modal) modal.style.display = 'none';
+
+  showToast('Venda excluida!');
+  setTimeout(vndRender, 100);
+}
+
 function retIrPag(p) {
   _retPagAtual = p;
   retRender();
@@ -2234,6 +2257,9 @@ document.addEventListener('click', function(e) {
 });
 
 
+// ─── VENDAS ────────────────────────────────
+var _vndIdxAtual = -1;
+
 // ─── PARCELAS ──────────────────────────────
 function vndToggleParcelas() {
   var pgto = document.getElementById('vnd-pgto') ? document.getElementById('vnd-pgto').value : '';
@@ -2273,6 +2299,7 @@ function vndVerNome(el) {
   if (idx < 0) return;
   var v = _vndListaAtual[idx];
   if (!v) return;
+  _vndIdxAtual = idx;
 
   var modal = document.getElementById('vnd-view-modal');
   var titulo = document.getElementById('vnd-view-titulo');
@@ -2370,6 +2397,8 @@ document.addEventListener('DOMContentLoaded', function() {
   if (vndVc) vndVc.onclick = function() { document.getElementById('vnd-view-modal').style.display = 'none'; };
   var vndVf = document.getElementById('vnd-view-fechar');
   if (vndVf) vndVf.onclick = function() { document.getElementById('vnd-view-modal').style.display = 'none'; };
+  var vndVe = document.getElementById('vnd-view-excluir');
+  if (vndVe) vndVe.onclick = vndExcluir;
 
   var cliMc = document.getElementById('cli-modal-close');
   if (cliMc) cliMc.onclick = function() { document.getElementById('cli-modal').style.display = 'none'; };
