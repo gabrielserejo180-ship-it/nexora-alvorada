@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nexora Connect v5.3</title>
+<title>Nexora Connect v5.5</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 :root{
@@ -167,7 +167,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 <body>
 
 <div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999;display:none">
-  JavaScript nao carregou — v5.3
+  JavaScript nao carregou — v5.5
 </div>
 
 <!-- MODAL VER/EDITAR RETORNO -->
@@ -226,7 +226,7 @@ document.getElementById('js-status').style.display='none';
   <div class="home-wrap">
     <div class="home-left">
       <div>
-        <div class="brand-v">v5.3</div>
+        <div class="brand-v">v5.5</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestao comercial centralizada</div>
@@ -540,10 +540,10 @@ document.getElementById('js-status').style.display='none';
 
 <script>
 // ═══════════════════════════════════════════
-// NEXORA CONNECT v5.3 - ES5 PURO
+// NEXORA CONNECT v5.5 - ES5 PURO
 // ═══════════════════════════════════════════
 
-var APPS_URL = 'https://script.google.com/macros/s/AKfycbwZaMUObGv2kAiMyBY07umBJ372BpezlIYiuX1l-Hq2w2pGdLkkTJ8pBDCXcYdeI7fT/exec';
+var APPS_URL = 'https://script.google.com/macros/s/AKfycbz_TmBCu8kSfzgIP6RFs3n8lhDa516gUOh6yoX_gXfOE2kZ5XyaqONnHM64w0TJ5b37/exec';
 var _CACHE_V = '4.4';
 var me = null;
 var profile = null;
@@ -2363,13 +2363,35 @@ function pecaBuscar() {
   res.innerHTML = '<div style="text-align:center;padding:40px;color:var(--txt2)">' +
     '<div style="font-size:28px;margin-bottom:12px">🔍</div>' +
     '<div style="font-size:14px;font-weight:600;margin-bottom:6px">Buscando peca...</div>' +
-    '<div style="font-size:12px;color:var(--txt3)">Pesquisando em varios sites Honda, aguarde.</div>' +
+    '<div class="peca-sub" style="font-size:12px;color:var(--txt3)">Pesquisando em varios sites Honda, aguarde.</div>' +
     '</div>';
 
-  // Usar Apps Script como proxy para evitar CORS
+  // Usar Apps Script como proxy - timeout de 45 segundos
   var urlProxy = APPS_URL + '?action=buscarPeca&termo=' + encodeURIComponent(termo);
-  fetch(urlProxy)
+  var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  var timeoutId = controller ? setTimeout(function() { controller.abort(); }, 45000) : null;
+
+  // Atualizar mensagem de progresso
+  var _progIdx = 0;
+  var _progMsgs = [
+    'Pesquisando em sites Honda...',
+    'Buscando imagem da peca...',
+    'Analisando resultados...',
+    'Quase pronto...'
+  ];
+  var _progTimer = setInterval(function() {
+    _progIdx = (_progIdx + 1) % _progMsgs.length;
+    var el2 = document.getElementById('peca-resultado');
+    if (el2) {
+      var sub = el2.querySelector('.peca-sub');
+      if (sub) sub.textContent = _progMsgs[_progIdx];
+    }
+  }, 4000);
+
+  fetch(urlProxy, controller ? { signal: controller.signal } : {})
   .then(function(r) {
+    clearTimeout(timeoutId);
+    clearInterval(_progTimer);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.text();
   })
@@ -2401,10 +2423,13 @@ function pecaBuscar() {
     }
   })
   .catch(function(err) {
+    clearInterval(_progTimer);
+    var msg = err ? err.message : 'sem resposta';
+    var isTimeout = msg.indexOf('abort') >= 0 || msg.indexOf('AbortError') >= 0;
     res.innerHTML = '<div class="empty-state">' +
       '<div style="font-size:32px;margin-bottom:12px">✖</div>' +
-      '<div style="font-weight:600;margin-bottom:6px">Erro de conexao</div>' +
-      '<div style="font-size:12px;color:var(--txt3)">Detalhe: ' + (err ? err.message : 'sem resposta') + '</div>' +
+      '<div style="font-weight:600;margin-bottom:6px">' + (isTimeout ? 'Tempo esgotado' : 'Erro de conexao') + '</div>' +
+      '<div style="font-size:12px;color:var(--txt3)">' + (isTimeout ? 'A busca demorou muito. Tente novamente.' : 'Detalhe: ' + msg) + '</div>' +
       '</div>';
   });
 }
