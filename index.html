@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nexora Connect v5.1</title>
+<title>Nexora Connect v5.2</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 :root{
@@ -167,7 +167,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 <body>
 
 <div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999;display:none">
-  JavaScript nao carregou — v5.1
+  JavaScript nao carregou — v5.2
 </div>
 
 <!-- MODAL VER/EDITAR RETORNO -->
@@ -226,7 +226,7 @@ document.getElementById('js-status').style.display='none';
   <div class="home-wrap">
     <div class="home-left">
       <div>
-        <div class="brand-v">v5.1</div>
+        <div class="brand-v">v5.2</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestao comercial centralizada</div>
@@ -540,7 +540,7 @@ document.getElementById('js-status').style.display='none';
 
 <script>
 // ═══════════════════════════════════════════
-// NEXORA CONNECT v5.1 - ES5 PURO
+// NEXORA CONNECT v5.2 - ES5 PURO
 // ═══════════════════════════════════════════
 
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbzv96Ip2ttBNFEVT6C3Hsbg0EyPR-8XIE6XC8Y-nAM0pWN0pN-ViYmXZKnrE4yvElUt/exec';
@@ -2369,8 +2369,20 @@ function pecaBuscar() {
   // Usar Apps Script como proxy para evitar CORS
   var urlProxy = APPS_URL + '?action=buscarPeca&termo=' + encodeURIComponent(termo);
   fetch(urlProxy)
-  .then(function(r) { return r.json(); })
-  .then(function(d) {
+  .then(function(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.text();
+  })
+  .then(function(txt) {
+    var d;
+    try { d = JSON.parse(txt); } catch(ex) {
+      // Apps Script retornou HTML de erro - provavelmente funcao nao existe
+      res.innerHTML = '<div class="cap-wrap">' +
+        '<div style="color:var(--amber);font-size:13px;font-weight:600;margin-bottom:8px">⚠ Apps Script precisa ser atualizado</div>' +
+        '<div style="font-size:12px;color:var(--txt2)">A funcao buscarPeca nao foi encontrada no Apps Script. Republique o script com o codigo mais recente e gere uma nova URL.</div>' +
+        '</div>';
+      return;
+    }
     if (!d || !d.ok) {
       res.innerHTML = '<div class="empty-state">' +
         '<div style="font-size:32px;margin-bottom:12px">🔍</div>' +
@@ -2381,18 +2393,18 @@ function pecaBuscar() {
     }
     if (d.data) {
       pecaMostrar(d.data);
-    } else {
+    } else if (d.texto) {
       res.innerHTML = '<div class="cap-wrap">' +
         '<div style="color:var(--amber);font-size:13px;margin-bottom:10px">Resultado:</div>' +
-        '<div style="font-size:13px;color:var(--txt2);line-height:1.8;white-space:pre-wrap">' + (d.texto || '') + '</div>' +
+        '<div style="font-size:13px;color:var(--txt2);line-height:1.8;white-space:pre-wrap">' + d.texto + '</div>' +
         '</div>';
     }
   })
-  .catch(function() {
+  .catch(function(err) {
     res.innerHTML = '<div class="empty-state">' +
       '<div style="font-size:32px;margin-bottom:12px">✖</div>' +
       '<div style="font-weight:600;margin-bottom:6px">Erro de conexao</div>' +
-      '<div style="font-size:12px;color:var(--txt3)">Verifique sua internet e tente novamente.</div>' +
+      '<div style="font-size:12px;color:var(--txt3)">Detalhe: ' + (err ? err.message : 'sem resposta') + '</div>' +
       '</div>';
   });
 }
