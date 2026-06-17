@@ -6,7 +6,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nexora Connect v6.0</title>
+<title>Nexora Connect v6.1</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 :root{
@@ -167,7 +167,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 <body>
 
 <div id="js-status" style="position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;padding:8px;text-align:center;font-size:13px;font-family:Arial;z-index:99999;display:none">
-  JavaScript nao carregou — v6.0
+  JavaScript nao carregou — v6.1
 </div>
 
 <!-- MODAL VER/EDITAR RETORNO -->
@@ -226,7 +226,7 @@ document.getElementById('js-status').style.display='none';
   <div class="home-wrap">
     <div class="home-left">
       <div>
-        <div class="brand-v">v6.0</div>
+        <div class="brand-v">v6.1</div>
         <div class="brand-name">Nexora<br><span>Connect</span></div>
         <div class="home-div"></div>
         <div class="home-tagline">Gestao comercial centralizada</div>
@@ -539,9 +539,9 @@ document.getElementById('js-status').style.display='none';
 </div>
 
 <script>
-// ═══════════════════════════════════════════
-// NEXORA CONNECT v6.0 - ES5 PURO
-// ═══════════════════════════════════════════
+// -------------------------------------------
+// NEXORA CONNECT v6.1 - ES5 PURO
+// -------------------------------------------
 
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbz3YdV7qYiSRM9eRW_XX3s6eqmGM9eamt0p5trOWelxhoai5AwtrzGl7QeQJzjiGSte/exec';
 var _CACHE_V = '4.4';
@@ -558,7 +558,7 @@ var _usrEditLogin = null;
 var _retEditIdx = -1;
 var _vndEditIdx = -1;
 
-// ─── STORAGE ───────────────────────────────
+// --- STORAGE -------------------------------
 function lsGet(k) {
   try { return localStorage.getItem(k); } catch(e) { return null; }
 }
@@ -578,7 +578,7 @@ function lsSave() {
   lsSet('nxr_usr', JSON.stringify(USR_DB));
 }
 
-// ─── TOAST ─────────────────────────────────
+// --- TOAST ---------------------------------
 function showToast(msg, tipo) {
   var t = document.getElementById('toast');
   if (!t) return;
@@ -588,7 +588,7 @@ function showToast(msg, tipo) {
   setTimeout(function() { t.style.display = 'none'; }, 3000);
 }
 
-// ─── SHEETS ────────────────────────────────
+// --- SHEETS --------------------------------
 function sheetsGet(action, cb) {
   var url = APPS_URL + '?action=' + action;
   fetch(url)
@@ -627,7 +627,7 @@ function sheetsLimpar(sheet) {
   return fetch(APPS_URL + '?action=limpar&sheet=' + sheet);
 }
 
-// ─── SCREENS ───────────────────────────────
+// --- SCREENS -------------------------------
 function showScreen(id) {
   var ids = ['screen-home', 'screen-login'];
   for (var i = 0; i < ids.length; i++) {
@@ -684,7 +684,7 @@ function goLogin(p) {
   });
 }
 
-// ─── LOGIN ─────────────────────────────────
+// --- LOGIN ---------------------------------
 function doLogin() {
   var user = document.getElementById('inp-user') ? document.getElementById('inp-user').value.trim().toLowerCase() : '';
   var pin = document.getElementById('inp-pin') ? String(document.getElementById('inp-pin').value.trim()) : '';
@@ -756,11 +756,11 @@ function doLoginVerificar(user, pin, al, db) {
   launchApp();
 }
 
-// ─── APP LAUNCH ────────────────────────────
+// --- APP LAUNCH ----------------------------
 
-// ─── CARREGAMENTO DE DADOS DA PLANILHA ────
+// --- CARREGAMENTO DE DADOS DA PLANILHA ----
 function retCarregarPlanilha() {
-  // Planilha é a fonte de verdade - substitui completamente os dados locais
+  // Planilha - a fonte de verdade - substitui completamente os dados locais
   sheetsGet('getClientes', function(d) {
     if (d && d.ok && d.data) {
       CLI_DB = d.data;
@@ -786,7 +786,7 @@ function retCarregarPlanilha() {
   });
 }
 
-// Renderiza só se o elemento estiver na tela
+// Renderiza s- se o elemento estiver na tela
 function cliRenderSafe() {
   var el = document.getElementById('cli-lista');
   if (el) cliRender();
@@ -841,7 +841,7 @@ function launchApp() {
   setInterval(notifVerificar, 5 * 60 * 1000);
 }
 
-// ─── NAV ───────────────────────────────────
+// --- NAV -----------------------------------
 var NAV_MAP = {
   rep: [
     { id: 'dashboard', label: 'Dashboard' },
@@ -959,7 +959,7 @@ function navigate(id) {
   }
 }
 
-// ─── PÁGINAS ───────────────────────────────
+// --- P-GINAS -------------------------------
 function buildPage(id) {
   var role = me ? me.role : 'rep';
   if (id === 'dashboard') {
@@ -1138,7 +1138,7 @@ function buildPage(id) {
   return { eye: 'Modulo', title: id, sub: '', body: '<div class="empty-state">Modulo nao encontrado.</div>' };
 }
 
-// ─── CAPTACAO ──────────────────────────────
+// --- CAPTACAO ------------------------------
 function capInit() {
   var tabCnpj = document.getElementById('ctab-cnpj');
   var tabNome = document.getElementById('ctab-nome');
@@ -1270,7 +1270,7 @@ function capAdicionar(btn) {
   showToast('Cliente adicionado a carteira!');
 }
 
-// ─── CLIENTES ──────────────────────────────
+// --- CLIENTES ------------------------------
 function cliDoRep() {
   var r = [];
   if (!me) return r;
@@ -1379,7 +1379,7 @@ function cliVerIdx(idx) {
     if (!c) return;
   }
   _cliEditIdx = idx;
-  // Atualizar lista atual para edição funcionar
+  // Atualizar lista atual para edi--o funcionar
   _cliListaAtual = [c];
   var modal = document.getElementById('cli-view-modal');
   var nome = document.getElementById('cli-view-nome');
@@ -1521,7 +1521,7 @@ function cliExcluir(idx) {
   cliRender();
 }
 
-// ─── RETORNOS ──────────────────────────────
+// --- RETORNOS ------------------------------
 function retDoRep() {
   var r = [];
   if (!me) return r;
@@ -1559,7 +1559,7 @@ function retRender() {
 
   _retListaAtual = filtrados;
 
-  // Paginação
+  // Pagina--o
   var total = filtrados.length;
   var totalPags = Math.ceil(total / _retPorPag) || 1;
   if (_retPagAtual > totalPags) _retPagAtual = 1;
@@ -1567,7 +1567,7 @@ function retRender() {
   var fim = Math.min(inicio + _retPorPag, total);
   var pagina = filtrados.slice(inicio, fim);
 
-  // Info de paginação
+  // Info de pagina--o
   var infoEl = document.getElementById('ret-pag-info');
   if (infoEl) {
     infoEl.textContent = total > 0
@@ -1601,7 +1601,7 @@ function retRender() {
 
   // clique via onclick inline no HTML
 
-  // Navegação de páginas
+  // Navega--o de p-ginas
   var navEl = document.getElementById('ret-pag-nav');
   if (navEl) {
     if (totalPags <= 1) { navEl.innerHTML = ''; }
@@ -1840,7 +1840,7 @@ function retSalvar() {
   setTimeout(notifVerificar, 200);
 }
 
-// ─── VENDAS ────────────────────────────────
+// --- VENDAS --------------------------------
 function vndDoRep() {
   var r = [];
   if (!me) return r;
@@ -1929,7 +1929,7 @@ function vndSalvar() {
   setTimeout(vndRender, 100);
 }
 
-// ─── USUARIOS ──────────────────────────────
+// --- USUARIOS ------------------------------
 function usrRender() {
   var busca = document.getElementById('usr-busca') ? document.getElementById('usr-busca').value.toLowerCase() : '';
   var lista = busca ? [] : USR_DB.slice();
@@ -2112,14 +2112,14 @@ function usrSalvarPlanilha() {
   });
 }
 
-// ─── AUDITORIA ─────────────────────────────
+// --- AUDITORIA -----------------------------
 function audRender() {
   var el = document.getElementById('aud-lista');
   if (!el) return;
   el.innerHTML = '<div class="aud-row" style="color:var(--txt2)">Log de auditoria nao disponivel localmente.</div>';
 }
 
-// ─── CONFIGURACOES ─────────────────────────
+// --- CONFIGURACOES -------------------------
 function cfgCarregar() {
   var inp = document.getElementById('cfg-url');
   if (inp) inp.value = lsGet('nxr_url') || APPS_URL;
@@ -2157,11 +2157,11 @@ function cfgExportar() {
   URL.revokeObjectURL(url);
 }
 
-// ═══════════════════════════════════════════
+// -------------------------------------------
 // INIT - Registrar todos os eventos aqui
-// ═══════════════════════════════════════════
+// -------------------------------------------
 
-// ─── NOTIFICACOES ──────────────────────────
+// --- NOTIFICACOES --------------------------
 var _notifAberto = false;
 
 function notifVerificar() {
@@ -2274,10 +2274,10 @@ document.addEventListener('click', function(e) {
 });
 
 
-// ─── VENDAS ────────────────────────────────
+// --- VENDAS --------------------------------
 var _vndIdxAtual = -1;
 
-// ─── PARCELAS ──────────────────────────────
+// --- PARCELAS ------------------------------
 function vndToggleParcelas() {
   var pgto = document.getElementById('vnd-pgto') ? document.getElementById('vnd-pgto').value : '';
   var div = document.getElementById('vnd-parcelas-div');
@@ -2308,7 +2308,7 @@ function vndCalcParcela() {
   info.style.display = 'block';
 }
 
-// ─── VER VENDA ─────────────────────────────
+// --- VER VENDA -----------------------------
 var _vndListaAtual = [];
 
 function vndVerNome(el) {
@@ -2349,7 +2349,7 @@ function vndVerNome(el) {
 }
 
 
-// ─── CONSULTA DE PECAS ─────────────────────
+// --- CONSULTA DE PECAS ---------------------
 function pecaBuscar() {
   var inp = document.getElementById('peca-inp');
   var res = document.getElementById('peca-resultado');
@@ -2432,6 +2432,14 @@ function pecaBuscar() {
       '<div style="font-size:12px;color:var(--txt3)">' + (isTimeout ? 'A busca demorou muito. Tente novamente.' : 'Detalhe: ' + msg) + '</div>' +
       '</div>';
   });
+}
+
+function pecaMostrarResultados(resultados, termo) {
+  var res = document.getElementById('peca-resultado');
+  if (!res) return;
+
+
+
 }
 
 function pecaMostrar(p) {
