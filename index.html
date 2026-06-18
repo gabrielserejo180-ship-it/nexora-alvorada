@@ -859,6 +859,7 @@ var NAV_MAP = {
     { id: 'clientes', label: 'Todos os Clientes' },
     { id: 'retornos', label: 'Retornos' },
     { id: 'comercial', label: 'Comercial' },
+    { id: 'relatorio', label: 'Relatorio' },
     { id: 'pecas', label: 'Consulta de Pecas' },
     { id: 'consultas', label: 'Consultas' },
     { sect: 'Administracao' },
@@ -870,6 +871,7 @@ var NAV_MAP = {
     { id: 'clientes', label: 'Todos os Clientes' },
     { id: 'retornos', label: 'Retornos' },
     { id: 'comercial', label: 'Comercial' },
+    { id: 'relatorio', label: 'Relatorio' },
     { id: 'pecas', label: 'Consulta de Pecas' },
     { id: 'consultas', label: 'Consultas' },
     { sect: 'Administracao' },
@@ -929,6 +931,7 @@ function navigate(id) {
     if (id === 'admin') setTimeout(usrRender, 50);
     if (id === 'auditoria') setTimeout(audRender, 50);
     if (id === 'config') setTimeout(cfgCarregar, 50);
+    if (id === 'relatorio') setTimeout(relGerar, 50);
     if (id === 'clientes') {
       setTimeout(cliRender, 50);
       // Buscar dados frescos ao abrir Clientes
@@ -1051,6 +1054,24 @@ function buildPage(id) {
         '<div class="sc"><div class="sc-val">' + VND_DB.length + '</div><div class="sc-label">Vendas</div></div>' +
         '</div>' +
         '<div class="usr-table">' + (rankHtml || '<div class="aud-row">Nenhuma venda registrada.</div>') + '</div>'
+    };
+  }
+  if (id === 'relatorio') {
+    return {
+      eye: 'Desempenho', title: 'Relatorio de Representantes', sub: 'Desempenho individual da equipe',
+      body:
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;align-items:center">' +
+        '<select id="rel-periodo" style="background:var(--s1);border:1px solid var(--line2);border-radius:10px;padding:9px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none;cursor:pointer">' +
+        '<option value="todos">Todos os periodos</option>' +
+        '<option value="mes">Este mes</option>' +
+        '<option value="ultimos30">Ultimos 30 dias</option>' +
+        '<option value="trimestre">Este trimestre</option>' +
+        '</select>' +
+        '<button class="btn-new" onclick="relGerar()" style="height:38px">Atualizar</button>' +
+        '<button onclick="relExportarCSV()" style="height:38px;padding:0 16px;background:none;border:1px solid var(--green);color:var(--green);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ff)">⬇ Exportar CSV</button>' +
+        '</div>' +
+        '<div id="rel-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:20px"></div>' +
+        '<div id="rel-tabela"></div>'
     };
   }
   if (id === 'pecas') {
@@ -2588,6 +2609,179 @@ document.addEventListener('DOMContentLoaded', function() {
   if (pjBtn) pjBtn.onclick = function() { cliTipo('pj'); };
   if (pfBtn) pfBtn.onclick = function() { cliTipo('pf'); };
 });
+
+// --- RELATORIO DE REPRESENTANTES -----------
+function relFiltrarPeriodo(lista) {
+  var periodo = document.getElementById('rel-periodo');
+  var val = periodo ? periodo.value : 'todos';
+  if (val === 'todos') return lista;
+  var hoje = new Date();
+  return lista.filter(function(v) {
+    if (!v.data) return false;
+    var parts = v.data.split('/');
+    if (parts.length < 3) return false;
+    var d = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+    if (isNaN(d)) return false;
+    var diff = (hoje - d) / (1000 * 60 * 60 * 24);
+    if (val === 'ultimos30') return diff <= 30;
+    if (val === 'mes') return d.getMonth() === hoje.getMonth() && d.getFullYear() === hoje.getFullYear();
+    if (val === 'trimestre') return diff <= 90;
+    return true;
+  });
+}
+
+function relGerar() {
+  var divCards = document.getElementById('rel-cards');
+  var divTabela = document.getElementById('rel-tabela');
+  if (!divCards || !divTabela) return;
+
+  var vendasFiltradas = relFiltrarPeriodo(VND_DB);
+
+  // Agrupar por representante
+  var reps = {};
+  for (var i = 0; i < USR_DB.length; i++) {
+    if ((USR_DB[i].role || '').toLowerCase() === 'rep') {
+      var nm = String(USR_DB[i].name || '').trim();
+      if (nm && !reps[nm]) reps[nm] = { vendas: 0, faturamento: 0, clientes: 0, retornos: 0, retConcluidos: 0 };
+    }
+  }
+  // Incluir representantes que aparecem nos dados mesmo sem estar em USR_DB
+  for (var j = 0; j < CLI_DB.length; j++) {
+    var r = String(CLI_DB[j].representante || '').trim();
+    if (r && !reps[r]) reps[r] = { vendas: 0, faturamento: 0, clientes: 0, retornos: 0, retConcluidos: 0 };
+    if (r && reps[r]) reps[r].clientes++;
+  }
+  for (var k = 0; k < vendasFiltradas.length; k++) {
+    var rv = String(vendasFiltradas[k].representante || '').trim();
+    if (!rv) continue;
+    if (!reps[rv]) reps[rv] = { vendas: 0, faturamento: 0, clientes: 0, retornos: 0, retConcluidos: 0 };
+    reps[rv].vendas++;
+    reps[rv].faturamento += Number(vendasFiltradas[k].valor || 0);
+  }
+  for (var m = 0; m < RET_DB.length; m++) {
+    var rr = String(RET_DB[m].representante || '').trim();
+    if (!rr) continue;
+    if (!reps[rr]) reps[rr] = { vendas: 0, faturamento: 0, clientes: 0, retornos: 0, retConcluidos: 0 };
+    reps[rr].retornos++;
+    if ((RET_DB[m].status || '') === 'concluido') reps[rr].retConcluidos++;
+  }
+
+  var nomes = Object.keys(reps).sort(function(a, b) { return reps[b].faturamento - reps[a].faturamento; });
+
+  if (!nomes.length) {
+    divCards.innerHTML = '';
+    divTabela.innerHTML = '<div class="empty-state">Nenhum dado de representante encontrado.</div>';
+    return;
+  }
+
+  // Total geral
+  var totalFat = 0, totalVnd = 0, totalCli = 0;
+  for (var n = 0; n < nomes.length; n++) {
+    totalFat += reps[nomes[n]].faturamento;
+    totalVnd += reps[nomes[n]].vendas;
+    totalCli += reps[nomes[n]].clientes;
+  }
+
+  // Cards de resumo geral
+  divCards.innerHTML =
+    '<div class="sc"><div class="sc-icon">👥</div><div class="sc-val">' + nomes.length + '</div><div class="sc-label">Representantes</div></div>' +
+    '<div class="sc"><div class="sc-icon">💰</div><div class="sc-val" style="color:var(--green)">R$ ' + totalFat.toLocaleString('pt-BR', {minimumFractionDigits:2}) + '</div><div class="sc-label">Faturamento Total</div></div>' +
+    '<div class="sc"><div class="sc-icon">🛒</div><div class="sc-val">' + totalVnd + '</div><div class="sc-label">Vendas Total</div></div>' +
+    '<div class="sc"><div class="sc-icon">🏢</div><div class="sc-val">' + totalCli + '</div><div class="sc-label">Clientes Total</div></div>';
+
+  // Tabela detalhada
+  var medals = ['🥇', '🥈', '🥉'];
+  var rows = '';
+  for (var p = 0; p < nomes.length; p++) {
+    var nm2 = nomes[p];
+    var d2 = reps[nm2];
+    var ticket = d2.vendas > 0 ? (d2.faturamento / d2.vendas) : 0;
+    var txConv = d2.retornos > 0 ? Math.round((d2.retConcluidos / d2.retornos) * 100) : 0;
+    var fatPct = totalFat > 0 ? Math.round((d2.faturamento / totalFat) * 100) : 0;
+    var ini = nm2.split(' ').filter(function(w){return w;}).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+    rows +=
+      '<div class="usr-row" style="flex-wrap:wrap;gap:12px">' +
+      '<div style="font-size:18px;width:24px;text-align:center">' + (medals[p] || (p+1)+'°') + '</div>' +
+      '<div class="usr-av" style="background:var(--blue)">' + ini + '</div>' +
+      '<div style="flex:1;min-width:140px">' +
+      '<div class="usr-name">' + nm2 + '</div>' +
+      '<div class="usr-login">' + d2.clientes + ' clientes · ' + d2.vendas + ' vendas · ' + d2.retornos + ' retornos</div>' +
+      '</div>' +
+      '<div style="text-align:right;min-width:110px">' +
+      '<div style="font-size:15px;font-weight:700;color:var(--green)">R$ ' + d2.faturamento.toLocaleString('pt-BR', {minimumFractionDigits:2}) + '</div>' +
+      '<div style="font-size:10px;color:var(--txt3)">' + fatPct + '% do total</div>' +
+      '</div>' +
+      '<div style="text-align:right;min-width:90px">' +
+      '<div style="font-size:13px;font-weight:600">R$ ' + ticket.toLocaleString('pt-BR', {minimumFractionDigits:2}) + '</div>' +
+      '<div style="font-size:10px;color:var(--txt3)">ticket medio</div>' +
+      '</div>' +
+      '<div style="text-align:right;min-width:70px">' +
+      '<div style="font-size:13px;font-weight:600;color:' + (txConv >= 50 ? 'var(--green)' : 'var(--amber)') + '">' + txConv + '%</div>' +
+      '<div style="font-size:10px;color:var(--txt3)">retornos ok</div>' +
+      '</div>' +
+      '<div style="width:100%;background:var(--s3);border-radius:4px;height:4px;margin-top:2px">' +
+      '<div style="width:' + fatPct + '%;background:var(--blue);height:4px;border-radius:4px;transition:width .4s"></div>' +
+      '</div>' +
+      '</div>';
+  }
+
+  divTabela.innerHTML = '<div class="usr-table">' + rows + '</div>';
+}
+
+function relExportarCSV() {
+  var vendasFiltradas = relFiltrarPeriodo(VND_DB);
+  var reps = {};
+
+  for (var j = 0; j < CLI_DB.length; j++) {
+    var r = String(CLI_DB[j].representante || '').trim();
+    if (r && !reps[r]) reps[r] = { vendas: 0, faturamento: 0, clientes: 0, retornos: 0, retConcluidos: 0 };
+    if (r) reps[r].clientes++;
+  }
+  for (var k = 0; k < vendasFiltradas.length; k++) {
+    var rv = String(vendasFiltradas[k].representante || '').trim();
+    if (!rv) continue;
+    if (!reps[rv]) reps[rv] = { vendas: 0, faturamento: 0, clientes: 0, retornos: 0, retConcluidos: 0 };
+    reps[rv].vendas++;
+    reps[rv].faturamento += Number(vendasFiltradas[k].valor || 0);
+  }
+  for (var m = 0; m < RET_DB.length; m++) {
+    var rr = String(RET_DB[m].representante || '').trim();
+    if (!rr) continue;
+    if (!reps[rr]) reps[rr] = { vendas: 0, faturamento: 0, clientes: 0, retornos: 0, retConcluidos: 0 };
+    reps[rr].retornos++;
+    if ((RET_DB[m].status || '') === 'concluido') reps[rr].retConcluidos++;
+  }
+
+  var nomes = Object.keys(reps).sort(function(a, b) { return reps[b].faturamento - reps[a].faturamento; });
+  if (!nomes.length) { showToast('Nenhum dado para exportar.', 'erro'); return; }
+
+  var hoje = new Date();
+  var dataStr = hoje.toLocaleDateString('pt-BR').replace(/\//g, '-');
+
+  // BOM para Excel abrir com acentos corretamente
+  var bom = '\uFEFF';
+  var cabecalho = 'Posicao;Representante;Clientes;Vendas;Faturamento (R$);Ticket Medio (R$);Retornos;Retornos Concluidos;Taxa Conclusao (%)\n';
+  var linhas = '';
+  for (var p = 0; p < nomes.length; p++) {
+    var nm = nomes[p];
+    var d = reps[nm];
+    var ticket = d.vendas > 0 ? (d.faturamento / d.vendas).toFixed(2) : '0.00';
+    var tx = d.retornos > 0 ? Math.round((d.retConcluidos / d.retornos) * 100) : 0;
+    linhas += (p + 1) + ';' + nm + ';' + d.clientes + ';' + d.vendas + ';' +
+              d.faturamento.toFixed(2) + ';' + ticket + ';' + d.retornos + ';' + d.retConcluidos + ';' + tx + '\n';
+  }
+
+  var blob = new Blob([bom + cabecalho + linhas], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'desempenho-representantes-' + dataStr + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Planilha exportada com sucesso!', 'ok');
+}
 
 </script>
 </body>
