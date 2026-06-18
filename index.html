@@ -985,30 +985,9 @@ function buildPage(id) {
     return {
       eye: 'Captacao', title: 'Captacao de Clientes', sub: 'Pesquise empresas para sua carteira',
       body: '<div class="cap-wrap">' +
-        '<div class="cap-tabs">' +
-        '<button class="cap-tab on" id="ctab-cnpj" data-aba="cnpj">Por CNPJ</button>' +
-        '<button class="cap-tab" id="ctab-nome" data-aba="nome">Por Nome / Cidade</button>' +
-        '</div>' +
-        '<div id="cap-cnpj-panel">' +
         '<div class="cap-row"><input class="cap-input" id="cap-cnpj-inp" placeholder="00.000.000/0001-00">' +
         '<button class="btn-search" id="cap-cnpj-btn">Buscar</button></div>' +
         '<div id="cap-res-cnpj"></div>' +
-        '</div>' +
-        '<div id="cap-nome-panel" style="display:none">' +
-        '<div class="cap-row">' +
-        '<input class="cap-input" id="cap-nome-inp" placeholder="Ex: MOTO, PECAS...">' +
-        '<input class="cap-input" id="cap-cid-inp" placeholder="Cidade (opcional)">' +
-        '<select class="cap-sel" id="cap-uf-inp"><option value="MA">MA</option><option value="">UF</option>' +
-        '<option value="AC">AC</option><option value="AL">AL</option><option value="AM">AM</option>' +
-        '<option value="BA">BA</option><option value="CE">CE</option><option value="GO">GO</option>' +
-        '<option value="MG">MG</option><option value="PA">PA</option><option value="PE">PE</option>' +
-        '<option value="PI">PI</option><option value="PR">PR</option><option value="RJ">RJ</option>' +
-        '<option value="RS">RS</option><option value="SC">SC</option><option value="SP">SP</option>' +
-        '</select>' +
-        '</div>' +
-        '<button class="btn-search" id="cap-nome-btn">Pesquisar</button>' +
-        '<div id="cap-res-nome" style="margin-top:12px"></div>' +
-        '</div>' +
         '</div>'
     };
   }
