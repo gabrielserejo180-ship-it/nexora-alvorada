@@ -1071,6 +1071,7 @@ function buildPage(id) {
         '<button onclick="relExportarCSV()" style="height:38px;padding:0 16px;background:none;border:1px solid var(--green);color:var(--green);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ff)">⬇ Exportar CSV</button>' +
         '</div>' +
         '<div id="rel-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:20px"></div>' +
+        '<div id="rel-graficos" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:20px"></div>' +
         '<div id="rel-tabela"></div>'
     };
   }
@@ -2630,9 +2631,97 @@ function relFiltrarPeriodo(lista) {
   });
 }
 
+function relCorPaleta(i) {
+  var cores = ['#3b82f6', '#22c55e', '#f59e0b', '#a855f7', '#ec4899', '#06b6d4', '#ef4444', '#84cc16', '#6366f1', '#14b8a6'];
+  return cores[i % cores.length];
+}
+
+function relGraficoBarras(nomes, reps) {
+  var max = 0;
+  for (var i = 0; i < nomes.length; i++) if (reps[nomes[i]].faturamento > max) max = reps[nomes[i]].faturamento;
+  if (max <= 0) max = 1;
+
+  var w = 280, barH = 26, gap = 12, padTop = 10, padBottom = 10;
+  var h = padTop + padBottom + nomes.length * (barH + gap) - gap;
+  var labelW = 96, valueW = 78;
+  var trackW = w - labelW - valueW - 16;
+
+  var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" xmlns="http://www.w3.org/2000/svg" font-family="inherit">';
+  for (var p = 0; p < nomes.length; p++) {
+    var nm = nomes[p];
+    var val = reps[nm].faturamento;
+    var pct = max > 0 ? (val / max) : 0;
+    var barW = Math.max(2, pct * trackW);
+    var y = padTop + p * (barH + gap);
+    var shortNm = nm.length > 13 ? nm.slice(0, 12) + '…' : nm;
+    var cor = relCorPaleta(p);
+
+    svg += '<text x="0" y="' + (y + barH / 2 + 4) + '" font-size="11" fill="var(--txt2, #94a3b8)">' + shortNm + '</text>';
+    svg += '<rect x="' + labelW + '" y="' + y + '" width="' + trackW + '" height="' + barH + '" rx="6" fill="var(--s3, #1e293b)"></rect>';
+    svg += '<rect x="' + labelW + '" y="' + y + '" width="' + barW + '" height="' + barH + '" rx="6" fill="' + cor + '"></rect>';
+    svg += '<text x="' + (labelW + trackW + 8) + '" y="' + (y + barH / 2 + 4) + '" font-size="11" font-weight="700" fill="var(--txt, #e2e8f0)">R$ ' + val.toLocaleString('pt-BR', {maximumFractionDigits: 0}) + '</text>';
+  }
+  svg += '</svg>';
+  return svg;
+}
+
+function relGraficoPizza(nomes, reps, totalFat) {
+  var size = 220, cx = 110, cy = 110, r = 80;
+  if (totalFat <= 0) totalFat = 1;
+
+  var svg = '<svg viewBox="0 0 ' + size + ' ' + size + '" width="100%" height="' + size + '" xmlns="http://www.w3.org/2000/svg">';
+  var anguloAtual = -Math.PI / 2;
+
+  for (var p = 0; p < nomes.length; p++) {
+    var val = reps[nomes[p]].faturamento;
+    var fracao = val / totalFat;
+    if (fracao <= 0) continue;
+    var anguloFatia = fracao * 2 * Math.PI;
+    var anguloFim = anguloAtual + anguloFatia;
+
+    var x1 = cx + r * Math.cos(anguloAtual);
+    var y1 = cy + r * Math.sin(anguloAtual);
+    var x2 = cx + r * Math.cos(anguloFim);
+    var y2 = cy + r * Math.sin(anguloFim);
+    var largeArc = anguloFatia > Math.PI ? 1 : 0;
+
+    var cor = relCorPaleta(p);
+    if (fracao >= 0.999) {
+      svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + cor + '"></circle>';
+    } else {
+      svg += '<path d="M' + cx + ',' + cy + ' L' + x1.toFixed(2) + ',' + y1.toFixed(2) +
+        ' A' + r + ',' + r + ' 0 ' + largeArc + ' 1 ' + x2.toFixed(2) + ',' + y2.toFixed(2) + ' Z" fill="' + cor + '"></path>';
+    }
+    anguloAtual = anguloFim;
+  }
+  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.55) + '" fill="var(--s1, #0f172a)"></circle>';
+  svg += '<text x="' + cx + '" y="' + (cy - 4) + '" font-size="10" text-anchor="middle" fill="var(--txt3, #64748b)">Total</text>';
+  svg += '<text x="' + cx + '" y="' + (cy + 12) + '" font-size="12" font-weight="700" text-anchor="middle" fill="var(--txt, #e2e8f0)">R$ ' + totalFat.toLocaleString('pt-BR', {maximumFractionDigits: 0}) + '</text>';
+  svg += '</svg>';
+  return svg;
+}
+
+function relLegendaPizza(nomes, reps, totalFat) {
+  if (totalFat <= 0) totalFat = 1;
+  var html = '<div style="display:flex;flex-direction:column;gap:6px;justify-content:center">';
+  for (var p = 0; p < nomes.length; p++) {
+    var val = reps[nomes[p]].faturamento;
+    var pct = Math.round((val / totalFat) * 100);
+    var cor = relCorPaleta(p);
+    var shortNm = nomes[p].length > 16 ? nomes[p].slice(0, 15) + '…' : nomes[p];
+    html += '<div style="display:flex;align-items:center;gap:6px;font-size:11px">' +
+      '<span style="width:9px;height:9px;border-radius:3px;background:' + cor + ';flex-shrink:0"></span>' +
+      '<span style="flex:1;color:var(--txt2)">' + shortNm + '</span>' +
+      '<span style="font-weight:700">' + pct + '%</span></div>';
+  }
+  html += '</div>';
+  return html;
+}
+
 function relGerar() {
   var divCards = document.getElementById('rel-cards');
   var divTabela = document.getElementById('rel-tabela');
+  var divGraficos = document.getElementById('rel-graficos');
   if (!divCards || !divTabela) return;
 
   var vendasFiltradas = relFiltrarPeriodo(VND_DB);
@@ -2688,6 +2777,19 @@ function relGerar() {
     '<div class="sc"><div class="sc-icon">💰</div><div class="sc-val" style="color:var(--green)">R$ ' + totalFat.toLocaleString('pt-BR', {minimumFractionDigits:2}) + '</div><div class="sc-label">Faturamento Total</div></div>' +
     '<div class="sc"><div class="sc-icon">🛒</div><div class="sc-val">' + totalVnd + '</div><div class="sc-label">Vendas Total</div></div>' +
     '<div class="sc"><div class="sc-icon">🏢</div><div class="sc-val">' + totalCli + '</div><div class="sc-label">Clientes Total</div></div>';
+
+  // Gráficos (top 8 representantes por faturamento, para não poluir o visual)
+  if (divGraficos) {
+    var nomesTop = nomes.slice(0, 8);
+    divGraficos.innerHTML =
+      '<div class="sc" style="padding:16px"><div style="font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:10px">Faturamento por Representante</div>' +
+      relGraficoBarras(nomesTop, reps) + '</div>' +
+      '<div class="sc" style="padding:16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap">' +
+      '<div style="flex:0 0 auto"><div style="font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:10px">Participação no Faturamento</div>' +
+      relGraficoPizza(nomesTop, reps, totalFat) + '</div>' +
+      '<div style="flex:1;min-width:120px">' + relLegendaPizza(nomesTop, reps, totalFat) + '</div>' +
+      '</div>';
+  }
 
   // Tabela detalhada
   var medals = ['🥇', '🥈', '🥉'];
