@@ -1076,21 +1076,10 @@ function buildPage(id) {
   }
   if (id === 'pecas') {
     return {
-      eye: 'Pecas Honda', title: 'Consulta de Pecas', sub: 'Pesquise pelo codigo ou nome da peca',
+      eye: 'Pecas Honda', title: 'Consulta de Pecas', sub: 'Pesquise pelo codigo da peca Honda',
       body:
-        // --- Bloco 1: Busca via Apps Script (existente) ---
+        // --- Pesquisa HondaShop ---
         '<div class="cap-wrap">' +
-        '<div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--txt3);margin-bottom:10px">Busca geral (Mercado Livre)</div>' +
-        '<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">' +
-        '<input class="cap-input" id="peca-inp" placeholder="Ex: 06121K62305 ou Kit Cilindro Pop 110" style="flex:1" onkeydown="if(event.keyCode===13)pecaBuscar()">' +
-        '<button class="btn-search" onclick="pecaBuscar()">Buscar</button>' +
-        '</div>' +
-        '<div style="font-size:11px;color:var(--txt3)">Digite o codigo ou nome da peca para buscar nos parceiros.</div>' +
-        '</div>' +
-        '<div id="peca-resultado"></div>' +
-
-        // --- Bloco 2: Pesquisa HondaShop (novo) ---
-        '<div class="cap-wrap" style="margin-top:14px">' +
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">' +
         '<div style="width:36px;height:36px;background:rgba(239,68,68,.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏍️</div>' +
         '<div>' +
