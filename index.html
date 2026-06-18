@@ -539,6 +539,7 @@ document.getElementById('js-status').style.display='none';
 </div>
 
 <script>
+
 // -------------------------------------------
 // NEXORA CONNECT v6.4 - ES5 PURO
 // -------------------------------------------
@@ -1077,14 +1078,32 @@ function buildPage(id) {
     return {
       eye: 'Pecas Honda', title: 'Consulta de Pecas', sub: 'Pesquise pelo codigo ou nome da peca',
       body:
+        // --- Bloco 1: Busca via Apps Script (existente) ---
         '<div class="cap-wrap">' +
-        '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">' +
+        '<div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--txt3);margin-bottom:10px">Busca geral (Mercado Livre)</div>' +
+        '<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">' +
         '<input class="cap-input" id="peca-inp" placeholder="Ex: 06121K62305 ou Kit Cilindro Pop 110" style="flex:1" onkeydown="if(event.keyCode===13)pecaBuscar()">' +
         '<button class="btn-search" onclick="pecaBuscar()">Buscar</button>' +
         '</div>' +
-        '<div style="font-size:11px;color:var(--txt3);margin-bottom:14px">Digite o codigo da peca (ex: 06121K62305) ou o nome. Buscamos em varios sites Honda.</div>' +
+        '<div style="font-size:11px;color:var(--txt3)">Digite o codigo ou nome da peca para buscar nos parceiros.</div>' +
         '</div>' +
-        '<div id="peca-resultado"></div>'
+        '<div id="peca-resultado"></div>' +
+
+        // --- Bloco 2: Pesquisa HondaShop (novo) ---
+        '<div class="cap-wrap" style="margin-top:14px">' +
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">' +
+        '<div style="width:36px;height:36px;background:rgba(239,68,68,.12);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏍️</div>' +
+        '<div>' +
+        '<div style="font-size:13px;font-weight:700;color:var(--txt)">Pesquisar no HondaShop</div>' +
+        '<div style="font-size:11px;color:var(--txt3)">Abre a busca oficial Honda em nova aba</div>' +
+        '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+        '<input class="cap-input" id="codigoHonda" placeholder="Digite o codigo da peca (ex: H0615KRMC00)" style="flex:1" onkeydown="if(event.keyCode===13)pesquisarHondaShop()">' +
+        '<button class="btn-search" onclick="pesquisarHondaShop()" style="background:#c00;white-space:nowrap">🔍 Pesquisar HondaShop</button>' +
+        '</div>' +
+        '<div style="font-size:11px;color:var(--txt3);margin-top:8px">Abre o resultado direto em <strong style="color:var(--txt2)">hondashop.com.br</strong> com o codigo preenchido.</div>' +
+        '</div>'
     };
   }
   if (id === 'consultas') {
@@ -2350,6 +2369,20 @@ function vndVerNome(el) {
 
 
 // --- CONSULTA DE PECAS ---------------------
+
+function pesquisarHondaShop() {
+  var inp = document.getElementById("codigoHonda");
+  if (!inp) return;
+  var codigo = inp.value.trim();
+  if (!codigo) {
+    showToast("Informe o codigo da peca.", "erro");
+    inp.focus();
+    return;
+  }
+  var url = "https://www.hondashop.com.br/s/search?typeProduct=Pe%C3%A7as&term=" + encodeURIComponent(codigo) + "&page=1";
+  window.open(url, "_blank");
+}
+
 function pecaBuscar() {
   var inp = document.getElementById('peca-inp');
   var res = document.getElementById('peca-resultado');
@@ -2587,6 +2620,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (pjBtn) pjBtn.onclick = function() { cliTipo('pj'); };
   if (pfBtn) pfBtn.onclick = function() { cliTipo('pf'); };
 });
+
 </script>
 </body>
 </html>
