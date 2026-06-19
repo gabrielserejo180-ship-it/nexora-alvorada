@@ -544,7 +544,7 @@ document.getElementById('js-status').style.display='none';
 // NEXORA CONNECT v6.4 - ES5 PURO
 // -------------------------------------------
 
-var APPS_URL = 'https://script.google.com/macros/s/AKfycbzKVKfKdTD7LOJjBsmfbIPH0XNYyyModxS4csL7yPDNyPcOyHkJBxnW6-_rSQspcRF8/exec';
+var APPS_URL = 'https://script.google.com/macros/s/AKfycbx9Nj81qbR5aPrOk_5kl7iTZCfn7_PBbLBwwr27wsR-biKuUFDzxKSNM3EY91v2WFEn/exec';
 var _CACHE_V = '4.4';
 var me = null;
 var profile = null;
@@ -626,6 +626,46 @@ function sheetsSalvarLinha(sheet, obj, cb) {
 }
 function sheetsLimpar(sheet) {
   return fetch(APPS_URL + '?action=limpar&sheet=' + sheet);
+}
+function sheetsAtualizarLinha(sheet, chaveCol, chaveVal, obj, cb) {
+  var encoded = encodeURIComponent(JSON.stringify(obj));
+  var url = APPS_URL + '?action=atualizarLinha&sheet=' + sheet +
+            '&chaveCol=' + encodeURIComponent(chaveCol) +
+            '&chaveVal=' + encodeURIComponent(chaveVal) +
+            '&row=' + encoded;
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d && d.ok) {
+        if (cb) cb(true);
+      } else {
+        console.error('Erro ao atualizar em ' + sheet + ':', d ? d.msg : 'resposta vazia');
+        if (cb) cb(false, d ? d.msg : 'erro');
+      }
+    })
+    .catch(function(e) {
+      console.error('Falha de conexao ao atualizar em ' + sheet + ':', e);
+      if (cb) cb(false, 'sem conexao');
+    });
+}
+function sheetsExcluirLinha(sheet, chaveCol, chaveVal, cb) {
+  var url = APPS_URL + '?action=excluirLinha&sheet=' + sheet +
+            '&chaveCol=' + encodeURIComponent(chaveCol) +
+            '&chaveVal=' + encodeURIComponent(chaveVal);
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d && d.ok) {
+        if (cb) cb(true);
+      } else {
+        console.error('Erro ao excluir em ' + sheet + ':', d ? d.msg : 'resposta vazia');
+        if (cb) cb(false, d ? d.msg : 'erro');
+      }
+    })
+    .catch(function(e) {
+      console.error('Falha de conexao ao excluir em ' + sheet + ':', e);
+      if (cb) cb(false, 'sem conexao');
+    });
 }
 
 // --- SCREENS -------------------------------
@@ -1491,32 +1531,50 @@ function cliSalvarManual() {
   if (!end) { showToast('Informe o endereco.', 'erro'); return; }
 
   var novo = {
-    nome: nome, cnpj: cliTipoAtual === 'pj' ? doc : '', fantasia: '',
+    nome: nome,
+    cnpj: cliTipoAtual === 'pj' ? doc : '',
+    cpf: cliTipoAtual === 'pf' ? doc : '',
+    fantasia: '',
     status: status, cidade: cid, uf: uf, telefne: tel, email: email,
     representante: me ? me.name : '', criado_em: new Date().toLocaleDateString('pt-BR'),
     ultimo_contato: '', obs: obs + (end ? ' | End: ' + end : '')
   };
 
-  if (_cliEditIdx >= 0 && _cliEditIdx < CLI_DB.length) {
+  var editando = (_cliEditIdx >= 0 && _cliEditIdx < CLI_DB.length);
+  var docAntigoCol = '';
+  var docAntigoVal = '';
+  if (editando) {
+    if (CLI_DB[_cliEditIdx].cnpj) { docAntigoCol = 'cnpj'; docAntigoVal = CLI_DB[_cliEditIdx].cnpj; }
+    else if (CLI_DB[_cliEditIdx].cpf) { docAntigoCol = 'cpf'; docAntigoVal = CLI_DB[_cliEditIdx].cpf; }
+  }
+
+  if (editando) {
     CLI_DB[_cliEditIdx] = novo;
-    sheetsSalvarLinha('Clientes', novo);
-    showToast('Cliente atualizado!');
   } else {
     CLI_DB.push(novo);
-    sheetsSalvarLinha('Clientes', novo);
-    showToast('Cliente cadastrado!');
   }
   lsSet('nxr_cli', JSON.stringify(CLI_DB));
   var modal = document.getElementById('cli-modal');
   if (modal) modal.style.display = 'none';
-  // Salvar na planilha com feedback
-  sheetsSalvarLinha('Clientes', novo, function(ok, err) {
-    if (ok) {
-      showToast('Cliente salvo na planilha!');
-    } else {
-      showToast('Salvo localmente. Planilha: ' + (err || 'erro'), 'erro');
-    }
-  });
+
+  // Envia so a linha alterada/criada, sem duplicar e sem apagar o restante da planilha.
+  if (editando && docAntigoCol) {
+    sheetsAtualizarLinha('Clientes', docAntigoCol, docAntigoVal, novo, function(ok, err) {
+      if (ok) {
+        showToast('Cliente atualizado!');
+      } else {
+        showToast('Salvo localmente. Planilha: ' + (err || 'erro'), 'erro');
+      }
+    });
+  } else {
+    sheetsSalvarLinha('Clientes', novo, function(ok, err) {
+      if (ok) {
+        showToast(editando ? 'Cliente atualizado!' : 'Cliente cadastrado!');
+      } else {
+        showToast('Salvo localmente. Planilha: ' + (err || 'erro'), 'erro');
+      }
+    });
+  }
   setTimeout(cliRender, 100);
 }
 
@@ -1550,9 +1608,19 @@ function cliEditarAtual() {
 
 function cliExcluir(idx) {
   if (!confirm('Excluir este cliente?')) return;
+  var c = CLI_DB[idx];
+  var docCol = '';
+  var docVal = '';
+  if (c) {
+    if (c.cnpj) { docCol = 'cnpj'; docVal = c.cnpj; }
+    else if (c.cpf) { docCol = 'cpf'; docVal = c.cpf; }
+  }
   CLI_DB.splice(idx, 1);
   lsSet('nxr_cli', JSON.stringify(CLI_DB));
   showToast('Cliente excluido!');
+  if (docCol) {
+    sheetsExcluirLinha('Clientes', docCol, docVal);
+  }
   cliRender();
 }
 
@@ -2043,17 +2111,18 @@ function usrAcao(act, login) {
   if (act === 'edit') { usrEditar(idx); return; }
   if (act === 'del') {
     if (!confirm('Excluir o usuario ' + USR_DB[idx].name + '?')) return;
+    var loginExcluido = USR_DB[idx].user;
     USR_DB.splice(idx, 1);
     lsSet('nxr_usr', JSON.stringify(USR_DB));
     showToast('Usuario excluido!');
-    usrSalvarPlanilha();
+    sheetsExcluirLinha('Usuarios', 'user', loginExcluido);
     usrRender();
     return;
   }
   if (act === 'toggle') {
     USR_DB[idx].status = USR_DB[idx].status === 'active' ? 'inactive' : 'active';
     lsSet('nxr_usr', JSON.stringify(USR_DB));
-    usrSalvarPlanilha();
+    sheetsAtualizarLinha('Usuarios', 'user', USR_DB[idx].user, USR_DB[idx]);
     usrRender();
     return;
   }
@@ -2099,7 +2168,10 @@ function usrSalvar() {
   if (!nome) { showToast('Informe o nome.', 'erro'); return; }
   if (!user) { showToast('Informe o usuario.', 'erro'); return; }
 
-  if (_usrEditLogin) {
+  var editando = !!_usrEditLogin;
+  var registro = null;
+
+  if (editando) {
     // Editando
     for (var i = 0; i < USR_DB.length; i++) {
       if (USR_DB[i].user === _usrEditLogin) {
@@ -2108,20 +2180,29 @@ function usrSalvar() {
         USR_DB[i].role = role;
         USR_DB[i].status = status;
         if (pin) USR_DB[i].pin = pin;
+        registro = USR_DB[i];
         break;
       }
     }
   } else {
     // Novo
     if (pin.length < 6) { showToast('Senha deve ter 6 digitos.', 'erro'); return; }
-    USR_DB.push({ user: user, pin: pin, name: nome, role: role, status: status, criado: new Date().toLocaleDateString('pt-BR') });
+    registro = { user: user, pin: pin, name: nome, role: role, status: status, criado: new Date().toLocaleDateString('pt-BR') };
+    USR_DB.push(registro);
   }
   lsSet('nxr_usr', JSON.stringify(USR_DB));
-  usrSalvarPlanilha();
   var modal = document.getElementById('usr-modal');
   if (modal) modal.style.display = 'none';
   showToast('Usuario salvo!');
   usrRender();
+
+  // Envia so a linha alterada/criada, sem apagar o restante da planilha.
+  // Isso evita que cadastros simultaneos em outro dispositivo se percam.
+  if (editando) {
+    sheetsAtualizarLinha('Usuarios', 'user', _usrEditLogin, registro);
+  } else {
+    sheetsSalvarLinha('Usuarios', registro);
+  }
 }
 
 function usrFecharModal() {
