@@ -1071,7 +1071,6 @@ function buildPage(id) {
         '<button onclick="relExportarCSV()" style="height:38px;padding:0 16px;background:none;border:1px solid var(--green);color:var(--green);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ff)">⬇ Exportar CSV</button>' +
         '</div>' +
         '<div id="rel-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:20px"></div>' +
-        '<div id="rel-graficos" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:20px"></div>' +
         '<div id="rel-tabela"></div>'
     };
   }
@@ -1141,6 +1140,33 @@ function buildPage(id) {
         '<div class="cap-wrap" style="margin-top:12px">' +
         '<div style="font-size:13px;font-weight:600;margin-bottom:10px">Dados</div>' +
         '<button class="btn-new" id="cfg-exportar-btn">Exportar JSON</button>' +
+        '</div>' +
+        '<div class="cap-wrap" style="margin-top:12px;border-color:rgba(239,68,68,.3)">' +
+        '<div style="font-size:13px;font-weight:600;margin-bottom:4px;color:var(--red)">⚠ Zona de Risco</div>' +
+        '<div style="font-size:11px;color:var(--txt3);margin-bottom:16px">Estas acoes excluem dados permanentemente, no app e na planilha. Nao podem ser desfeitas.</div>' +
+        '<div style="display:flex;flex-direction:column;gap:10px">' +
+
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:var(--s2);border-radius:10px;flex-wrap:wrap">' +
+        '<div><div style="font-size:13px;font-weight:600">Clientes</div><div style="font-size:11px;color:var(--txt3)" id="cfg-count-cli">' + CLI_DB.length + ' registro(s)</div></div>' +
+        '<button onclick="cfgExcluir(\'clientes\')" style="height:34px;padding:0 14px;background:none;border:1px solid var(--red);color:var(--red);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--ff)">Excluir todos</button>' +
+        '</div>' +
+
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:var(--s2);border-radius:10px;flex-wrap:wrap">' +
+        '<div><div style="font-size:13px;font-weight:600">Vendas</div><div style="font-size:11px;color:var(--txt3)" id="cfg-count-vnd">' + VND_DB.length + ' registro(s)</div></div>' +
+        '<button onclick="cfgExcluir(\'vendas\')" style="height:34px;padding:0 14px;background:none;border:1px solid var(--red);color:var(--red);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--ff)">Excluir todas</button>' +
+        '</div>' +
+
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:var(--s2);border-radius:10px;flex-wrap:wrap">' +
+        '<div><div style="font-size:13px;font-weight:600">Retornos</div><div style="font-size:11px;color:var(--txt3)" id="cfg-count-ret">' + RET_DB.length + ' registro(s)</div></div>' +
+        '<button onclick="cfgExcluir(\'retornos\')" style="height:34px;padding:0 14px;background:none;border:1px solid var(--red);color:var(--red);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--ff)">Excluir todos</button>' +
+        '</div>' +
+
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;background:var(--s2);border-radius:10px;flex-wrap:wrap">' +
+        '<div><div style="font-size:13px;font-weight:600">Usuarios / Representantes</div><div style="font-size:11px;color:var(--txt3)" id="cfg-count-usr">' + USR_DB.length + ' cadastrado(s) — mantem o seu login</div></div>' +
+        '<button onclick="cfgExcluir(\'usuarios\')" style="height:34px;padding:0 14px;background:none;border:1px solid var(--red);color:var(--red);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--ff)">Excluir todos</button>' +
+        '</div>' +
+
+        '</div>' +
         '</div>'
     };
   }
@@ -2166,6 +2192,66 @@ function cfgExportar() {
   URL.revokeObjectURL(url);
 }
 
+// --- EXCLUSAO DE DADOS (ZONA DE RISCO) ------
+var CFG_TIPOS = {
+  clientes: { sheet: 'Clientes', label: 'Clientes', getDb: function(){ return CLI_DB; }, setDb: function(v){ CLI_DB = v; }, lsKey: 'nxr_cli' },
+  vendas:   { sheet: 'Vendas',   label: 'Vendas',   getDb: function(){ return VND_DB; }, setDb: function(v){ VND_DB = v; }, lsKey: 'nxr_vnd' },
+  retornos: { sheet: 'Retornos', label: 'Retornos', getDb: function(){ return RET_DB; }, setDb: function(v){ RET_DB = v; }, lsKey: 'nxr_ret' },
+  usuarios: { sheet: 'Usuarios', label: 'Usuarios', getDb: function(){ return USR_DB; }, setDb: function(v){ USR_DB = v; }, lsKey: 'nxr_usr' }
+};
+
+function cfgExcluir(tipo) {
+  var cfg = CFG_TIPOS[tipo];
+  if (!cfg) return;
+  var qtd = cfg.getDb().length;
+  if (qtd === 0) { showToast('Nao ha ' + cfg.label.toLowerCase() + ' para excluir.', 'erro'); return; }
+
+  var confirmacao = prompt(
+    'Esta acao vai excluir ' + qtd + ' registro(s) de ' + cfg.label +
+    ' permanentemente, no app e na planilha.\n\nDigite EXCLUIR para confirmar:'
+  );
+  if (confirmacao !== 'EXCLUIR') {
+    if (confirmacao !== null) showToast('Exclusao cancelada.', 'erro');
+    return;
+  }
+
+  var st = document.getElementById('cfg-status');
+  if (st) st.textContent = 'Excluindo ' + cfg.label + '...';
+
+  // Caso especial: Usuarios -> manter o login atual no app e na planilha
+  var meuUsuario = null;
+  if (tipo === 'usuarios') {
+    var encontrados = me ? USR_DB.filter(function(u){ return String(u.user||'').toLowerCase().trim() === String(me.user||'').toLowerCase().trim(); }) : [];
+    meuUsuario = encontrados.length ? encontrados[0] : null;
+    USR_DB = meuUsuario ? [meuUsuario] : [];
+    lsSet('nxr_usr', JSON.stringify(USR_DB));
+  } else {
+    cfg.setDb([]);
+    lsSet(cfg.lsKey, '[]');
+  }
+
+  sheetsLimpar(cfg.sheet)
+    .then(function() {
+      if (tipo === 'usuarios' && meuUsuario) {
+        sheetsSalvarLinha('Usuarios', meuUsuario, function(ok) {
+          if (ok) {
+            showToast('Usuarios excluidos! Seu acesso foi mantido.', 'ok');
+          } else {
+            showToast('Excluido, mas falha ao manter seu login na planilha.', 'erro');
+          }
+          navigate('config');
+        });
+      } else {
+        showToast(cfg.label + ' excluido(s) com sucesso!', 'ok');
+        navigate('config');
+      }
+    })
+    .catch(function() {
+      showToast(cfg.label + ' excluido(s) localmente. Falha ao sincronizar com a planilha.', 'erro');
+      navigate('config');
+    });
+}
+
 // -------------------------------------------
 // INIT - Registrar todos os eventos aqui
 // -------------------------------------------
@@ -2631,97 +2717,9 @@ function relFiltrarPeriodo(lista) {
   });
 }
 
-function relCorPaleta(i) {
-  var cores = ['#3b82f6', '#22c55e', '#f59e0b', '#a855f7', '#ec4899', '#06b6d4', '#ef4444', '#84cc16', '#6366f1', '#14b8a6'];
-  return cores[i % cores.length];
-}
-
-function relGraficoBarras(nomes, reps) {
-  var max = 0;
-  for (var i = 0; i < nomes.length; i++) if (reps[nomes[i]].faturamento > max) max = reps[nomes[i]].faturamento;
-  if (max <= 0) max = 1;
-
-  var w = 280, barH = 26, gap = 12, padTop = 10, padBottom = 10;
-  var h = padTop + padBottom + nomes.length * (barH + gap) - gap;
-  var labelW = 96, valueW = 78;
-  var trackW = w - labelW - valueW - 16;
-
-  var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '" xmlns="http://www.w3.org/2000/svg" font-family="inherit">';
-  for (var p = 0; p < nomes.length; p++) {
-    var nm = nomes[p];
-    var val = reps[nm].faturamento;
-    var pct = max > 0 ? (val / max) : 0;
-    var barW = Math.max(2, pct * trackW);
-    var y = padTop + p * (barH + gap);
-    var shortNm = nm.length > 13 ? nm.slice(0, 12) + '…' : nm;
-    var cor = relCorPaleta(p);
-
-    svg += '<text x="0" y="' + (y + barH / 2 + 4) + '" font-size="11" fill="var(--txt2, #94a3b8)">' + shortNm + '</text>';
-    svg += '<rect x="' + labelW + '" y="' + y + '" width="' + trackW + '" height="' + barH + '" rx="6" fill="var(--s3, #1e293b)"></rect>';
-    svg += '<rect x="' + labelW + '" y="' + y + '" width="' + barW + '" height="' + barH + '" rx="6" fill="' + cor + '"></rect>';
-    svg += '<text x="' + (labelW + trackW + 8) + '" y="' + (y + barH / 2 + 4) + '" font-size="11" font-weight="700" fill="var(--txt, #e2e8f0)">R$ ' + val.toLocaleString('pt-BR', {maximumFractionDigits: 0}) + '</text>';
-  }
-  svg += '</svg>';
-  return svg;
-}
-
-function relGraficoPizza(nomes, reps, totalFat) {
-  var size = 220, cx = 110, cy = 110, r = 80;
-  if (totalFat <= 0) totalFat = 1;
-
-  var svg = '<svg viewBox="0 0 ' + size + ' ' + size + '" width="100%" height="' + size + '" xmlns="http://www.w3.org/2000/svg">';
-  var anguloAtual = -Math.PI / 2;
-
-  for (var p = 0; p < nomes.length; p++) {
-    var val = reps[nomes[p]].faturamento;
-    var fracao = val / totalFat;
-    if (fracao <= 0) continue;
-    var anguloFatia = fracao * 2 * Math.PI;
-    var anguloFim = anguloAtual + anguloFatia;
-
-    var x1 = cx + r * Math.cos(anguloAtual);
-    var y1 = cy + r * Math.sin(anguloAtual);
-    var x2 = cx + r * Math.cos(anguloFim);
-    var y2 = cy + r * Math.sin(anguloFim);
-    var largeArc = anguloFatia > Math.PI ? 1 : 0;
-
-    var cor = relCorPaleta(p);
-    if (fracao >= 0.999) {
-      svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + cor + '"></circle>';
-    } else {
-      svg += '<path d="M' + cx + ',' + cy + ' L' + x1.toFixed(2) + ',' + y1.toFixed(2) +
-        ' A' + r + ',' + r + ' 0 ' + largeArc + ' 1 ' + x2.toFixed(2) + ',' + y2.toFixed(2) + ' Z" fill="' + cor + '"></path>';
-    }
-    anguloAtual = anguloFim;
-  }
-  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (r * 0.55) + '" fill="var(--s1, #0f172a)"></circle>';
-  svg += '<text x="' + cx + '" y="' + (cy - 4) + '" font-size="10" text-anchor="middle" fill="var(--txt3, #64748b)">Total</text>';
-  svg += '<text x="' + cx + '" y="' + (cy + 12) + '" font-size="12" font-weight="700" text-anchor="middle" fill="var(--txt, #e2e8f0)">R$ ' + totalFat.toLocaleString('pt-BR', {maximumFractionDigits: 0}) + '</text>';
-  svg += '</svg>';
-  return svg;
-}
-
-function relLegendaPizza(nomes, reps, totalFat) {
-  if (totalFat <= 0) totalFat = 1;
-  var html = '<div style="display:flex;flex-direction:column;gap:6px;justify-content:center">';
-  for (var p = 0; p < nomes.length; p++) {
-    var val = reps[nomes[p]].faturamento;
-    var pct = Math.round((val / totalFat) * 100);
-    var cor = relCorPaleta(p);
-    var shortNm = nomes[p].length > 16 ? nomes[p].slice(0, 15) + '…' : nomes[p];
-    html += '<div style="display:flex;align-items:center;gap:6px;font-size:11px">' +
-      '<span style="width:9px;height:9px;border-radius:3px;background:' + cor + ';flex-shrink:0"></span>' +
-      '<span style="flex:1;color:var(--txt2)">' + shortNm + '</span>' +
-      '<span style="font-weight:700">' + pct + '%</span></div>';
-  }
-  html += '</div>';
-  return html;
-}
-
 function relGerar() {
   var divCards = document.getElementById('rel-cards');
   var divTabela = document.getElementById('rel-tabela');
-  var divGraficos = document.getElementById('rel-graficos');
   if (!divCards || !divTabela) return;
 
   var vendasFiltradas = relFiltrarPeriodo(VND_DB);
@@ -2778,21 +2776,9 @@ function relGerar() {
     '<div class="sc"><div class="sc-icon">🛒</div><div class="sc-val">' + totalVnd + '</div><div class="sc-label">Vendas Total</div></div>' +
     '<div class="sc"><div class="sc-icon">🏢</div><div class="sc-val">' + totalCli + '</div><div class="sc-label">Clientes Total</div></div>';
 
-  // Gráficos (top 8 representantes por faturamento, para não poluir o visual)
-  if (divGraficos) {
-    var nomesTop = nomes.slice(0, 8);
-    divGraficos.innerHTML =
-      '<div class="sc" style="padding:16px"><div style="font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:10px">Faturamento por Representante</div>' +
-      relGraficoBarras(nomesTop, reps) + '</div>' +
-      '<div class="sc" style="padding:16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap">' +
-      '<div style="flex:0 0 auto"><div style="font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:10px">Participação no Faturamento</div>' +
-      relGraficoPizza(nomesTop, reps, totalFat) + '</div>' +
-      '<div style="flex:1;min-width:120px">' + relLegendaPizza(nomesTop, reps, totalFat) + '</div>' +
-      '</div>';
-  }
-
-  // Tabela detalhada
+  // Tabela detalhada - layout em cards responsivos (evita sobreposicao no mobile)
   var medals = ['🥇', '🥈', '🥉'];
+  var cores = ['#3B82F6','#10B981','#F59E0B','#8B5CF6','#EF4444','#06B6D4'];
   var rows = '';
   for (var p = 0; p < nomes.length; p++) {
     var nm2 = nomes[p];
@@ -2801,29 +2787,31 @@ function relGerar() {
     var txConv = d2.retornos > 0 ? Math.round((d2.retConcluidos / d2.retornos) * 100) : 0;
     var fatPct = totalFat > 0 ? Math.round((d2.faturamento / totalFat) * 100) : 0;
     var ini = nm2.split(' ').filter(function(w){return w;}).map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
+    var cor = cores[p % cores.length];
+    var txColor = txConv >= 70 ? 'var(--green)' : txConv >= 40 ? 'var(--amber)' : 'var(--red)';
+
     rows +=
-      '<div class="usr-row" style="flex-wrap:wrap;gap:12px">' +
-      '<div style="font-size:18px;width:24px;text-align:center">' + (medals[p] || (p+1)+'°') + '</div>' +
-      '<div class="usr-av" style="background:var(--blue)">' + ini + '</div>' +
-      '<div style="flex:1;min-width:140px">' +
-      '<div class="usr-name">' + nm2 + '</div>' +
-      '<div class="usr-login">' + d2.clientes + ' clientes · ' + d2.vendas + ' vendas · ' + d2.retornos + ' retornos</div>' +
-      '</div>' +
-      '<div style="text-align:right;min-width:110px">' +
-      '<div style="font-size:15px;font-weight:700;color:var(--green)">R$ ' + d2.faturamento.toLocaleString('pt-BR', {minimumFractionDigits:2}) + '</div>' +
-      '<div style="font-size:10px;color:var(--txt3)">' + fatPct + '% do total</div>' +
-      '</div>' +
-      '<div style="text-align:right;min-width:90px">' +
-      '<div style="font-size:13px;font-weight:600">R$ ' + ticket.toLocaleString('pt-BR', {minimumFractionDigits:2}) + '</div>' +
-      '<div style="font-size:10px;color:var(--txt3)">ticket medio</div>' +
-      '</div>' +
-      '<div style="text-align:right;min-width:70px">' +
-      '<div style="font-size:13px;font-weight:600;color:' + (txConv >= 50 ? 'var(--green)' : 'var(--amber)') + '">' + txConv + '%</div>' +
-      '<div style="font-size:10px;color:var(--txt3)">retornos ok</div>' +
-      '</div>' +
-      '<div style="width:100%;background:var(--s3);border-radius:4px;height:4px;margin-top:2px">' +
-      '<div style="width:' + fatPct + '%;background:var(--blue);height:4px;border-radius:4px;transition:width .4s"></div>' +
-      '</div>' +
+      '<div style="padding:16px;border-bottom:1px solid var(--line)">' +
+        // Linha 1: posicao + avatar + nome + clientes/vendas/retornos
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">' +
+        '<div style="font-size:16px;width:22px;text-align:center;flex-shrink:0">' + (medals[p] || (p+1)+'°') + '</div>' +
+        '<div style="width:34px;height:34px;border-radius:50%;background:' + cor + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">' + ini + '</div>' +
+        '<div style="flex:1;min-width:0;overflow:hidden">' +
+        '<div style="font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + nm2 + '</div>' +
+        '<div style="font-size:10px;color:var(--txt3)">' + d2.clientes + ' clientes · ' + d2.vendas + ' vendas · ' + d2.retornos + ' retornos</div>' +
+        '</div>' +
+        '</div>' +
+        // Linha 2: grid de metricas, sempre 3 colunas iguais (sem overflow)
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">' +
+        '<div><div style="font-size:13px;font-weight:700;color:var(--green)">R$ ' + d2.faturamento.toLocaleString('pt-BR', {minimumFractionDigits:2}) + '</div><div style="font-size:9px;color:var(--txt3)">faturamento</div></div>' +
+        '<div><div style="font-size:13px;font-weight:600">R$ ' + ticket.toLocaleString('pt-BR', {minimumFractionDigits:2}) + '</div><div style="font-size:9px;color:var(--txt3)">ticket medio</div></div>' +
+        '<div><div style="font-size:13px;font-weight:700;color:' + txColor + '">' + txConv + '%</div><div style="font-size:9px;color:var(--txt3)">retornos ok</div></div>' +
+        '</div>' +
+        // Barra de participacao
+        '<div style="display:flex;align-items:center;gap:8px;margin-top:10px">' +
+        '<div style="flex:1;background:var(--s3);border-radius:4px;height:5px"><div style="width:' + fatPct + '%;background:' + cor + ';height:5px;border-radius:4px"></div></div>' +
+        '<div style="font-size:10px;color:var(--txt3);flex-shrink:0">' + fatPct + '% do total</div>' +
+        '</div>' +
       '</div>';
   }
 
