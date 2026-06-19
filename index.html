@@ -1257,7 +1257,7 @@ function capBuscarNome() {
       for (var i = 0; i < d.data.length; i++) {
         var e = d.data[i];
         var enome = e.razao_social || e.nome || '-';
-        var ecnpj = (e.cnpj || '').replace(/\D/g, '');
+        var ecnpj = String(e.cnpj || '').replace(/\D/g, '');
         var ecid = e.municipio || e.cidade || '';
         var euf = e.uf || e.estado || '';
         var etel = ((e.ddd_telefone_1 || '') + (e.telefone_1 || '') || e.telefone || '').replace(/\D/g, '');
@@ -1291,7 +1291,7 @@ function capAdicionar(btn) {
   var tel = btn.getAttribute('data-tel');
   var email = btn.getAttribute('data-email');
   for (var i = 0; i < CLI_DB.length; i++) {
-    if (cnpj && (CLI_DB[i].cnpj || '').replace(/\D/g, '') === cnpj) {
+    if (cnpj && String(CLI_DB[i].cnpj || '').replace(/\D/g, '') === cnpj) {
       showToast('Cliente ja esta na carteira!', 'erro'); return;
     }
   }
@@ -1333,8 +1333,8 @@ function cliRender() {
     var c = todos[i];
     if (!busca) { lista.push(c); continue; }
     if ((c.nome || '').toLowerCase().indexOf(busca) > -1 ||
-        (c.cnpj || '').indexOf(busca) > -1 ||
-        (c.cpf || '').indexOf(busca) > -1) {
+        String(c.cnpj || '').indexOf(busca) > -1 ||
+        String(c.cpf || '').indexOf(busca) > -1) {
       lista.push(c);
     }
   }
@@ -1422,7 +1422,7 @@ function cliVerIdx(idx) {
   if (!modal) { alert('Modal nao encontrado'); return; }
   if (nome) nome.textContent = c.nome || 'Cliente';
   if (body) {
-    var tel = (c.telefne || c.telefone || '').replace(/\D/g, '');
+    var tel = String(c.telefne || c.telefone || '').replace(/\D/g, '');
     body.innerHTML =
       '<div style="margin-bottom:8px"><strong>CNPJ/CPF:</strong> ' + (c.cnpj || c.cpf || '-') + '</div>' +
       '<div style="margin-bottom:8px"><strong>Status:</strong> ' + (c.status || '-') + '</div>' +
@@ -1721,7 +1721,7 @@ function retVerIdx(idx) {
       '<div style="margin-bottom:10px"><strong>Observacao:</strong> ' + (r.obs || '-') + '</div>' +
       '<div style="margin-bottom:10px"><strong>Representante:</strong> ' + (r.representante || '-') + '</div>' +
       '<div style="margin-bottom:10px"><strong>Status:</strong> <span style="color:' + (r.status === 'concluido' ? 'var(--green)' : 'var(--blue-h)') + ';font-weight:700">' + (r.status || 'pendente') + '</span></div>' +
-      (r.telefone ? '<div style="margin-top:14px"><a class="link-btn link-wa" href="https://wa.me/55' + r.telefone.replace(/\D/g, '') + '" target="_blank">WhatsApp</a></div>' : '');
+      (r.telefone ? '<div style="margin-top:14px"><a class="link-btn link-wa" href="https://wa.me/55' + String(r.telefone).replace(/\D/g, '') + '" target="_blank">WhatsApp</a></div>' : '');
   }
 
   // Esconder botoes para gerente (so pode visualizar)
