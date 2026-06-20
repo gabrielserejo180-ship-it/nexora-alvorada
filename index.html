@@ -1374,10 +1374,7 @@ function grafMapaBrasil() {
   }
 }
 
-function grafRender() {
-  // data = [{label, valor, cor}]
-  var total = 0;
-  for (var i = 0; i < data.length; i++) total += data[i].valor;
+function grafDonut(data, containerId) {
   if (total <= 0) {
     var el = document.getElementById(containerId);
     if (el) el.innerHTML = '<div class="empty-state">Sem dados suficientes.</div>';
@@ -1446,14 +1443,210 @@ function grafBarrasH(data, containerId) {
   if (cont) cont.innerHTML = svg;
 }
 
+// --- FATURAMENTO COM FILTROS -----------------
+var _grafFatVnd = [];
+
+function grafFatRender(vndList) {
+  if (vndList) _grafFatVnd = vndList;
+  var el = document.getElementById('graf-fat');
+  if (!el) return;
+
+  var hoje = new Date();
+  var modo = (document.getElementById('fat-modo') ? document.getElementById('fat-modo').value : 'mes');
+  var anoSel = parseInt(document.getElementById('fat-ano') ? document.getElementById('fat-ano').value : hoje.getFullYear());
+  var mesSel = parseInt(document.getElementById('fat-mes') ? document.getElementById('fat-mes').value : (hoje.getMonth() + 1));
+
+  var MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  var MESES_FULL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+  // Anos disponíveis a partir dos dados
+  var anosSet = {};
+  _grafFatVnd.forEach(function(v) {
+    var t = dashParseData(v.data);
+    if (t) anosSet[new Date(t).getFullYear()] = 1;
+  });
+  if (!anosSet[hoje.getFullYear()]) anosSet[hoje.getFullYear()] = 1;
+  var anos = Object.keys(anosSet).map(Number).sort();
+
+  // Mostra/oculta seletor de mês
+  var mostrarMes = (modo === 'dia' || modo === 'semana');
+
+  // Monta controles
+  var ctrlHtml =
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">' +
+    // Modo
+    '<div style="display:flex;background:var(--s3);border-radius:10px;padding:3px;gap:2px">' +
+    ['dia','semana','mes','ano'].map(function(m) {
+      var labels = { dia:'Dia', semana:'Semana', mes:'Mês', ano:'Ano' };
+      var ativo = (modo === m);
+      return '<button onclick="document.getElementById(\'fat-modo\').value=\'' + m + '\';grafFatRender()" ' +
+        'style="padding:6px 14px;border:none;border-radius:8px;font-size:12px;font-weight:' + (ativo?'700':'500') + ';cursor:pointer;font-family:var(--ff);' +
+        'background:' + (ativo?'var(--blue)':'none') + ';color:' + (ativo?'#fff':'var(--txt2)') + '">' + labels[m] + '</button>';
+    }).join('') +
+    '</div>' +
+    // Ano
+    '<select id="fat-ano" onchange="grafFatRender()" style="background:var(--s1);border:1px solid var(--line2);border-radius:9px;padding:7px 12px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none;cursor:pointer">' +
+    anos.map(function(a) { return '<option value="' + a + '"' + (a===anoSel?' selected':'') + '>' + a + '</option>'; }).join('') +
+    '</select>' +
+    // Mês (só para dia/semana)
+    '<select id="fat-mes" onchange="grafFatRender()" style="background:var(--s1);border:1px solid var(--line2);border-radius:9px;padding:7px 12px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none;cursor:pointer;' + (mostrarMes?'':'display:none') + '">' +
+    MESES_FULL.map(function(m,i) { return '<option value="' + (i+1) + '"' + ((i+1)===mesSel?' selected':'') + '>' + m + '</option>'; }).join('') +
+    '</select>' +
+    // Input hidden para modo
+    '<input type="hidden" id="fat-modo" value="' + modo + '">' +
+    '</div>';
+
+  // Monta dados do gráfico conforme modo
+  var itens = []; // [{label, valor, rep: {nome: valor}}]
+
+  if (modo === 'dia') {
+    // Cada dia do mês selecionado
+    var diasNoMes = new Date(anoSel, mesSel, 0).getDate();
+    for (var d = 1; d <= diasNoMes; d++) {
+      itens.push({ label: String(d).padStart(2,'0'), valor: 0, reps: {} });
+    }
+    _grafFatVnd.forEach(function(v) {
+      var t = dashParseData(v.data);
+      if (!t) return;
+      var dv = new Date(t);
+      if (dv.getFullYear() !== anoSel || (dv.getMonth()+1) !== mesSel) return;
+      var idx = dv.getDate() - 1;
+      itens[idx].valor += Number(v.valor || 0);
+      var r = v.representante || 'N/I';
+      itens[idx].reps[r] = (itens[idx].reps[r] || 0) + Number(v.valor || 0);
+    });
+    // Remove dias vazios do final
+    while (itens.length > 1 && itens[itens.length-1].valor === 0) itens.pop();
+
+  } else if (modo === 'semana') {
+    // Semanas do mês selecionado (S1..S5)
+    for (var s = 1; s <= 5; s++) itens.push({ label: 'S'+s, valor: 0, reps: {}, semana: s });
+    _grafFatVnd.forEach(function(v) {
+      var t = dashParseData(v.data);
+      if (!t) return;
+      var dv = new Date(t);
+      if (dv.getFullYear() !== anoSel || (dv.getMonth()+1) !== mesSel) return;
+      var sem = Math.ceil(dv.getDate() / 7); if (sem > 5) sem = 5;
+      itens[sem-1].valor += Number(v.valor || 0);
+      var r = v.representante || 'N/I';
+      itens[sem-1].reps[r] = (itens[sem-1].reps[r] || 0) + Number(v.valor || 0);
+    });
+    while (itens.length > 1 && itens[itens.length-1].valor === 0) itens.pop();
+
+  } else if (modo === 'mes') {
+    // Meses do ano selecionado
+    for (var m2 = 0; m2 < 12; m2++) itens.push({ label: MESES[m2], valor: 0, reps: {} });
+    _grafFatVnd.forEach(function(v) {
+      var t = dashParseData(v.data);
+      if (!t) return;
+      var dv = new Date(t);
+      if (dv.getFullYear() !== anoSel) return;
+      itens[dv.getMonth()].valor += Number(v.valor || 0);
+      var r = v.representante || 'N/I';
+      itens[dv.getMonth()].reps[r] = (itens[dv.getMonth()].reps[r] || 0) + Number(v.valor || 0);
+    });
+
+  } else if (modo === 'ano') {
+    // Todos os anos disponíveis
+    anos.forEach(function(a) { itens.push({ label: String(a), valor: 0, reps: {}, ano: a }); });
+    _grafFatVnd.forEach(function(v) {
+      var t = dashParseData(v.data);
+      if (!t) return;
+      var dv = new Date(t);
+      var idx2 = anos.indexOf(dv.getFullYear());
+      if (idx2 < 0) return;
+      itens[idx2].valor += Number(v.valor || 0);
+      var r = v.representante || 'N/I';
+      itens[idx2].reps[r] = (itens[idx2].reps[r] || 0) + Number(v.valor || 0);
+    });
+  }
+
+  // Gera SVG de barras
+  var max = 0;
+  itens.forEach(function(it) { if (it.valor > max) max = it.valor; });
+
+  var svgHtml = '';
+  if (max <= 0) {
+    svgHtml = '<div class="empty-state">Sem vendas no período selecionado.</div>';
+  } else {
+    var W = 620, H = 220, padB = 30, padT = 20, padL = 60, padR = 10;
+    var n = itens.length;
+    var barGap = Math.max(4, Math.floor((W - padL - padR) / n * 0.18));
+    var barW = Math.max(8, Math.floor((W - padL - padR - barGap * (n + 1)) / n));
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;display:block" preserveAspectRatio="xMidYMid meet">';
+
+    // Linhas de grade
+    for (var g = 1; g <= 4; g++) {
+      var gy = padT + ((H - padB - padT) / 4) * (4 - g);
+      var gval = Math.round((max / 4) * g);
+      svg += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '" stroke="var(--line)" stroke-width="1"></line>';
+      svg += '<text x="' + (padL - 5) + '" y="' + (gy + 4) + '" text-anchor="end" font-size="9" fill="var(--txt3)" font-family="DM Sans,Arial,sans-serif">R$' + (gval >= 1000 ? Math.round(gval/1000)+'k' : gval) + '</text>';
+    }
+
+    // Barras
+    for (var bi = 0; bi < n; bi++) {
+      var item = itens[bi];
+      var barH2 = max > 0 ? Math.round(((H - padB - padT) * item.valor) / max) : 0;
+      if (item.valor > 0 && barH2 < 4) barH2 = 4;
+      var bx = padL + barGap + bi * (barW + barGap);
+      var by = H - padB - barH2;
+      // Hoje ou mês atual destaca em azul mais vivo
+      var isAtual = (modo === 'dia' && parseInt(item.label) === hoje.getDate() && anoSel === hoje.getFullYear() && mesSel === (hoje.getMonth()+1)) ||
+                    (modo === 'mes' && bi === hoje.getMonth() && anoSel === hoje.getFullYear()) ||
+                    (modo === 'semana' && item.semana === Math.ceil(hoje.getDate()/7) && anoSel === hoje.getFullYear() && mesSel === (hoje.getMonth()+1)) ||
+                    (modo === 'ano' && item.ano === hoje.getFullYear());
+      var cor = isAtual ? 'var(--blue-h)' : 'var(--blue)';
+      svg += '<rect x="' + bx + '" y="' + by + '" width="' + barW + '" height="' + barH2 + '" rx="4" fill="' + cor + '"></rect>';
+      if (item.valor > 0) {
+        var lblVal = item.valor >= 1000 ? 'R$' + (item.valor/1000).toFixed(1).replace('.',',') + 'k' : 'R$' + Math.round(item.valor);
+        svg += '<text x="' + (bx + barW/2) + '" y="' + (by - 5) + '" text-anchor="middle" font-size="9" fill="var(--txt2)" font-family="DM Sans,Arial,sans-serif">' + lblVal + '</text>';
+      }
+      // Label eixo X (mostrar menos labels se muitas barras)
+      var showLabel = (n <= 12) || (n <= 31 && bi % 5 === 0) || bi === n-1 || bi === 0;
+      if (showLabel) {
+        svg += '<text x="' + (bx + barW/2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10" fill="var(--txt3)" font-family="DM Sans,Arial,sans-serif">' + item.label + '</text>';
+      }
+    }
+
+    svg += '</svg>';
+    svgHtml = svg;
+
+    // Detalhamento por representante do período (top 3 ou todos)
+    var repTotais = {};
+    itens.forEach(function(it) {
+      Object.keys(it.reps).forEach(function(r) {
+        repTotais[r] = (repTotais[r] || 0) + it.reps[r];
+      });
+    });
+    var repArr = Object.keys(repTotais).map(function(r) { return { nome: r, valor: repTotais[r] }; }).sort(function(a,b){return b.valor-a.valor;});
+    var fatTotal = itens.reduce(function(acc, it) { return acc + it.valor; }, 0);
+
+    if (repArr.length > 0) {
+      svgHtml += '<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px">';
+      repArr.forEach(function(rep) {
+        var pct = fatTotal > 0 ? Math.round((rep.valor/fatTotal)*100) : 0;
+        var iniciais = rep.nome.split(' ').slice(0,2).map(function(p){return p[0]||'';}).join('').toUpperCase();
+        svgHtml += '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--s1);border:1px solid var(--line);border-radius:10px;flex:1;min-width:160px">' +
+          '<div style="width:30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">' + iniciais + '</div>' +
+          '<div style="min-width:0">' +
+          '<div style="font-size:12px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + rep.nome + '</div>' +
+          '<div style="font-size:11px;color:var(--green);font-weight:700">R$ ' + rep.valor.toLocaleString('pt-BR',{minimumFractionDigits:2}) + ' <span style="color:var(--txt3);font-weight:400">(' + pct + '%)</span></div>' +
+          '</div></div>';
+      });
+      svgHtml += '</div>';
+    }
+  }
+
+  el.innerHTML = ctrlHtml + svgHtml;
+}
+
 function grafRender() {
   var vnd = VND_DB || [];
   var ret = RET_DB || [];
   var cli = CLI_DB || [];
 
-  // 1. Faturamento mensal (reutiliza função existente)
-  var elFat = document.getElementById('graf-fat');
-  if (elFat) elFat.innerHTML = dashGraficoFaturamento(vnd);
+  // 1. Faturamento com filtros interativos
+  grafFatRender(vnd);
 
   // 2. Vendas por forma de pagamento (donut)
   var pgtoMap = {};
