@@ -1170,7 +1170,6 @@ function buildPage(id) {
       body: '<div class="usr-topbar">' +
         '<input class="usr-search" id="usr-busca" placeholder="Buscar...">' +
         '<button class="btn-new" id="usr-novo-btn" onclick="usrNovo()">+ Novo</button>' +
-        '<button class="btn-save" id="usr-salvar-btn" onclick="usrSalvarPlanilha()">Salvar na Planilha</button>' +
         '</div>' +
         '<div class="usr-stats" id="usr-stats"></div>' +
         '<div class="usr-table" id="usr-lista"></div>'
@@ -2122,8 +2121,6 @@ function usrRender() {
   if (bc) bc.oninput = usrRender;
   var novoBtn = document.getElementById('usr-novo-btn');
   if (novoBtn) novoBtn.addEventListener('click', usrNovo);
-  // Nao registrar addEventListener aqui - o botao ja tem onclick="usrSalvarPlanilha()"
-  // no HTML. Registrar os dois fazia a funcao disparar 2x e duplicar na planilha.
 }
 
 function usrAcao(act, login) {
@@ -2236,51 +2233,6 @@ function usrFecharModal() {
   if (modal) modal.style.display = 'none';
 }
 
-function usrSalvarPlanilha() {
-  var btn = document.getElementById('usr-salvar-btn');
-  if (btn && btn.disabled) return; // evita duplo clique disparando 2x
-  if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
-
-  // Remove duplicados que ja possam existir (de cadastros antigos com bug)
-  // antes de regravar a planilha do zero.
-  USR_DB = usrDedup(USR_DB);
-  lsSet('nxr_usr', JSON.stringify(USR_DB));
-
-  sheetsLimpar('Usuarios')
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      if (!d || !d.ok) throw new Error(d && d.msg ? d.msg : 'Falha ao limpar planilha');
-
-      var total = USR_DB.length;
-      var concluidos = 0;
-      var falhas = 0;
-
-      if (total === 0) {
-        if (btn) { btn.disabled = false; btn.textContent = 'Salvar na Planilha'; }
-        showToast('Nenhum usuario para salvar.');
-        return;
-      }
-
-      for (var i = 0; i < total; i++) {
-        sheetsSalvarLinha('Usuarios', USR_DB[i], function(ok) {
-          concluidos++;
-          if (!ok) falhas++;
-          if (concluidos === total) {
-            if (btn) { btn.disabled = false; btn.textContent = 'Salvar na Planilha'; }
-            if (falhas > 0) {
-              showToast(falhas + ' usuario(s) falharam ao salvar.', 'erro');
-            } else {
-              showToast('Usuarios salvos na planilha!');
-            }
-          }
-        });
-      }
-    })
-    .catch(function(err) {
-      if (btn) { btn.disabled = false; btn.textContent = 'Salvar na Planilha'; }
-      showToast('Erro ao salvar: ' + (err && err.message ? err.message : 'falha de conexao'), 'erro');
-    });
-}
 
 // --- AUDITORIA -----------------------------
 function audRender() {
