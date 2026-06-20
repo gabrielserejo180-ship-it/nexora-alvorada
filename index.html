@@ -1951,11 +1951,14 @@ function retSalvar() {
   RET_DB.push(novo);
   lsSet('nxr_ret', JSON.stringify(RET_DB));
   sheetsSalvarLinha('Retornos', novo, function(ok, err) {
-    if (!ok) showToast('Retorno salvo localmente. Planilha: ' + (err || 'erro'), 'erro');
+    if (ok) {
+      showToast('Retorno salvo na planilha!');
+    } else {
+      showToast('ERRO ao salvar na planilha: ' + (err || 'falha desconhecida'), 'erro');
+    }
   });
   var modal = document.getElementById('ret-modal');
   if (modal) modal.style.display = 'none';
-  showToast('Retorno agendado!');
   setTimeout(retRender, 100);
   setTimeout(notifVerificar, 200);
 }
