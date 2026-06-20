@@ -440,7 +440,7 @@ document.getElementById('js-status').style.display='none';
         <label>Forma de Pagamento</label>
         <select id="vnd-pgto" onchange="vndToggleParcelas()" style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
           <option>Boleto</option><option>Cartao de Credito</option><option>Cartao de Debito</option>
-          <option>PIX</option><option>Dinheiro</option><option>Financiamento</option><option>Consorcio</option>
+          <option>Cheque</option><option>PIX</option><option>Dinheiro</option><option>Financiamento</option><option>Consorcio</option>
         </select>
       </div>
       <!-- Parcelas - aparece so para Boleto e Cartao de Credito -->
@@ -973,6 +973,7 @@ var NAV_MAP = {
     { id: 'clientes', label: 'Todos os Clientes' },
     { id: 'retornos', label: 'Retornos' },
     { id: 'comercial', label: 'Comercial' },
+    { id: 'graficos', label: 'Graficos' },
     { id: 'relatorio', label: 'Relatorio' },
     { id: 'pecas', label: 'Consulta de Pecas' },
     { id: 'consultas', label: 'Consultas' },
@@ -985,6 +986,7 @@ var NAV_MAP = {
     { id: 'clientes', label: 'Todos os Clientes' },
     { id: 'retornos', label: 'Retornos' },
     { id: 'comercial', label: 'Comercial' },
+    { id: 'graficos', label: 'Graficos' },
     { id: 'relatorio', label: 'Relatorio' },
     { id: 'pecas', label: 'Consulta de Pecas' },
     { id: 'consultas', label: 'Consultas' },
@@ -1046,6 +1048,7 @@ function navigate(id) {
     if (id === 'auditoria') setTimeout(audRender, 50);
     if (id === 'config') setTimeout(cfgCarregar, 50);
     if (id === 'relatorio') setTimeout(relGerar, 50);
+    if (id === 'graficos') setTimeout(grafRender, 50);
     if (id === 'clientes') {
       setTimeout(cliRender, 50);
       // Buscar dados frescos ao abrir Clientes
@@ -1131,6 +1134,367 @@ function dashGraficoFaturamento(vndList) {
   }
   svg += '</svg>';
   return svg;
+}
+
+// --- GRAFICOS --------------------------------
+
+// Coordenadas SVG aproximadas de cada UF no mapa do Brasil (viewBox 0 0 600 660)
+var UF_POS = {
+  'AC': [55,  390], 'AL': [500, 300], 'AM': [155, 310], 'AP': [345,  90],
+  'BA': [430, 350], 'CE': [490, 210], 'DF': [375, 385], 'ES': [490, 420],
+  'GO': [355, 390], 'MA': [390, 210], 'MG': [420, 420], 'MS': [290, 470],
+  'MT': [265, 370], 'PA': [310, 210], 'PB': [520, 250], 'PE': [490, 270],
+  'PI': [440, 250], 'PR': [330, 520], 'RJ': [460, 460], 'RN': [530, 225],
+  'RO': [165, 390], 'RR': [190, 130], 'RS': [305, 590], 'SC': [345, 555],
+  'SE': [510, 315], 'SP': [380, 480], 'TO': [375, 295]
+};
+
+function grafMapaBrasil() {
+  var vnd = VND_DB || [];
+  var cli = CLI_DB || [];
+  var ret = RET_DB || [];
+
+  // Monta índice cliente->UF e cliente->representante
+  var cliUF = {}, cliRep = {};
+  for (var i = 0; i < cli.length; i++) {
+    var uf = (cli[i].uf || '').toUpperCase().trim();
+    var nome = cli[i].nome || cli[i].fantasia || '';
+    if (nome) { cliUF[nome] = uf; cliRep[nome] = cli[i].representante || ''; }
+  }
+
+  // Monta mapa UF -> { clientes, cidades, reps: {rep -> {vendas, valor, retornos}} }
+  var ufMap = {};
+  for (var ci = 0; ci < cli.length; ci++) {
+    var ufc = (cli[ci].uf || '').toUpperCase().trim();
+    if (!ufc || !UF_POS[ufc]) continue;
+    if (!ufMap[ufc]) ufMap[ufc] = { clientes: 0, cidades: {}, reps: {} };
+    ufMap[ufc].clientes++;
+    var cid = cli[ci].cidade || 'Desconhecida';
+    ufMap[ufc].cidades[cid] = (ufMap[ufc].cidades[cid] || 0) + 1;
+  }
+
+  // Vendas por UF/rep
+  for (var vi = 0; vi < vnd.length; vi++) {
+    var vcli = vnd[vi].cliente || '';
+    var vuf = (cliUF[vcli] || '').toUpperCase().trim();
+    if (!vuf || !UF_POS[vuf]) continue;
+    if (!ufMap[vuf]) ufMap[vuf] = { clientes: 0, cidades: {}, reps: {} };
+    var rep = vnd[vi].representante || cliRep[vcli] || 'Desconhecido';
+    if (!ufMap[vuf].reps[rep]) ufMap[vuf].reps[rep] = { vendas: 0, valor: 0, retornos: 0 };
+    ufMap[vuf].reps[rep].vendas++;
+    ufMap[vuf].reps[rep].valor += Number(vnd[vi].valor || 0);
+  }
+
+  // Retornos por UF/rep
+  for (var ri = 0; ri < ret.length; ri++) {
+    var rcli = ret[ri].cliente || '';
+    var ruf = (cliUF[rcli] || '').toUpperCase().trim();
+    if (!ruf || !UF_POS[ruf]) continue;
+    if (!ufMap[ruf]) ufMap[ruf] = { clientes: 0, cidades: {}, reps: {} };
+    var rrep = ret[ri].representante || cliRep[rcli] || 'Desconhecido';
+    if (!ufMap[ruf].reps[rrep]) ufMap[ruf].reps[rrep] = { vendas: 0, valor: 0, retornos: 0 };
+    ufMap[ruf].reps[rrep].retornos++;
+  }
+
+  var maxCli = 0;
+  Object.keys(ufMap).forEach(function(u) { if (ufMap[u].clientes > maxCli) maxCli = ufMap[u].clientes; });
+
+  var W = 600, H = 660;
+  var svg = '<svg id="svg-mapa-brasil" viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;max-width:' + W + 'px;height:auto;display:block;cursor:default" preserveAspectRatio="xMidYMid meet">';
+
+  // Pontos cinza para estados sem dados
+  Object.keys(UF_POS).forEach(function(uf) {
+    if (ufMap[uf]) return;
+    var pos = UF_POS[uf];
+    svg += '<circle cx="' + pos[0] + '" cy="' + pos[1] + '" r="9" fill="var(--s3)" opacity="0.5"></circle>';
+    svg += '<text x="' + pos[0] + '" y="' + (pos[1] + 4) + '" text-anchor="middle" font-size="8" fill="var(--txt3)" font-family="DM Sans,Arial,sans-serif">' + uf + '</text>';
+  });
+
+  // Pontos coloridos para estados com dados
+  Object.keys(ufMap).forEach(function(uf) {
+    var pos = UF_POS[uf];
+    if (!pos) return;
+    var d = ufMap[uf];
+    var temVenda = Object.keys(d.reps).some(function(r) { return d.reps[r].vendas > 0; });
+    var r = maxCli > 0 ? Math.round(12 + (d.clientes / maxCli) * 24) : 16;
+    var cor = temVenda ? 'var(--blue-h)' : 'var(--cyan)';
+    var opac = temVenda ? '0.85' : '0.55';
+    svg += '<circle class="mapa-ponto" cx="' + pos[0] + '" cy="' + pos[1] + '" r="' + r + '"' +
+      ' fill="' + cor + '" opacity="' + opac + '" stroke="var(--s1)" stroke-width="2"' +
+      ' data-uf="' + uf + '" style="cursor:pointer"></circle>';
+    svg += '<text x="' + pos[0] + '" y="' + (pos[1] + 4) + '" text-anchor="middle" font-size="9" font-weight="700" fill="#fff" font-family="DM Sans,Arial,sans-serif" pointer-events="none">' + uf + '</text>';
+  });
+
+  // Legenda
+  svg += '<circle cx="24" cy="' + (H - 80) + '" r="8" fill="var(--blue-h)" opacity="0.85"></circle>';
+  svg += '<text x="38" y="' + (H - 76) + '" font-size="10" fill="var(--txt2)" font-family="DM Sans,Arial,sans-serif">Com vendas registradas</text>';
+  svg += '<circle cx="24" cy="' + (H - 58) + '" r="8" fill="var(--cyan)" opacity="0.55"></circle>';
+  svg += '<text x="38" y="' + (H - 54) + '" font-size="10" fill="var(--txt2)" font-family="DM Sans,Arial,sans-serif">Apenas clientes (sem venda)</text>';
+  svg += '<circle cx="24" cy="' + (H - 36) + '" r="5" fill="var(--s3)" opacity="0.5"></circle>';
+  svg += '<text x="38" y="' + (H - 32) + '" font-size="10" fill="var(--txt3)" font-family="DM Sans,Arial,sans-serif">Sem dados</text>';
+  svg += '<text x="' + (W - 10) + '" y="' + (H - 8) + '" text-anchor="end" font-size="9" fill="var(--txt3)" font-family="DM Sans,Arial,sans-serif">Clique num estado para ver detalhes</text>';
+  svg += '</svg>';
+
+  var cont = document.getElementById('graf-mapa');
+  if (!cont) return;
+  cont.style.position = 'relative';
+  cont.innerHTML = svg;
+
+  // Painel lateral de detalhes (criado dinamicamente)
+  var painel = document.getElementById('graf-mapa-painel');
+  if (!painel) {
+    painel = document.createElement('div');
+    painel.id = 'graf-mapa-painel';
+    painel.style.cssText = 'display:none;margin-top:14px;background:var(--s2);border:1px solid var(--line2);border-radius:14px;padding:18px 20px;animation:fadeIn .2s ease';
+    cont.parentNode.insertBefore(painel, cont.nextSibling);
+  }
+
+  // Tooltip hover simples
+  var tip = document.getElementById('graf-mapa-tip');
+
+  var pontos = cont.querySelectorAll('.mapa-ponto');
+  var ufAtiva = null;
+
+  for (var p = 0; p < pontos.length; p++) {
+    (function(el) {
+      var uf = el.getAttribute('data-uf');
+
+      // Hover: tooltip leve
+      el.addEventListener('mouseenter', function() {
+        var d = ufMap[uf];
+        if (!d || !tip) return;
+        var totalVendas = 0, totalValor = 0, totalRet = 0;
+        Object.keys(d.reps).forEach(function(r) { totalVendas += d.reps[r].vendas; totalValor += d.reps[r].valor; totalRet += d.reps[r].retornos; });
+        tip.innerHTML =
+          '<strong style="color:var(--txt)">' + uf + '</strong><br>' +
+          'Clientes: ' + d.clientes + ' &nbsp;|&nbsp; Vendas: ' + totalVendas + '<br>' +
+          (totalValor > 0 ? 'Fat.: <span style="color:var(--green)">R$ ' + totalValor.toLocaleString('pt-BR', {minimumFractionDigits:2}) + '</span><br>' : '') +
+          '<span style="color:var(--txt3);font-size:10px">Clique para detalhes</span>';
+        tip.style.display = 'block';
+        if (uf !== ufAtiva) el.setAttribute('opacity', '1');
+      });
+      el.addEventListener('mousemove', function(e) {
+        if (!tip) return;
+        var rect = cont.getBoundingClientRect();
+        var tx = e.clientX - rect.left + 14;
+        var ty = e.clientY - rect.top - 10;
+        if (tx + 190 > rect.width) tx = e.clientX - rect.left - 195;
+        tip.style.left = tx + 'px'; tip.style.top = ty + 'px';
+      });
+      el.addEventListener('mouseleave', function() {
+        if (tip) tip.style.display = 'none';
+        if (uf !== ufAtiva) el.setAttribute('opacity', ufMap[uf] && Object.keys(ufMap[uf].reps).some(function(r){return ufMap[uf].reps[r].vendas>0;}) ? '0.85' : '0.55');
+      });
+
+      // Click: abre painel detalhado abaixo
+      el.addEventListener('click', function() {
+        // Reseta todos
+        pontos.forEach(function(pt) {
+          var puf = pt.getAttribute('data-uf');
+          var pTemVenda = ufMap[puf] && Object.keys(ufMap[puf].reps).some(function(r){return ufMap[puf].reps[r].vendas>0;});
+          pt.setAttribute('opacity', pTemVenda ? '0.85' : '0.55');
+          pt.setAttribute('stroke', 'var(--s1)');
+          pt.setAttribute('stroke-width', '2');
+        });
+
+        if (ufAtiva === uf) {
+          // Toggle: fecha se clicar no mesmo
+          ufAtiva = null;
+          painel.style.display = 'none';
+          return;
+        }
+        ufAtiva = uf;
+
+        // Destaca o ponto selecionado
+        el.setAttribute('opacity', '1');
+        el.setAttribute('stroke', 'var(--blue-h)');
+        el.setAttribute('stroke-width', '4');
+
+        var d = ufMap[uf];
+        if (!d) { painel.style.display = 'none'; return; }
+
+        // Monta lista de representantes ordenada por faturamento
+        var repsArr = Object.keys(d.reps).map(function(r) {
+          return { nome: r, vendas: d.reps[r].vendas, valor: d.reps[r].valor, retornos: d.reps[r].retornos };
+        }).sort(function(a, b) { return b.valor - a.valor; });
+
+        var totalVendas = 0, totalValor = 0, totalRet = 0;
+        repsArr.forEach(function(r) { totalVendas += r.vendas; totalValor += r.valor; totalRet += r.retornos; });
+
+        var cidades = Object.keys(d.cidades).sort(function(a,b){return d.cidades[b]-d.cidades[a];}).slice(0,6).join(', ');
+
+        var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">' +
+          '<div>' +
+          '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue-h);margin-bottom:2px">Estado selecionado</div>' +
+          '<div style="font-size:18px;font-weight:700;color:var(--txt)">' + uf + '</div>' +
+          (cidades ? '<div style="font-size:11px;color:var(--txt3);margin-top:2px">' + cidades + '</div>' : '') +
+          '</div>' +
+          '<button onclick="document.getElementById(\'graf-mapa-painel\').style.display=\'none\'" style="background:none;border:1px solid var(--line2);border-radius:8px;color:var(--txt3);padding:5px 12px;font-size:12px;cursor:pointer;font-family:var(--ff)">Fechar</button>' +
+          '</div>' +
+          // Totais resumidos
+          '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:16px">' +
+          '<div style="background:var(--s1);border:1px solid var(--line);border-radius:10px;padding:12px"><div style="font-size:18px;font-weight:700">' + d.clientes + '</div><div style="font-size:10px;color:var(--txt2)">Clientes</div></div>' +
+          '<div style="background:var(--s1);border:1px solid var(--line);border-radius:10px;padding:12px"><div style="font-size:18px;font-weight:700">' + totalVendas + '</div><div style="font-size:10px;color:var(--txt2)">Vendas</div></div>' +
+          '<div style="background:var(--s1);border:1px solid var(--line);border-radius:10px;padding:12px"><div style="font-size:18px;font-weight:700">' + totalRet + '</div><div style="font-size:10px;color:var(--txt2)">Retornos</div></div>' +
+          '<div style="background:var(--s1);border:1px solid var(--line);border-radius:10px;padding:12px"><div style="font-size:15px;font-weight:700;color:var(--green)">R$ ' + totalValor.toLocaleString('pt-BR', {minimumFractionDigits:2}) + '</div><div style="font-size:10px;color:var(--txt2)">Faturamento</div></div>' +
+          '</div>' +
+          '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--txt3);margin-bottom:10px">Representantes nesta região</div>';
+
+        if (!repsArr.length) {
+          html += '<div style="color:var(--txt3);font-size:13px">Nenhum representante com dados neste estado.</div>';
+        } else {
+          for (var ri2 = 0; ri2 < repsArr.length; ri2++) {
+            var rep = repsArr[ri2];
+            var iniciais = rep.nome.split(' ').slice(0,2).map(function(p){return p[0]||'';}).join('').toUpperCase();
+            var pctVal = totalValor > 0 ? Math.round((rep.valor / totalValor) * 100) : 0;
+            html += '<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--s1);border:1px solid var(--line);border-radius:11px;margin-bottom:8px">' +
+              '<div style="width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">' + iniciais + '</div>' +
+              '<div style="flex:1;min-width:0">' +
+              '<div style="font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + rep.nome + '</div>' +
+              '<div style="display:flex;gap:12px;margin-top:4px;flex-wrap:wrap">' +
+              '<span style="font-size:11px;color:var(--txt2)">Vendas: <strong style="color:var(--txt)">' + rep.vendas + '</strong></span>' +
+              '<span style="font-size:11px;color:var(--txt2)">Retornos: <strong style="color:var(--txt)">' + rep.retornos + '</strong></span>' +
+              '<span style="font-size:11px;color:var(--txt2)">Fat.: <strong style="color:var(--green)">R$ ' + rep.valor.toLocaleString('pt-BR', {minimumFractionDigits:2}) + '</strong></span>' +
+              '</div>' +
+              // Barra de participação
+              '<div style="margin-top:6px;height:4px;background:var(--s3);border-radius:2px;overflow:hidden">' +
+              '<div style="height:4px;background:var(--blue-h);border-radius:2px;width:' + pctVal + '%"></div>' +
+              '</div>' +
+              '<div style="font-size:10px;color:var(--txt3);margin-top:2px">' + pctVal + '% do faturamento do estado</div>' +
+              '</div>' +
+              '</div>';
+          }
+        }
+
+        painel.innerHTML = html;
+        painel.style.display = 'block';
+        painel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    })(pontos[p]);
+  }
+}
+
+function grafRender() {
+  // data = [{label, valor, cor}]
+  var total = 0;
+  for (var i = 0; i < data.length; i++) total += data[i].valor;
+  if (total <= 0) {
+    var el = document.getElementById(containerId);
+    if (el) el.innerHTML = '<div class="empty-state">Sem dados suficientes.</div>';
+    return;
+  }
+  var w = 260, h = 200, cx = 90, cy = 96, r = 76, ri = 44;
+  var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;max-width:' + w + 'px;height:auto;display:block" preserveAspectRatio="xMidYMid meet">';
+  var startAngle = -Math.PI / 2;
+  for (var j = 0; j < data.length; j++) {
+    var slice = (data[j].valor / total) * 2 * Math.PI;
+    var endAngle = startAngle + slice;
+    var x1 = cx + r * Math.cos(startAngle), y1 = cy + r * Math.sin(startAngle);
+    var x2 = cx + r * Math.cos(endAngle), y2 = cy + r * Math.sin(endAngle);
+    var ix1 = cx + ri * Math.cos(startAngle), iy1 = cy + ri * Math.sin(startAngle);
+    var ix2 = cx + ri * Math.cos(endAngle), iy2 = cy + ri * Math.sin(endAngle);
+    var large = slice > Math.PI ? 1 : 0;
+    svg += '<path d="M ' + ix1 + ' ' + iy1 + ' L ' + x1 + ' ' + y1 +
+      ' A ' + r + ' ' + r + ' 0 ' + large + ' 1 ' + x2 + ' ' + y2 +
+      ' L ' + ix2 + ' ' + iy2 +
+      ' A ' + ri + ' ' + ri + ' 0 ' + large + ' 0 ' + ix1 + ' ' + iy1 + ' Z"' +
+      ' fill="' + data[j].cor + '" stroke="var(--s1)" stroke-width="2"></path>';
+    startAngle = endAngle;
+  }
+  // Total no centro
+  svg += '<text x="' + cx + '" y="' + (cy - 6) + '" text-anchor="middle" font-size="20" font-weight="700" fill="var(--txt)" font-family="DM Sans,Arial,sans-serif">' + total + '</text>';
+  svg += '<text x="' + cx + '" y="' + (cy + 12) + '" text-anchor="middle" font-size="10" fill="var(--txt3)" font-family="DM Sans,Arial,sans-serif">total</text>';
+  // Legenda
+  var ly = 20;
+  for (var k = 0; k < data.length; k++) {
+    var pct = Math.round((data[k].valor / total) * 100);
+    svg += '<rect x="' + (w - 160) + '" y="' + ly + '" width="10" height="10" rx="3" fill="' + data[k].cor + '"></rect>';
+    svg += '<text x="' + (w - 144) + '" y="' + (ly + 9) + '" font-size="11" fill="var(--txt2)" font-family="DM Sans,Arial,sans-serif">' + data[k].label + ' (' + pct + '%)</text>';
+    ly += 22;
+  }
+  svg += '</svg>';
+  var cont = document.getElementById(containerId);
+  if (cont) cont.innerHTML = svg;
+}
+
+function grafBarrasH(data, containerId) {
+  // data = [{label, valor}], horizontal bars
+  if (!data.length) {
+    var el = document.getElementById(containerId);
+    if (el) el.innerHTML = '<div class="empty-state">Sem dados.</div>';
+    return;
+  }
+  var max = 0;
+  for (var i = 0; i < data.length; i++) if (data[i].valor > max) max = data[i].valor;
+  var w = 500, rowH = 36, pad = 10, labelW = 120, barAreaW = w - labelW - pad * 2;
+  var h = data.length * rowH + pad * 2;
+  var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;height:auto;display:block" preserveAspectRatio="xMidYMid meet">';
+  var CORES = ['var(--blue-h)', 'var(--cyan)', 'var(--green)', 'var(--amber)', 'var(--red)', '#818CF8', '#F472B6', '#34D399'];
+  for (var j = 0; j < data.length; j++) {
+    var y = pad + j * rowH;
+    var barW = max > 0 ? Math.round((data[j].valor / max) * barAreaW) : 0;
+    if (data[j].valor > 0 && barW < 4) barW = 4;
+    var cor = CORES[j % CORES.length];
+    svg += '<text x="' + (labelW - 8) + '" y="' + (y + 16) + '" text-anchor="end" font-size="11" fill="var(--txt2)" font-family="DM Sans,Arial,sans-serif">' + data[j].label + '</text>';
+    svg += '<rect x="' + labelW + '" y="' + (y + 4) + '" width="' + barW + '" height="20" rx="4" fill="' + cor + '"></rect>';
+    if (data[j].valor > 0) {
+      svg += '<text x="' + (labelW + barW + 6) + '" y="' + (y + 17) + '" font-size="11" fill="var(--txt2)" font-family="DM Sans,Arial,sans-serif">' + data[j].valor + '</text>';
+    }
+  }
+  svg += '</svg>';
+  var cont = document.getElementById(containerId);
+  if (cont) cont.innerHTML = svg;
+}
+
+function grafRender() {
+  var vnd = VND_DB || [];
+  var ret = RET_DB || [];
+  var cli = CLI_DB || [];
+
+  // 1. Faturamento mensal (reutiliza função existente)
+  var elFat = document.getElementById('graf-fat');
+  if (elFat) elFat.innerHTML = dashGraficoFaturamento(vnd);
+
+  // 2. Vendas por forma de pagamento (donut)
+  var pgtoMap = {};
+  for (var i = 0; i < vnd.length; i++) {
+    var p = vnd[i].pgto || 'Outros';
+    pgtoMap[p] = (pgtoMap[p] || 0) + 1;
+  }
+  var CORES_PGTO = { 'Boleto': 'var(--blue-h)', 'Cartao de Credito': 'var(--cyan)', 'PIX': 'var(--green)', 'Dinheiro': 'var(--amber)', 'Cheque': '#818CF8', 'Cartao de Debito': '#F472B6', 'Financiamento': 'var(--red)', 'Consorcio': '#34D399' };
+  var pgtoData = Object.keys(pgtoMap).map(function(k) { return { label: k, valor: pgtoMap[k], cor: CORES_PGTO[k] || 'var(--txt3)' }; });
+  pgtoData.sort(function(a, b) { return b.valor - a.valor; });
+  grafDonut(pgtoData, 'graf-pgto');
+
+  // 3. Status dos retornos (donut)
+  var retPend = 0, retConc = 0, retAtras = 0;
+  var hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  for (var j = 0; j < ret.length; j++) {
+    if (ret[j].status === 'concluido') { retConc++; }
+    else {
+      var dtRet = dashParseData(ret[j].data);
+      if (dtRet && dtRet < hoje.getTime()) retAtras++;
+      else retPend++;
+    }
+  }
+  var retData = [];
+  if (retPend > 0) retData.push({ label: 'Pendente', valor: retPend, cor: 'var(--amber)' });
+  if (retAtras > 0) retData.push({ label: 'Atrasado', valor: retAtras, cor: 'var(--red)' });
+  if (retConc > 0) retData.push({ label: 'Concluido', valor: retConc, cor: 'var(--green)' });
+  grafDonut(retData, 'graf-ret');
+
+  // 4. Clientes por status (barras horizontais)
+  var cliMap = {};
+  for (var k = 0; k < cli.length; k++) {
+    var st = cli[k].status || 'Sem status';
+    cliMap[st] = (cliMap[st] || 0) + 1;
+  }
+  var cliData = Object.keys(cliMap).map(function(s) { return { label: s, valor: cliMap[s] }; });
+  cliData.sort(function(a, b) { return b.valor - a.valor; });
+  grafBarrasH(cliData, 'graf-cli');
+
+  // 5. Mapa do Brasil
+  grafMapaBrasil();
 }
 
 // --- P-GINAS -------------------------------
@@ -1259,6 +1623,36 @@ function buildPage(id) {
         '<div class="sc"><div class="sc-val">' + VND_DB.length + '</div><div class="sc-label">Vendas</div></div>' +
         '</div>' +
         '<div class="usr-table">' + (rankHtml || '<div class="aud-row">Nenhuma venda registrada.</div>') + '</div>'
+    };
+  }
+  if (id === 'graficos') {
+    return {
+      eye: 'Analise Visual', title: 'Graficos', sub: 'Visao grafica de clientes, vendas e retornos',
+      body:
+        '<div class=\"cap-wrap\" style=\"margin-bottom:14px\">' +
+        '<div style=\"font-size:13px;font-weight:700;margin-bottom:12px\">Faturamento Mensal (ultimos 6 meses)</div>' +
+        '<div id=\"graf-fat\"></div>' +
+        '</div>' +
+        '<div style=\"display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:14px\">' +
+        '<div class=\"cap-wrap\" style=\"margin-bottom:0\">' +
+        '<div style=\"font-size:13px;font-weight:700;margin-bottom:12px\">Vendas por Forma de Pagamento</div>' +
+        '<div id=\"graf-pgto\"></div>' +
+        '</div>' +
+        '<div class=\"cap-wrap\" style=\"margin-bottom:0\">' +
+        '<div style=\"font-size:13px;font-weight:700;margin-bottom:12px\">Status dos Retornos</div>' +
+        '<div id=\"graf-ret\"></div>' +
+        '</div>' +
+        '</div>' +
+        '<div class=\"cap-wrap\" style=\"margin-bottom:14px\">' +
+        '<div style=\"font-size:13px;font-weight:700;margin-bottom:4px\">Mapa de Vendas por Estado</div>' +
+        '<div style=\"font-size:11px;color:var(--txt3);margin-bottom:12px\">Baseado nos clientes cadastrados com UF. Tamanho do ponto = volume de vendas.</div>' +
+        '<div id=\"graf-mapa\" style=\"position:relative\"></div>' +
+        '<div id=\"graf-mapa-tip\" style=\"display:none;position:absolute;background:var(--s2);border:1px solid var(--line2);border-radius:9px;padding:10px 14px;font-size:12px;pointer-events:none;z-index:99;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,.4)\"></div>' +
+        '</div>' +
+        '<div class=\"cap-wrap\">' +
+        '<div style=\"font-size:13px;font-weight:700;margin-bottom:12px\">Clientes por Status</div>' +
+        '<div id=\"graf-cli\"></div>' +
+        '</div>'
     };
   }
   if (id === 'relatorio') {
@@ -2204,7 +2598,7 @@ function vndSalvar() {
   if (!cli) { showToast('Selecione um cliente.', 'erro'); return; }
   if (!val || Number(val) <= 0) { showToast('Informe o valor.', 'erro'); return; }
   var pgto = document.getElementById('vnd-pgto') ? document.getElementById('vnd-pgto').value : '';
-  var temParcela = (pgto === 'Boleto' || pgto === 'Cartao de Credito');
+  var temParcela = (pgto === 'Boleto' || pgto === 'Cartao de Credito' || pgto === 'Cheque');
   var parcelas = temParcela ? (parseInt(document.getElementById('vnd-parcelas') ? document.getElementById('vnd-parcelas').value : '1') || 1) : 1;
   var novo = {
     id: 'v' + Date.now() + Math.random().toString(36).slice(2, 7),
@@ -2690,7 +3084,7 @@ function vndToggleParcelas() {
   var pgto = document.getElementById('vnd-pgto') ? document.getElementById('vnd-pgto').value : '';
   var div = document.getElementById('vnd-parcelas-div');
   var info = document.getElementById('vnd-parcela-info');
-  var temParcela = (pgto === 'Boleto' || pgto === 'Cartao de Credito');
+  var temParcela = (pgto === 'Boleto' || pgto === 'Cartao de Credito' || pgto === 'Cheque');
   if (div) div.style.display = temParcela ? '' : 'none';
   if (!temParcela) {
     var sel = document.getElementById('vnd-parcelas');
@@ -2706,7 +3100,7 @@ function vndCalcParcela() {
   var parc = parseInt(document.getElementById('vnd-parcelas') ? document.getElementById('vnd-parcelas').value : '1') || 1;
   var info = document.getElementById('vnd-parcela-info');
   var pgto = document.getElementById('vnd-pgto') ? document.getElementById('vnd-pgto').value : '';
-  var temParcela = (pgto === 'Boleto' || pgto === 'Cartao de Credito');
+  var temParcela = (pgto === 'Boleto' || pgto === 'Cartao de Credito' || pgto === 'Cheque');
   if (!info || !temParcela || val <= 0 || parc <= 1) {
     if (info) info.style.display = 'none';
     return;
