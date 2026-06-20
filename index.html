@@ -974,6 +974,7 @@ var NAV_MAP = {
     { id: 'retornos', label: 'Retornos' },
     { id: 'comercial', label: 'Comercial' },
     { id: 'graficos', label: 'Graficos' },
+    { id: 'mapa', label: 'Mapa' },
     { id: 'relatorio', label: 'Relatorio' },
     { id: 'pecas', label: 'Consulta de Pecas' },
     { id: 'consultas', label: 'Consultas' },
@@ -987,6 +988,7 @@ var NAV_MAP = {
     { id: 'retornos', label: 'Retornos' },
     { id: 'comercial', label: 'Comercial' },
     { id: 'graficos', label: 'Graficos' },
+    { id: 'mapa', label: 'Mapa' },
     { id: 'relatorio', label: 'Relatorio' },
     { id: 'pecas', label: 'Consulta de Pecas' },
     { id: 'consultas', label: 'Consultas' },
@@ -1049,6 +1051,7 @@ function navigate(id) {
     if (id === 'config') setTimeout(cfgCarregar, 50);
     if (id === 'relatorio') setTimeout(relGerar, 50);
     if (id === 'graficos') setTimeout(grafRender, 50);
+    if (id === 'mapa') setTimeout(mapaRender, 50);
     if (id === 'clientes') {
       setTimeout(cliRender, 50);
       // Buscar dados frescos ao abrir Clientes
@@ -1149,7 +1152,23 @@ var UF_POS = {
   'SE': [510, 315], 'SP': [380, 480], 'TO': [375, 295]
 };
 
-function grafMapaBrasil() {
+// Versao standalone do mapa, usada pela aba "Mapa" propria (maior, em destaque,
+// sem disputar espaco com os outros graficos). Reaproveita toda a logica de
+// grafMapaBrasil, so com IDs e tamanho proprios para nao conflitar com a
+// versao compacta que continua dentro da aba Graficos.
+function mapaRender() {
+  var w = window.innerWidth || 800;
+  var tamanho = w < 640 ? 380 : (w < 1024 ? 560 : 720);
+  grafMapaBrasil('mapa-svg', 'mapa-tip', 'mapa-painel', tamanho, Math.round(tamanho * 1.1));
+}
+
+function grafMapaBrasil(contId, tipId, painelId, W, H) {
+  contId = contId || 'graf-mapa';
+  tipId = tipId || 'graf-mapa-tip';
+  painelId = painelId || 'graf-mapa-painel';
+  W = W || 600;
+  H = H || 660;
+
   var vnd = VND_DB || [];
   var cli = CLI_DB || [];
   var ret = RET_DB || [];
@@ -1199,7 +1218,6 @@ function grafMapaBrasil() {
   var maxCli = 0;
   Object.keys(ufMap).forEach(function(u) { if (ufMap[u].clientes > maxCli) maxCli = ufMap[u].clientes; });
 
-  var W = 600, H = 660;
   var svg = '<svg id="svg-mapa-brasil" viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;max-width:' + W + 'px;height:auto;display:block;cursor:default" preserveAspectRatio="xMidYMid meet">';
 
   // Pontos cinza para estados sem dados
@@ -1235,22 +1253,22 @@ function grafMapaBrasil() {
   svg += '<text x="' + (W - 10) + '" y="' + (H - 8) + '" text-anchor="end" font-size="9" fill="var(--txt3)" font-family="DM Sans,Arial,sans-serif">Clique num estado para ver detalhes</text>';
   svg += '</svg>';
 
-  var cont = document.getElementById('graf-mapa');
+  var cont = document.getElementById(contId);
   if (!cont) return;
   cont.style.position = 'relative';
   cont.innerHTML = svg;
 
   // Painel lateral de detalhes (criado dinamicamente)
-  var painel = document.getElementById('graf-mapa-painel');
+  var painel = document.getElementById(painelId);
   if (!painel) {
     painel = document.createElement('div');
-    painel.id = 'graf-mapa-painel';
+    painel.id = painelId;
     painel.style.cssText = 'display:none;margin-top:14px;background:var(--s2);border:1px solid var(--line2);border-radius:14px;padding:18px 20px;animation:fadeIn .2s ease';
     cont.parentNode.insertBefore(painel, cont.nextSibling);
   }
 
   // Tooltip hover simples
-  var tip = document.getElementById('graf-mapa-tip');
+  var tip = document.getElementById(tipId);
 
   var pontos = cont.querySelectorAll('.mapa-ponto');
   var ufAtiva = null;
@@ -1329,7 +1347,7 @@ function grafMapaBrasil() {
           '<div style="font-size:18px;font-weight:700;color:var(--txt)">' + uf + '</div>' +
           (cidades ? '<div style="font-size:11px;color:var(--txt3);margin-top:2px">' + cidades + '</div>' : '') +
           '</div>' +
-          '<button onclick="document.getElementById(\'graf-mapa-painel\').style.display=\'none\'" style="background:none;border:1px solid var(--line2);border-radius:8px;color:var(--txt3);padding:5px 12px;font-size:12px;cursor:pointer;font-family:var(--ff)">Fechar</button>' +
+          '<button onclick="document.getElementById(\'' + painelId + '\').style.display=\'none\'" style="background:none;border:1px solid var(--line2);border-radius:8px;color:var(--txt3);padding:5px 12px;font-size:12px;cursor:pointer;font-family:var(--ff)">Fechar</button>' +
           '</div>' +
           // Totais resumidos
           '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:16px">' +
@@ -1845,6 +1863,17 @@ function buildPage(id) {
         '<div class=\"cap-wrap\">' +
         '<div style=\"font-size:13px;font-weight:700;margin-bottom:12px\">Clientes por Status</div>' +
         '<div id=\"graf-cli\"></div>' +
+        '</div>'
+    };
+  }
+  if (id === 'mapa') {
+    return {
+      eye: 'Analise Visual', title: 'Mapa de Vendas', sub: 'Distribuicao de clientes, vendas e retornos por estado',
+      body:
+        '<div class="cap-wrap" style="margin-bottom:0">' +
+        '<div style="font-size:11px;color:var(--txt3);margin-bottom:14px">Baseado nos clientes cadastrados com UF. Tamanho do ponto = volume de clientes. Clique num estado para ver o ranking de representantes daquela regiao.</div>' +
+        '<div id="mapa-svg" style="position:relative"></div>' +
+        '<div id="mapa-tip" style="display:none;position:absolute;background:var(--s2);border:1px solid var(--line2);border-radius:9px;padding:10px 14px;font-size:12px;pointer-events:none;z-index:99;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,.4)"></div>' +
         '</div>'
     };
   }
