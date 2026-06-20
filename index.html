@@ -545,6 +545,8 @@ document.getElementById('js-status').style.display='none';
 // -------------------------------------------
 
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbx9Nj81qbR5aPrOk_5kl7iTZCfn7_PBbLBwwr27wsR-biKuUFDzxKSNM3EY91v2WFEn/exec';
+var SYS_MANUTENCAO = false;
+var SYS_MANUTENCAO_MSG = 'Sistema em atualizacao. Tente novamente mais tarde.';
 var _CACHE_V = '4.4';
 var me = null;
 var profile = null;
@@ -741,6 +743,27 @@ function goLogin(p) {
       lsSet('nxr_usr', JSON.stringify(USR_DB));
     }
   });
+
+  // Aviso antecipado de manutencao (Rep./Gerente) - antes mesmo de digitar a senha
+  if (p !== 'adm') {
+    sheetsGet('getConfig', function(d) {
+      var bloqueado = false, msg = SYS_MANUTENCAO_MSG;
+      if (d && d.ok && d.data) {
+        for (var k = 0; k < d.data.length; k++) {
+          if (String(d.data[k].chave || '').trim().toLowerCase() === 'manutencao') {
+            bloqueado = String(d.data[k].valor || '').trim().toLowerCase() === 'true';
+            if (d.data[k].mensagem) msg = String(d.data[k].mensagem).trim();
+          }
+        }
+      }
+      SYS_MANUTENCAO = bloqueado;
+      SYS_MANUTENCAO_MSG = msg;
+      if (bloqueado && profile === p) {
+        var al2 = document.getElementById('login-alert');
+        if (al2) { al2.innerHTML = '&#128274; ' + msg; al2.className = 'alert show'; }
+      }
+    });
+  }
 }
 
 // --- LOGIN ---------------------------------
@@ -810,9 +833,42 @@ function doLoginVerificar(user, pin, al, db) {
     al.className = 'alert show';
     return;
   }
-  me = found;
-  lsLoad();
-  launchApp();
+
+  // Administrador nunca e bloqueado. Para Rep/Gerente, verifica
+  // o bloqueio de manutencao direto na planilha (sempre atualizado).
+  if (found.role === 'adm') {
+    me = found;
+    lsLoad();
+    launchApp();
+    return;
+  }
+
+  al.textContent = 'Verificando acesso...'; al.className = 'alert show'; al.style.color = '#F59E0B';
+  sheetsGet('getConfig', function(d) {
+    al.style.color = '';
+    var bloqueado = false, msg = SYS_MANUTENCAO_MSG;
+    if (d && d.ok && d.data) {
+      for (var k = 0; k < d.data.length; k++) {
+        if (String(d.data[k].chave || '').trim().toLowerCase() === 'manutencao') {
+          bloqueado = String(d.data[k].valor || '').trim().toLowerCase() === 'true';
+          if (d.data[k].mensagem) msg = String(d.data[k].mensagem).trim();
+        }
+      }
+    }
+    SYS_MANUTENCAO = bloqueado;
+    SYS_MANUTENCAO_MSG = msg;
+    if (bloqueado) {
+      al.textContent = '&#128274; ' + msg;
+      al.innerHTML = '&#128274; ' + msg;
+      al.className = 'alert show';
+      var ip2 = document.getElementById('inp-pin');
+      if (ip2) ip2.value = '';
+      return;
+    }
+    me = found;
+    lsLoad();
+    launchApp();
+  });
 }
 
 // --- APP LAUNCH ----------------------------
@@ -1276,7 +1332,18 @@ function buildPage(id) {
   if (id === 'config') {
     return {
       eye: 'Administracao', title: 'Configuracoes', sub: 'Configuracoes do sistema',
-      body: '<div class="cap-wrap">' +
+      body: '<div class="cap-wrap" style="border-color:rgba(245,158,11,.35)">' +
+        '<div style="font-size:13px;font-weight:600;margin-bottom:4px">&#128274; Bloqueio de Acesso</div>' +
+        '<div style="font-size:11px;color:var(--txt3);margin-bottom:14px">Quando ativado, Representantes e Gerentes nao conseguem fazer login — veem um aviso na tela. O Administrador nunca e bloqueado.</div>' +
+        '<div id="cfg-man-status" style="font-size:12px;margin-bottom:14px;color:var(--txt2)">Carregando estado atual...</div>' +
+        '<div class="mfield"><label>Mensagem exibida para Rep./Gerente</label>' +
+        '<input id="cfg-man-msg" placeholder="Sistema em atualizacao. Tente novamente mais tarde." style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none"></div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+        '<button id="cfg-man-ativar" style="height:38px;padding:0 16px;background:var(--amber);color:#1a1200;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--ff)">&#128274; Ativar bloqueio</button>' +
+        '<button id="cfg-man-desativar" style="height:38px;padding:0 16px;background:none;border:1px solid var(--green);color:var(--green);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ff)">&#128275; Desativar bloqueio</button>' +
+        '</div>' +
+        '</div>' +
+        '<div class="cap-wrap">' +
         '<div style="font-size:13px;font-weight:600;margin-bottom:10px">URL do Apps Script</div>' +
         '<input class="cap-input" id="cfg-url" style="width:100%;margin-bottom:10px" placeholder="https://script.google.com/...">' +
         '<div style="display:flex;gap:8px">' +
@@ -2361,6 +2428,12 @@ function cfgCarregar() {
   if (salvarBtn) salvarBtn.addEventListener('click', cfgSalvar);
   var exportarBtn = document.getElementById('cfg-exportar-btn');
   if (exportarBtn) exportarBtn.addEventListener('click', cfgExportar);
+
+  var ativarBtn = document.getElementById('cfg-man-ativar');
+  if (ativarBtn) ativarBtn.onclick = function() { cfgManutencaoSalvar(true); };
+  var desativarBtn = document.getElementById('cfg-man-desativar');
+  if (desativarBtn) desativarBtn.onclick = function() { cfgManutencaoSalvar(false); };
+  cfgManutencaoCarregar();
 }
 function cfgTestar() {
   var st = document.getElementById('cfg-status');
@@ -2387,6 +2460,49 @@ function cfgExportar() {
   var a = document.createElement('a');
   a.href = url; a.download = 'nexora-backup.json'; a.click();
   URL.revokeObjectURL(url);
+}
+
+// --- BLOQUEIO DE ACESSO (MANUTENCAO) --------
+function cfgManutencaoCarregar() {
+  var st = document.getElementById('cfg-man-status');
+  var msgInp = document.getElementById('cfg-man-msg');
+  if (st) st.textContent = 'Carregando estado atual...';
+  sheetsGet('getConfig', function(d) {
+    var ativo = false, msg = '';
+    if (d && d.ok && d.data) {
+      for (var i = 0; i < d.data.length; i++) {
+        if (String(d.data[i].chave || '').trim().toLowerCase() === 'manutencao') {
+          ativo = String(d.data[i].valor || '').trim().toLowerCase() === 'true';
+          msg = String(d.data[i].mensagem || '').trim();
+        }
+      }
+    }
+    SYS_MANUTENCAO = ativo;
+    SYS_MANUTENCAO_MSG = msg || 'Sistema em atualizacao. Tente novamente mais tarde.';
+    if (msgInp && !msgInp.value) msgInp.value = SYS_MANUTENCAO_MSG;
+    if (st) {
+      st.innerHTML = ativo
+        ? '<span style="color:var(--red);font-weight:700">&#9679; Bloqueio ATIVO</span> — Representantes e Gerentes nao conseguem logar agora.'
+        : '<span style="color:var(--green);font-weight:700">&#9679; Liberado</span> — todos podem usar o sistema normalmente.';
+    }
+  });
+}
+function cfgManutencaoSalvar(ativar) {
+  var msgInp = document.getElementById('cfg-man-msg');
+  var msg = (msgInp && msgInp.value.trim()) ? msgInp.value.trim() : 'Sistema em atualizacao. Tente novamente mais tarde.';
+  var st = document.getElementById('cfg-man-status');
+  if (st) st.textContent = ativar ? 'Ativando bloqueio...' : 'Desativando bloqueio...';
+  sheetsAtualizarLinha('Config', 'chave', 'manutencao', { chave: 'manutencao', valor: ativar ? 'true' : 'false', mensagem: msg }, function(ok, err) {
+    if (ok) {
+      SYS_MANUTENCAO = ativar;
+      SYS_MANUTENCAO_MSG = msg;
+      showToast(ativar ? 'Bloqueio ativado! Rep./Gerente nao conseguem mais logar.' : 'Bloqueio desativado! Acesso liberado para todos.');
+      cfgManutencaoCarregar();
+    } else {
+      showToast('Erro ao salvar na planilha: ' + (err || 'erro'), 'erro');
+      if (st) st.textContent = 'Erro ao salvar.';
+    }
+  });
 }
 
 // --- EXCLUSAO DE DADOS (ZONA DE RISCO) ------
