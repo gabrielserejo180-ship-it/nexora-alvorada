@@ -1021,6 +1021,62 @@ function navigate(id) {
   }
 }
 
+// --- DASHBOARD: HELPERS ---------------------
+function dashParseData(str) {
+  if (!str) return 0;
+  var p = String(str).split('/');
+  if (p.length !== 3) return 0;
+  var d = new Date(Number(p[2]), Number(p[1]) - 1, Number(p[0]));
+  return d.getTime() || 0;
+}
+function dashGraficoFaturamento(vndList) {
+  var MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  var hoje = new Date();
+  var chaves = [];
+  var totais = {};
+  for (var k = 5; k >= 0; k--) {
+    var dt = new Date(hoje.getFullYear(), hoje.getMonth() - k, 1);
+    var chave = dt.getFullYear() + '-' + dt.getMonth();
+    chaves.push(chave);
+    totais[chave] = { label: MESES[dt.getMonth()], valor: 0 };
+  }
+  for (var i = 0; i < vndList.length; i++) {
+    var t = dashParseData(vndList[i].data);
+    if (!t) continue;
+    var dv = new Date(t);
+    var ch = dv.getFullYear() + '-' + dv.getMonth();
+    if (totais[ch]) totais[ch].valor += Number(vndList[i].valor || 0);
+  }
+
+  var max = 0;
+  for (var j = 0; j < chaves.length; j++) { if (totais[chaves[j]].valor > max) max = totais[chaves[j]].valor; }
+  if (max <= 0) {
+    return '<div class="empty-state">Sem vendas suficientes para gerar o grafico.</div>';
+  }
+
+  var w = 600, h = 200, padBottom = 26, padTop = 14, barGap = 14;
+  var n = chaves.length;
+  var barW = (w - barGap * (n + 1)) / n;
+  var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;height:auto;display:block" preserveAspectRatio="xMidYMid meet">';
+  for (var m = 0; m < n; m++) {
+    var item = totais[chaves[m]];
+    var barH = max > 0 ? Math.round(((h - padBottom - padTop) * item.valor) / max) : 0;
+    if (item.valor > 0 && barH < 4) barH = 4;
+    var x = barGap + m * (barW + barGap);
+    var y = h - padBottom - barH;
+    var isLast = (m === n - 1);
+    var cor = isLast ? 'var(--blue-h)' : 'var(--blue)';
+    svg += '<rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + barH + '" rx="4" fill="' + cor + '"></rect>';
+    if (item.valor > 0) {
+      svg += '<text x="' + (x + barW / 2) + '" y="' + (y - 6) + '" text-anchor="middle" font-size="10" fill="var(--txt2)" font-family="DM Sans,Arial,sans-serif">R$ ' +
+        item.valor.toLocaleString('pt-BR', {maximumFractionDigits:0}) + '</text>';
+    }
+    svg += '<text x="' + (x + barW / 2) + '" y="' + (h - 8) + '" text-anchor="middle" font-size="11" fill="var(--txt3)" font-family="DM Sans,Arial,sans-serif">' + item.label + '</text>';
+  }
+  svg += '</svg>';
+  return svg;
+}
+
 // --- P-GINAS -------------------------------
 function buildPage(id) {
   var role = me ? me.role : 'rep';
@@ -1032,6 +1088,33 @@ function buildPage(id) {
     for (var i = 0; i < vnd.length; i++) fat += Number(vnd[i].valor || 0);
     var pend = 0;
     for (var j = 0; j < ret.length; j++) { if (ret[j].status !== 'concluido') pend++; }
+
+    // Vendas recentes (cliente + valor), mais recentes primeiro
+    var vndOrdenado = vnd.slice().sort(function(a, b) {
+      return dashParseData(b.data) - dashParseData(a.data);
+    });
+    var recentes = vndOrdenado.slice(0, 6);
+    var recentesHtml = '';
+    if (!recentes.length) {
+      recentesHtml = '<div class="empty-state">Nenhuma venda registrada ainda.</div>';
+    } else {
+      for (var r = 0; r < recentes.length; r++) {
+        var rv = recentes[r];
+        var rval = Number(rv.valor || 0);
+        recentesHtml += '<div class="vnd-row">' +
+          '<div style="flex:1;min-width:0">' +
+          '<div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (rv.cliente || '-') + '</div>' +
+          '<div style="font-size:11px;color:var(--txt2)">' + (rv.data || '') +
+          (role !== 'rep' && rv.representante ? ' . ' + rv.representante : '') + '</div>' +
+          '</div>' +
+          '<span style="color:var(--green);font-weight:700;flex-shrink:0">R$ ' + rval.toLocaleString('pt-BR', {minimumFractionDigits:2}) + '</span>' +
+          '</div>';
+      }
+    }
+
+    // Grafico de faturamento mensal (ultimos 6 meses com dados)
+    var graficoSvg = dashGraficoFaturamento(vnd);
+
     return {
       eye: 'Visao Geral', title: 'Dashboard', sub: 'Bem-vindo, ' + me.name,
       body: '<div class="stat-grid">' +
@@ -1039,7 +1122,15 @@ function buildPage(id) {
         '<div class="sc"><div class="sc-val">' + pend + '</div><div class="sc-label">Retornos pendentes</div></div>' +
         '<div class="sc"><div class="sc-val">' + vnd.length + '</div><div class="sc-label">Vendas</div></div>' +
         '<div class="sc"><div class="sc-val">R$ ' + fat.toLocaleString('pt-BR') + '</div><div class="sc-label">Faturamento</div></div>' +
-        '</div><div class="empty-state">Use o menu lateral para navegar.</div>'
+        '</div>' +
+        '<div class="cap-wrap" style="margin-bottom:14px">' +
+        '<div style="font-size:13px;font-weight:700;margin-bottom:12px">Faturamento mensal</div>' +
+        graficoSvg +
+        '</div>' +
+        '<div class="cap-wrap">' +
+        '<div style="font-size:13px;font-weight:700;margin-bottom:10px">Vendas recentes</div>' +
+        recentesHtml +
+        '</div>'
     };
   }
   if (id === 'captacao') {
@@ -1761,9 +1852,11 @@ function vndExcluir() {
   var v = _vndListaAtual[_vndIdxAtual];
   if (!confirm('Excluir a venda de ' + (v.cliente || '?') + ' no valor de R$ ' + Number(v.valor||0).toLocaleString('pt-BR') + '?')) return;
 
-  // Remover do VND_DB pelo cliente+data+valor
+  // Remover do VND_DB local pelo id (ou, em vendas antigas sem id, por cliente+data+valor)
   for (var i = 0; i < VND_DB.length; i++) {
-    if (VND_DB[i].cliente === v.cliente && VND_DB[i].data === v.data && Number(VND_DB[i].valor) === Number(v.valor)) {
+    var mesmoId = v.id && VND_DB[i].id === v.id;
+    var mesmoConjunto = !v.id && VND_DB[i].cliente === v.cliente && VND_DB[i].data === v.data && Number(VND_DB[i].valor) === Number(v.valor);
+    if (mesmoId || mesmoConjunto) {
       VND_DB.splice(i, 1);
       break;
     }
@@ -1774,7 +1867,20 @@ function vndExcluir() {
   var modal = document.getElementById('vnd-view-modal');
   if (modal) modal.style.display = 'none';
 
-  showToast('Venda excluida!');
+  if (v.id) {
+    // Venda com id unico - apaga a linha certa na planilha
+    sheetsExcluirLinha('Vendas', 'id', v.id, function(ok, err) {
+      if (ok) {
+        showToast('Venda excluida (app e planilha)!');
+      } else {
+        showToast('Excluida aqui, mas falhou na planilha: ' + (err || 'erro'), 'erro');
+      }
+    });
+  } else {
+    // Venda antiga, cadastrada antes do id existir - nao ha como
+    // localizar a linha certa na planilha com seguranca.
+    showToast('Venda excluida aqui. Apague essa linha manualmente na planilha (venda antiga sem ID).', 'erro');
+  }
   setTimeout(vndRender, 100);
 }
 
@@ -2034,6 +2140,7 @@ function vndSalvar() {
   var temParcela = (pgto === 'Boleto' || pgto === 'Cartao de Credito');
   var parcelas = temParcela ? (parseInt(document.getElementById('vnd-parcelas') ? document.getElementById('vnd-parcelas').value : '1') || 1) : 1;
   var novo = {
+    id: 'v' + Date.now() + Math.random().toString(36).slice(2, 7),
     cliente: cli, representante: me ? me.name : '',
     data: new Date().toLocaleDateString('pt-BR'),
     valor: Number(val),
