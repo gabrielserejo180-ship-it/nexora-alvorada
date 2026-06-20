@@ -1393,6 +1393,8 @@ function grafMapaBrasil(contId, tipId, painelId, W, H) {
 }
 
 function grafDonut(data, containerId) {
+  var total = 0;
+  for (var t = 0; t < data.length; t++) total += Number(data[t].valor || 0);
   if (total <= 0) {
     var el = document.getElementById(containerId);
     if (el) el.innerHTML = '<div class="empty-state">Sem dados suficientes.</div>';
