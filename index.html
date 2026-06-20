@@ -552,6 +552,23 @@ var CLI_DB = [];
 var VND_DB = [];
 var RET_DB = [];
 var USR_DB = [];
+
+// Remove logins duplicados, mantendo a ultima ocorrencia (a mais recente na planilha).
+// Usado sempre que USR_DB e populado a partir da planilha, para a tela nunca
+// exibir o mesmo usuario repetido mesmo que existam linhas duplicadas la.
+function usrDedup(lista) {
+  var porUser = {};
+  var ordem = [];
+  for (var i = 0; i < lista.length; i++) {
+    var key = String(lista[i].user || '').toLowerCase().trim();
+    if (!key) continue;
+    if (!(key in porUser)) ordem.push(key);
+    porUser[key] = lista[i];
+  }
+  var out = [];
+  for (var j = 0; j < ordem.length; j++) out.push(porUser[ordem[j]]);
+  return out;
+}
 var cliTipoAtual = 'pj';
 var _cliEditIdx = -1;
 var _cliListaAtual = [];
@@ -706,12 +723,12 @@ function goLogin(p) {
   // Carregar usuarios da planilha em background
   sheetsGet('getUsuarios', function(d) {
     if (d && d.ok && d.data && d.data.length > 0) {
-      USR_DB = [];
+      var carregados = [];
       for (var i = 0; i < d.data.length; i++) {
         var u = d.data[i];
         var st = String(u.status || '').toLowerCase().trim();
         var pin = (u.pin === null || u.pin === undefined) ? '' : String(u.pin).trim();
-        USR_DB.push({
+        carregados.push({
           user: String(u.user || '').trim(),
           pin: pin,
           name: String(u.name || '').trim(),
@@ -720,6 +737,7 @@ function goLogin(p) {
           criado: String(u.criado || '').trim()
         });
       }
+      USR_DB = usrDedup(carregados);
       lsSet('nxr_usr', JSON.stringify(USR_DB));
     }
   });
@@ -759,9 +777,9 @@ function doLogin() {
         status: (st === 'active' || st === 'ativo') ? 'active' : 'inactive'
       });
     }
-    USR_DB = db;
+    USR_DB = usrDedup(db);
     lsSet('nxr_usr', JSON.stringify(USR_DB));
-    doLoginVerificar(user, pin, al, db);
+    doLoginVerificar(user, pin, al, USR_DB);
   });
 }
 
@@ -2034,6 +2052,10 @@ function vndSalvar() {
 
 // --- USUARIOS ------------------------------
 function usrRender() {
+  // Garante que mesmo se a planilha tiver linhas duplicadas (de cadastros
+  // antigos com bug), a lista exibida nunca mostra o mesmo login 2x.
+  USR_DB = usrDedup(USR_DB);
+
   var busca = document.getElementById('usr-busca') ? document.getElementById('usr-busca').value.toLowerCase() : '';
   var lista = busca ? [] : USR_DB.slice();
   if (busca) {
@@ -2120,6 +2142,10 @@ function usrAcao(act, login) {
     return;
   }
   if (act === 'toggle') {
+    if (me && USR_DB[idx].user === me.user && USR_DB[idx].status === 'active') {
+      showToast('Voce nao pode inativar o proprio usuario.', 'erro');
+      return;
+    }
     USR_DB[idx].status = USR_DB[idx].status === 'active' ? 'inactive' : 'active';
     lsSet('nxr_usr', JSON.stringify(USR_DB));
     sheetsAtualizarLinha('Usuarios', 'user', USR_DB[idx].user, USR_DB[idx]);
@@ -2214,6 +2240,11 @@ function usrSalvarPlanilha() {
   var btn = document.getElementById('usr-salvar-btn');
   if (btn && btn.disabled) return; // evita duplo clique disparando 2x
   if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+
+  // Remove duplicados que ja possam existir (de cadastros antigos com bug)
+  // antes de regravar a planilha do zero.
+  USR_DB = usrDedup(USR_DB);
+  lsSet('nxr_usr', JSON.stringify(USR_DB));
 
   sheetsLimpar('Usuarios')
     .then(function(r) { return r.json(); })
