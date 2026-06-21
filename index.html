@@ -677,6 +677,30 @@ function sheetsPost(action, sheet, row) {
   var url = APPS_URL + '?action=' + action + '&sheet=' + sheet + '&' + r;
   fetch(url).catch(function() {});
 }
+// Registra uma acao no log de auditoria (aba 'Auditoria' na planilha).
+// Usado em login, e em cadastro/edicao/exclusao de clientes, vendas,
+// retornos e usuarios. Falha silenciosamente se a aba nao existir ainda,
+// para nao atrapalhar o uso normal do sistema.
+function auditLog(acao, detalhe) {
+  try {
+    var agora = new Date();
+    var dataStr = String(agora.getDate()).padStart(2, '0') + '/' +
+                  String(agora.getMonth() + 1).padStart(2, '0') + '/' +
+                  agora.getFullYear();
+    var horaStr = String(agora.getHours()).padStart(2, '0') + ':' +
+                  String(agora.getMinutes()).padStart(2, '0');
+    var registro = {
+      data: dataStr,
+      hora: horaStr,
+      usuario: me ? (me.name || me.user || '') : '',
+      perfil: me ? (me.role || '') : '',
+      acao: acao || '',
+      detalhe: detalhe || ''
+    };
+    sheetsSalvarLinha('Auditoria', registro);
+  } catch(e) {}
+}
+
 function sheetsSalvarLinha(sheet, obj, cb) {
   var encoded = encodeURIComponent(JSON.stringify(obj));
   var url = APPS_URL + '?action=inserirLinha&sheet=' + sheet + '&row=' + encoded;
@@ -890,6 +914,7 @@ function doLoginVerificar(user, pin, al, db) {
   // o bloqueio de manutencao direto na planilha (sempre atualizado).
   if (found.role === 'adm') {
     me = found;
+    auditLog('Login', 'Acesso ao sistema');
     lsLoad();
     launchApp();
     return;
@@ -918,6 +943,7 @@ function doLoginVerificar(user, pin, al, db) {
       return;
     }
     me = found;
+    auditLog('Login', 'Acesso ao sistema');
     lsLoad();
     launchApp();
   });
@@ -2407,6 +2433,7 @@ function cliSalvarManual() {
     sheetsAtualizarLinha('Clientes', docAntigoCol, docAntigoVal, novo, function(ok, err) {
       if (ok) {
         showToast('Cliente atualizado!');
+        auditLog('Edicao de cliente', nome);
       } else {
         showToast('Salvo localmente. Planilha: ' + (err || 'erro'), 'erro');
       }
@@ -2415,6 +2442,7 @@ function cliSalvarManual() {
     sheetsSalvarLinha('Clientes', novo, function(ok, err) {
       if (ok) {
         showToast(editando ? 'Cliente atualizado!' : 'Cliente cadastrado!');
+        auditLog(editando ? 'Edicao de cliente' : 'Cadastro de cliente', nome);
       } else {
         showToast('Salvo localmente. Planilha: ' + (err || 'erro'), 'erro');
       }
@@ -2463,6 +2491,7 @@ function cliExcluir(idx) {
   CLI_DB.splice(idx, 1);
   lsSet('nxr_cli', JSON.stringify(CLI_DB));
   showToast('Cliente excluido!');
+  auditLog('Exclusao de cliente', c ? c.nome : '');
   if (docCol) {
     sheetsExcluirLinha('Clientes', docCol, docVal);
   }
@@ -2599,6 +2628,7 @@ function vndExcluir() {
     }
   }
   lsSet('nxr_vnd', JSON.stringify(VND_DB));
+  auditLog('Exclusao de venda', (v.cliente || '?') + ' - R$ ' + Number(v.valor||0).toFixed(2));
 
   // Fechar modal
   var modal = document.getElementById('vnd-view-modal');
@@ -2674,6 +2704,7 @@ function retConcluirAtual() {
   var modal = document.getElementById('ret-view-modal');
   if (modal) modal.style.display = 'none';
   showToast('Retorno concluido!');
+  auditLog('Retorno concluido', RET_DB[_retIdxAtual].cliente || '');
   setTimeout(retRender, 100);
   setTimeout(notifVerificar, 200);
 }
@@ -2745,6 +2776,7 @@ function retSalvarEdicao() {
   var salvarBtn = document.getElementById('ret-modal-salvar');
   if (salvarBtn) { salvarBtn.textContent = 'Agendar'; salvarBtn.onclick = retSalvar; }
   showToast('Retorno atualizado!');
+  auditLog('Edicao de retorno', cli);
   setTimeout(retRender, 100);
   setTimeout(notifVerificar, 200);
 }
@@ -2796,6 +2828,7 @@ function retSalvar() {
   sheetsSalvarLinha('Retornos', novo, function(ok, err) {
     if (ok) {
       showToast('Retorno salvo na planilha!');
+      auditLog('Agendamento de retorno', cli);
     } else {
       showToast('ERRO ao salvar na planilha: ' + (err || 'falha desconhecida'), 'erro');
     }
@@ -2893,6 +2926,7 @@ function vndSalvar() {
   var modal = document.getElementById('vnd-modal');
   if (modal) modal.style.display = 'none';
   showToast('Venda registrada!');
+  auditLog('Registro de venda', cli + ' - R$ ' + Number(val).toFixed(2));
   setTimeout(vndRender, 100);
 }
 
@@ -2978,9 +3012,11 @@ function usrAcao(act, login) {
   if (act === 'del') {
     if (!confirm('Excluir o usuario ' + USR_DB[idx].name + '?')) return;
     var loginExcluido = USR_DB[idx].user;
+    var nomeExcluido = USR_DB[idx].name;
     USR_DB.splice(idx, 1);
     lsSet('nxr_usr', JSON.stringify(USR_DB));
     showToast('Usuario excluido!');
+    auditLog('Exclusao de usuario', nomeExcluido + ' (' + loginExcluido + ')');
     sheetsExcluirLinha('Usuarios', 'user', loginExcluido);
     usrRender();
     return;
@@ -2992,6 +3028,7 @@ function usrAcao(act, login) {
     }
     USR_DB[idx].status = USR_DB[idx].status === 'active' ? 'inactive' : 'active';
     lsSet('nxr_usr', JSON.stringify(USR_DB));
+    auditLog(USR_DB[idx].status === 'active' ? 'Ativacao de usuario' : 'Inativacao de usuario', USR_DB[idx].name + ' (' + USR_DB[idx].user + ')');
     sheetsAtualizarLinha('Usuarios', 'user', USR_DB[idx].user, USR_DB[idx]);
     usrRender();
     return;
@@ -3064,6 +3101,7 @@ function usrSalvar() {
   var modal = document.getElementById('usr-modal');
   if (modal) modal.style.display = 'none';
   showToast('Usuario salvo!');
+  auditLog(editando ? 'Edicao de usuario' : 'Cadastro de usuario', nome + ' (' + user + ')');
   usrRender();
 
   // Envia so a linha alterada/criada, sem apagar o restante da planilha.
@@ -3082,10 +3120,57 @@ function usrFecharModal() {
 
 
 // --- AUDITORIA -----------------------------
+var _audListaAtual = [];
 function audRender() {
   var el = document.getElementById('aud-lista');
   if (!el) return;
-  el.innerHTML = '<div class="aud-row" style="color:var(--txt2)">Log de auditoria nao disponivel localmente.</div>';
+  el.innerHTML = '<div class="aud-row" style="color:var(--txt2)">Carregando...</div>';
+
+  sheetsGet('getAuditoria', function(d) {
+    if (!d || !d.ok || !d.data) {
+      el.innerHTML = '<div class="aud-row" style="color:var(--txt2)">Nenhum registro de auditoria encontrado ainda.</div>';
+      return;
+    }
+    // Mais recente primeiro
+    _audListaAtual = d.data.slice().reverse();
+    audAplicarFiltro();
+  });
+
+  var bc = document.getElementById('aud-busca');
+  if (bc) bc.oninput = audAplicarFiltro;
+}
+
+function audAplicarFiltro() {
+  var el = document.getElementById('aud-lista');
+  if (!el) return;
+  var busca = document.getElementById('aud-busca') ? document.getElementById('aud-busca').value.toLowerCase().trim() : '';
+
+  var lista = _audListaAtual;
+  if (busca) {
+    lista = _audListaAtual.filter(function(r) {
+      var texto = (String(r.usuario||'') + ' ' + String(r.acao||'') + ' ' + String(r.detalhe||'')).toLowerCase();
+      return texto.indexOf(busca) >= 0;
+    });
+  }
+
+  if (!lista.length) {
+    el.innerHTML = '<div class="aud-row" style="color:var(--txt2)">Nenhum registro encontrado.</div>';
+    return;
+  }
+
+  var h = '';
+  for (var i = 0; i < lista.length; i++) {
+    var r = lista[i];
+    h += '<div class="usr-row" style="cursor:default">' +
+      '<div class="usr-avatar" style="background:rgba(37,99,235,.15);color:var(--blue-h);font-size:11px">' + String(r.data||'').slice(0,5) + '</div>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div class="usr-name">' + (r.acao || '-') + '</div>' +
+        '<div class="usr-login">' + (r.usuario || '-') + (r.perfil ? ' (' + r.perfil + ')' : '') + (r.detalhe ? ' - ' + r.detalhe : '') + '</div>' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--txt3);white-space:nowrap">' + (r.data || '') + ' ' + (r.hora || '') + '</div>' +
+    '</div>';
+  }
+  el.innerHTML = h;
 }
 
 // --- CONFIGURACOES -------------------------
