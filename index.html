@@ -45,6 +45,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 .pcard:hover .pcard-arrow{transform:translateX(3px);color:var(--blue-h)}
 .moto-col{width:190px;flex-shrink:0;border-left:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;pointer-events:none;user-select:none;background:linear-gradient(180deg,var(--s2) 0%,var(--s1) 100%)}
 @keyframes girar{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes supDigitando{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
 @keyframes sb{from{opacity:.25;transform:scaleY(.5)}to{opacity:1;transform:scaleY(1)}}
 .moto-spd{display:flex;gap:3px;align-items:flex-end}
 .moto-bar{width:5px;border-radius:3px;background:var(--blue);animation:sb .9s ease-in-out infinite alternate}
@@ -429,40 +430,54 @@ document.getElementById('js-status').style.display='none';
   <div class="modal-box" style="max-width:420px">
     <div class="modal-head">
       <div style="width:38px;height:38px;border-radius:11px;background:rgba(37,99,235,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue-h)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue-h)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
       </div>
-      <div class="modal-head-title">Central de Suporte</div>
+      <div class="modal-head-title" id="sup-modal-title">Assistente Nexora</div>
       <button class="modal-close" id="suporte-modal-close" onclick="document.getElementById('suporte-modal').style.display='none'">X</button>
     </div>
-    <div class="modal-body" style="padding-top:20px">
-      <div style="font-size:12.5px;color:var(--txt2);line-height:1.6;margin-bottom:18px">
-        Conta pra gente sua duvida, problema ou sugestao. Sua mensagem chega direto para nossa equipe.
+
+    <div id="sup-tela-chat">
+      <div id="sup-chat-log" style="padding:16px 18px;max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:10px"></div>
+      <div style="padding:12px 16px 16px;border-top:1px solid var(--line2);display:flex;gap:8px">
+        <input id="sup-chat-input" placeholder="Digite sua duvida..." style="flex:1;background:var(--s3);border:1px solid var(--line2);border-radius:20px;padding:10px 16px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none" onkeydown="if(event.key==='Enter'){suporteChatEnviar();}">
+        <button onclick="suporteChatEnviar()" style="width:40px;height:40px;border-radius:50%;background:var(--blue);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
+        </button>
       </div>
-      <div class="mfield">
-        <label>Nome *</label>
-        <input id="sup-nome" placeholder="Seu nome">
+    </div>
+
+    <div id="sup-tela-form" style="display:none">
+      <div class="modal-body" style="padding-top:20px">
+        <div style="font-size:12.5px;color:var(--txt2);line-height:1.6;margin-bottom:18px">
+          Conta pra gente sua duvida, problema ou sugestao. Sua mensagem chega direto para nossa equipe.
+        </div>
+        <div class="mfield">
+          <label>Nome *</label>
+          <input id="sup-nome" placeholder="Seu nome">
+        </div>
+        <div class="mfield">
+          <label>Categoria *</label>
+          <select id="sup-categoria">
+            <option value="">-- Selecione --</option>
+            <option value="Suporte">Suporte</option>
+            <option value="Sistema">Sistema</option>
+            <option value="Inovacao">Inovacao</option>
+            <option value="Atualizacao">Atualizacao</option>
+            <option value="Bug/Erro">Bug/Erro</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+        <div class="mfield">
+          <label>Mensagem *</label>
+          <textarea id="sup-mensagem" rows="4" placeholder="Descreva com detalhes..." style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none;resize:vertical"></textarea>
+        </div>
+        <div id="sup-status" style="font-size:12px;margin-bottom:10px;display:none"></div>
+        <button id="sup-enviar-btn" onclick="suporteEnviar()" style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:11px;padding:13px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:var(--ff);display:flex;align-items:center;justify-content:center;gap:8px">
+          Enviar mensagem
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
+        </button>
+        <button onclick="suporteVoltarChat()" style="width:100%;background:none;border:none;color:var(--txt3);font-size:12px;margin-top:10px;cursor:pointer;font-family:var(--ff)">&#8249; Voltar ao assistente</button>
       </div>
-      <div class="mfield">
-        <label>Categoria *</label>
-        <select id="sup-categoria">
-          <option value="">-- Selecione --</option>
-          <option value="Suporte">Suporte</option>
-          <option value="Sistema">Sistema</option>
-          <option value="Inovacao">Inovacao</option>
-          <option value="Atualizacao">Atualizacao</option>
-          <option value="Bug/Erro">Bug/Erro</option>
-          <option value="Outro">Outro</option>
-        </select>
-      </div>
-      <div class="mfield">
-        <label>Mensagem *</label>
-        <textarea id="sup-mensagem" rows="4" placeholder="Descreva com detalhes..." style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none;resize:vertical"></textarea>
-      </div>
-      <div id="sup-status" style="font-size:12px;margin-bottom:10px;display:none"></div>
-      <button id="sup-enviar-btn" onclick="suporteEnviar()" style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:11px;padding:13px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:var(--ff);display:flex;align-items:center;justify-content:center;gap:8px">
-        Enviar mensagem
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-      </button>
     </div>
   </div>
 </div>
@@ -3975,11 +3990,212 @@ function notifToggle() {
   if (_notifAberto) notifVerificar();
 }
 
+// Base de conhecimento do assistente de suporte. Cada item tem palavras-chave
+// (para casar com o que a pessoa digitar) e a quais perfis a pergunta se
+// aplica. perfis: null = aparece para todos; ['rep'] = so representante;
+// ['ger','adm'] = so gerente e administrador.
+var SUP_FAQ = [
+  {
+    chaves: ['senha', 'esqueci', 'esqueci a senha', 'recuperar senha', 'redefinir senha'],
+    perfis: null,
+    resposta: 'Sua senha tem 6 digitos e e cadastrada pelo administrador do sistema. Se voce esqueceu, peca para o administrador ou gerente verificar ou redefinir seu acesso na tela de Usuarios. Por seguranca, o Nexora nao mostra senhas existentes, apenas permite cadastrar uma nova.'
+  },
+  {
+    chaves: ['nao consigo entrar', 'nao consigo logar', 'login', 'nao entra', 'nao acessa', 'erro ao entrar'],
+    perfis: null,
+    resposta: 'Confira tres coisas: (1) se o usuario e a senha de 6 digitos estao digitados corretamente, (2) se voce selecionou o perfil certo na tela inicial - Representante, Gerente ou Administrador - ja que o mesmo usuario pode nao existir em outro perfil, e (3) sua conexao com a internet, ja que o sistema confere seus dados na planilha a cada login. Se mesmo assim nao conseguir, pode haver um bloqueio de manutencao ativo - fale com o administrador.'
+  },
+  {
+    chaves: ['nao aparece', 'sumiu', 'clientes nao aparecem', 'vendas nao aparecem', 'dados nao aparecem', 'atualizar'],
+    perfis: null,
+    resposta: 'Os dados do Nexora ficam guardados numa planilha do Google e sao carregados toda vez que voce entra no sistema. Se algo nao aparecer: no celular, puxe a tela para baixo para atualizar, ou feche e abra o navegador novamente. No computador, atualize a pagina (F5) ou feche e abra a aba novamente. Verifique tambem sua conexao com a internet - sem conexao, o sistema mostra os ultimos dados salvos, que podem estar desatualizados.'
+  },
+  {
+    chaves: ['agendar retorno', 'retorno', 'marcar retorno', 'como agendo'],
+    perfis: ['rep'],
+    resposta: 'Va na aba Retornos pelo menu lateral e toque no botao "+ Agendar". Preencha o cliente, a data prevista e o motivo do retorno. Depois de agendado, ele aparece na sua lista de retornos pendentes e gera um alerta automatico no Dashboard quando estiver atrasado ou vencendo no dia.'
+  },
+  {
+    chaves: ['nao vejo metas', 'nao vejo auditoria', 'cade metas', 'cade auditoria', 'tela de metas', 'tela de auditoria'],
+    perfis: ['rep'],
+    resposta: 'Essas telas sao exclusivas de Gerente e Administrador, ja que envolvem definir metas da equipe e acompanhar o historico de acoes de todo mundo no sistema. Se voce e representante e precisa de algo relacionado a isso, fale com seu gerente.'
+  },
+  {
+    chaves: ['minha meta', 'meta nao aparece', 'progresso de meta', 'meta zerada'],
+    perfis: ['rep'],
+    resposta: 'As metas (diaria, semanal e mensal) sao definidas pelo gerente na tela Metas, individualmente para cada representante. Se a sua ainda nao foi cadastrada, o bloco de progresso de metas simplesmente nao aparece no seu Dashboard - assim que o gerente definir um valor para voce, ele passa a aparecer automaticamente.'
+  },
+  {
+    chaves: ['o que e o nexora', 'o que e esse sistema', 'para que serve', 'pra que serve o sistema'],
+    perfis: null,
+    resposta: 'O Nexora Connect e o sistema de gestao comercial da Alvorada Motocicletas. Ele centraliza o cadastro de clientes, o registro de vendas, o agendamento de retornos e o acompanhamento de metas da equipe - tudo sincronizado com uma planilha do Google, acessivel por qualquer representante, gerente ou administrador autorizado.'
+  },
+  {
+    chaves: ['telas', 'menu', 'o que cada tela faz', 'como funciona o sistema', 'pra que serve cada aba'],
+    perfis: ['rep'],
+    resposta: 'Dashboard mostra um resumo do seu desempenho, retornos pendentes e progresso de metas. Captacao ajuda a buscar novos clientes. Meus Clientes lista sua carteira. Retornos e onde voce agenda e acompanha visitas. Minhas Vendas registra o que voce vendeu. Consulta de Pecas busca informacoes de pecas.'
+  },
+  {
+    chaves: ['telas', 'menu', 'o que cada tela faz', 'como funciona o sistema', 'pra que serve cada aba'],
+    perfis: ['ger', 'adm'],
+    resposta: 'Comercial mostra o desempenho de toda a equipe. Metas e onde voce define as metas de cada representante. Graficos traz visoes gerais de faturamento, pagamentos e desempenho. Mapa mostra a distribuicao de clientes e vendas pelo estado. Usuarios e Auditoria (administracao) controlam quem acessa o sistema e o historico de acoes.'
+  },
+  {
+    chaves: ['registrar venda', 'como vendo', 'cadastrar venda', 'lancar venda', 'nova venda'],
+    perfis: ['rep'],
+    resposta: 'Va na aba Minhas Vendas e procure o botao de nova venda. Preencha o cliente, a data, o valor, a forma de pagamento e outras informacoes pedidas. A venda entra automaticamente no seu faturamento e nos graficos do sistema.'
+  },
+  {
+    chaves: ['registrar venda', 'como vendo', 'cadastrar venda', 'lancar venda', 'nova venda'],
+    perfis: ['ger', 'adm'],
+    resposta: 'Va na aba Comercial, onde voce acompanha as vendas de toda a equipe. O registro de uma venda especifica e feito pelo proprio representante na conta dele, na aba Minhas Vendas.'
+  },
+  {
+    chaves: ['perfil de acesso', 'diferenca entre representante e gerente', 'tipos de usuario', 'niveis de acesso', 'permissoes'],
+    perfis: null,
+    resposta: 'O Nexora tem tres niveis de acesso. Representante ve e gerencia so a propria carteira de clientes, vendas e retornos. Gerente ve o desempenho de toda a equipe, define metas, acessa graficos e auditoria, alem de tudo que o representante ve. Administrador tem acesso total, incluindo cadastro e gerenciamento de usuarios e configuracoes do sistema. Cada pessoa so ve as telas do menu correspondentes ao seu perfil.'
+  }
+];
+
+var _supChatHistorico = [];
+
 function suporteAbrir() {
   var modal = document.getElementById('suporte-modal');
   if (modal) modal.style.display = 'flex';
   var st = document.getElementById('sup-status');
   if (st) { st.style.display = 'none'; st.textContent = ''; }
+
+  suporteMostrarChat();
+
+  // So mostra a saudacao inicial na primeira vez que o modal e aberto nesta sessao
+  if (!_supChatHistorico.length) {
+    var log = document.getElementById('sup-chat-log');
+    if (log) {
+      var nomeUser = (me && me.name) ? me.name.split(' ')[0] : '';
+      suporteAdicionarBolha('bot', 'Oi' + (nomeUser ? ', ' + nomeUser : '') + '! Sou o assistente do Nexora. Pode me perguntar sobre login, senha, retornos, vendas, metas ou como o sistema funciona.');
+    }
+  }
+}
+
+function suporteMostrarChat() {
+  var telaChat = document.getElementById('sup-tela-chat');
+  var telaForm = document.getElementById('sup-tela-form');
+  var titulo = document.getElementById('sup-modal-title');
+  if (telaChat) telaChat.style.display = 'block';
+  if (telaForm) telaForm.style.display = 'none';
+  if (titulo) titulo.textContent = 'Assistente Nexora';
+  var input = document.getElementById('sup-chat-input');
+  if (input) setTimeout(function() { input.focus(); }, 200);
+}
+
+function suporteVoltarChat() {
+  suporteMostrarChat();
+}
+
+function suporteMostrarForm(prefilMensagem) {
+  var telaChat = document.getElementById('sup-tela-chat');
+  var telaForm = document.getElementById('sup-tela-form');
+  var titulo = document.getElementById('sup-modal-title');
+  if (telaChat) telaChat.style.display = 'none';
+  if (telaForm) telaForm.style.display = 'block';
+  if (titulo) titulo.textContent = 'Falar com o suporte';
+  var msgEl = document.getElementById('sup-mensagem');
+  if (msgEl && prefilMensagem) msgEl.value = prefilMensagem;
+  var nomeEl = document.getElementById('sup-nome');
+  if (nomeEl && me && me.name && !nomeEl.value) nomeEl.value = me.name;
+}
+
+// Adiciona uma bolha de mensagem ao log do chat (autor: 'user' ou 'bot')
+function suporteAdicionarBolha(autor, texto, htmlExtra) {
+  var log = document.getElementById('sup-chat-log');
+  if (!log) return;
+  var isUser = autor === 'user';
+  var bolha = document.createElement('div');
+  bolha.style.cssText = 'display:flex;' + (isUser ? 'justify-content:flex-end' : 'justify-content:flex-start');
+  var conteudo = document.createElement('div');
+  conteudo.style.cssText = 'max-width:78%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;' +
+    (isUser ? 'background:var(--blue);color:#fff;border-bottom-right-radius:4px' : 'background:var(--s3);color:var(--txt);border-bottom-left-radius:4px');
+  conteudo.textContent = texto;
+  bolha.appendChild(conteudo);
+  log.appendChild(bolha);
+  if (htmlExtra) {
+    var extraWrap = document.createElement('div');
+    extraWrap.style.cssText = 'display:flex;justify-content:flex-start';
+    extraWrap.innerHTML = htmlExtra;
+    log.appendChild(extraWrap);
+  }
+  log.scrollTop = log.scrollHeight;
+  _supChatHistorico.push({ autor: autor, texto: texto });
+}
+
+// Mostra o indicador "digitando..." por um tempo, depois executa o callback
+function suporteMostrarDigitando(callback) {
+  var log = document.getElementById('sup-chat-log');
+  if (!log) { callback(); return; }
+  var bolha = document.createElement('div');
+  bolha.id = 'sup-digitando';
+  bolha.style.cssText = 'display:flex;justify-content:flex-start';
+  bolha.innerHTML = '<div style="background:var(--s3);padding:10px 16px;border-radius:14px;border-bottom-left-radius:4px;display:flex;gap:4px;align-items:center">' +
+    '<span class="sup-dot" style="width:6px;height:6px;border-radius:50%;background:var(--txt3);animation:supDigitando 1.2s ease-in-out infinite"></span>' +
+    '<span class="sup-dot" style="width:6px;height:6px;border-radius:50%;background:var(--txt3);animation:supDigitando 1.2s ease-in-out .2s infinite"></span>' +
+    '<span class="sup-dot" style="width:6px;height:6px;border-radius:50%;background:var(--txt3);animation:supDigitando 1.2s ease-in-out .4s infinite"></span>' +
+    '</div>';
+  log.appendChild(bolha);
+  log.scrollTop = log.scrollHeight;
+  var tempo = 700 + Math.random() * 600;
+  setTimeout(function() {
+    var d = document.getElementById('sup-digitando');
+    if (d) d.remove();
+    callback();
+  }, tempo);
+}
+
+// Normaliza texto para comparacao: minusculas, sem acento
+function suporteNormalizar(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
+
+// Busca a melhor pergunta da FAQ que combina com o texto digitado,
+// considerando apenas perguntas liberadas para o perfil atual.
+function suporteBuscarResposta(texto) {
+  var perfilAtual = (me && me.role) ? me.role : 'rep';
+  var textoNorm = suporteNormalizar(texto);
+  var melhor = null, melhorScore = 0;
+
+  for (var i = 0; i < SUP_FAQ.length; i++) {
+    var item = SUP_FAQ[i];
+    if (item.perfis && item.perfis.indexOf(perfilAtual) < 0) continue;
+
+    for (var j = 0; j < item.chaves.length; j++) {
+      var chaveNorm = suporteNormalizar(item.chaves[j]);
+      if (!chaveNorm) continue;
+      if (textoNorm.indexOf(chaveNorm) >= 0) {
+        var score = chaveNorm.length;
+        if (score > melhorScore) { melhorScore = score; melhor = item; }
+      }
+    }
+  }
+  return melhor;
+}
+
+function suporteChatEnviar() {
+  var input = document.getElementById('sup-chat-input');
+  if (!input) return;
+  var texto = input.value.trim();
+  if (!texto) return;
+  input.value = '';
+
+  suporteAdicionarBolha('user', texto);
+
+  suporteMostrarDigitando(function() {
+    var resposta = suporteBuscarResposta(texto);
+    if (resposta) {
+      suporteAdicionarBolha('bot', resposta.resposta);
+    } else {
+      var btnHtml = '<button onclick="suporteMostrarForm(' + "'" + texto.replace(/'/g, "\\'") + "'" + ')" style="margin-top:6px;background:var(--blue);color:#fff;border:none;border-radius:18px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--ff)">Falar com o suporte</button>';
+      suporteAdicionarBolha('bot', 'Nao encontrei essa resposta na minha lista. Voce deseja conversar com o suporte?', btnHtml);
+    }
+  });
 }
 
 // Envia a mensagem de suporte direto para o Google Forms, por baixo dos panos,
