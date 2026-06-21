@@ -76,7 +76,9 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 .sb-item{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13px;color:var(--txt2);cursor:pointer;border-left:2px solid transparent;background:none;width:100%;text-align:left;border-right:none;border-top:none;border-bottom:none;font-family:var(--ff)}
 .sb-item:hover{background:var(--s2);color:var(--txt)}
 .sb-item.on{color:var(--blue-h);background:rgba(37,99,235,.08);border-left-color:var(--blue);font-weight:600}
-.main{flex:1;padding:28px;overflow-y:auto;min-height:0}
+.main{flex:1;padding:28px;overflow-y:auto;min-height:0;position:relative}
+.main::before{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22400%22%20height%3D%22400%22%20viewBox%3D%220%200%20400%20400%22%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2270%22%20r%3D%2222.0%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Ccircle%20cx%3D%2260%22%20cy%3D%2270%22%20r%3D%228.0%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%2282.0%22%20y1%3D%2270.0%22%20x2%3D%2287.0%22%20y2%3D%2270.0%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%2280.3%22%20y1%3D%2278.4%22%20x2%3D%2284.9%22%20y2%3D%2280.3%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%2275.6%22%20y1%3D%2285.6%22%20x2%3D%2279.1%22%20y2%3D%2289.1%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%2268.4%22%20y1%3D%2290.3%22%20x2%3D%2270.3%22%20y2%3D%2294.9%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%2260.0%22%20y1%3D%2292.0%22%20x2%3D%2260.0%22%20y2%3D%2297.0%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%2251.6%22%20y1%3D%2290.3%22%20x2%3D%2249.7%22%20y2%3D%2294.9%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%2244.4%22%20y1%3D%2285.6%22%20x2%3D%2240.9%22%20y2%3D%2289.1%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%2239.7%22%20y1%3D%2278.4%22%20x2%3D%2235.1%22%20y2%3D%2280.3%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%2238.0%22%20y1%3D%2270.0%22%20x2%3D%2233.0%22%20y2%3D%2270.0%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%2239.7%22%20y1%3D%2261.6%22%20x2%3D%2235.1%22%20y2%3D%2259.7%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%2244.4%22%20y1%3D%2254.4%22%20x2%3D%2240.9%22%20y2%3D%2250.9%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%2251.6%22%20y1%3D%2249.7%22%20x2%3D%2249.7%22%20y2%3D%2245.1%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%2260.0%22%20y1%3D%2248.0%22%20x2%3D%2260.0%22%20y2%3D%2243.0%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%2268.4%22%20y1%3D%2249.7%22%20x2%3D%2270.3%22%20y2%3D%2245.1%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%2275.6%22%20y1%3D%2254.4%22%20x2%3D%2279.1%22%20y2%3D%2250.9%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%2280.3%22%20y1%3D%2261.6%22%20x2%3D%2284.9%22%20y2%3D%2259.7%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%3Cellipse%20cx%3D%2293.0%22%20cy%3D%2275%22%20rx%3D%225.0%22%20ry%3D%227.5%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.8%22/%3E%0A%3Cellipse%20cx%3D%22107.0%22%20cy%3D%2275%22%20rx%3D%225.0%22%20ry%3D%227.5%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.8%22%20transform%3D%22rotate%2890%20107.0%2075%29%22/%3E%3Cellipse%20cx%3D%22111.0%22%20cy%3D%2265%22%20rx%3D%225.0%22%20ry%3D%227.5%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.8%22/%3E%0A%3Cellipse%20cx%3D%22125.0%22%20cy%3D%2265%22%20rx%3D%225.0%22%20ry%3D%227.5%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.8%22%20transform%3D%22rotate%2890%20125.0%2065%29%22/%3E%3Ccircle%20cx%3D%22310%22%20cy%3D%2290%22%20r%3D%2216.2%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Ccircle%20cx%3D%22310%22%20cy%3D%2290%22%20r%3D%229.9%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.5%22/%3E%0A%3Ccircle%20cx%3D%22310.0%22%20cy%3D%2278.3%22%20r%3D%221.8%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.5%22/%3E%0A%3Ccircle%20cx%3D%22310.0%22%20cy%3D%22101.7%22%20r%3D%221.8%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.5%22/%3E%0A%3Ccircle%20cx%3D%22298.3%22%20cy%3D%2290.0%22%20r%3D%221.8%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.5%22/%3E%0A%3Ccircle%20cx%3D%22321.7%22%20cy%3D%2290.0%22%20r%3D%221.8%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.5%22/%3E%0A%3Cline%20x1%3D%22326.2%22%20y1%3D%2290.0%22%20x2%3D%22328.9%22%20y2%3D%2290.0%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%22324.0%22%20y1%3D%2298.1%22%20x2%3D%22326.4%22%20y2%3D%2299.5%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%22318.1%22%20y1%3D%22104.0%22%20x2%3D%22319.4%22%20y2%3D%22106.4%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%22310.0%22%20y1%3D%22106.2%22%20x2%3D%22310.0%22%20y2%3D%22108.9%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%22301.9%22%20y1%3D%22104.0%22%20x2%3D%22300.6%22%20y2%3D%22106.4%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%22296.0%22%20y1%3D%2298.1%22%20x2%3D%22293.6%22%20y2%3D%2299.5%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%22293.8%22%20y1%3D%2290.0%22%20x2%3D%22291.1%22%20y2%3D%2290.0%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%22296.0%22%20y1%3D%2281.9%22%20x2%3D%22293.6%22%20y2%3D%2280.5%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%22301.9%22%20y1%3D%2276.0%22%20x2%3D%22300.6%22%20y2%3D%2273.6%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%22310.0%22%20y1%3D%2273.8%22%20x2%3D%22310.0%22%20y2%3D%2271.1%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%22318.1%22%20y1%3D%2276.0%22%20x2%3D%22319.4%22%20y2%3D%2273.6%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%22324.0%22%20y1%3D%2281.9%22%20x2%3D%22326.4%22%20y2%3D%2280.5%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%22250%22%20r%3D%2216.0%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222.5%22/%3E%0A%3Ccircle%20cx%3D%2250%22%20cy%3D%22250%22%20r%3D%229.0%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Ccircle%20cx%3D%2262.5%22%20cy%3D%22250.0%22%20r%3D%221.8%22%20fill%3D%22%23ffffff%22/%3E%0A%3Ccircle%20cx%3D%2258.8%22%20cy%3D%22258.8%22%20r%3D%221.8%22%20fill%3D%22%23ffffff%22/%3E%0A%3Ccircle%20cx%3D%2250.0%22%20cy%3D%22262.5%22%20r%3D%221.8%22%20fill%3D%22%23ffffff%22/%3E%0A%3Ccircle%20cx%3D%2241.2%22%20cy%3D%22258.8%22%20r%3D%221.8%22%20fill%3D%22%23ffffff%22/%3E%0A%3Ccircle%20cx%3D%2237.5%22%20cy%3D%22250.0%22%20r%3D%221.8%22%20fill%3D%22%23ffffff%22/%3E%0A%3Ccircle%20cx%3D%2241.2%22%20cy%3D%22241.2%22%20r%3D%221.8%22%20fill%3D%22%23ffffff%22/%3E%0A%3Ccircle%20cx%3D%2250.0%22%20cy%3D%22237.5%22%20r%3D%221.8%22%20fill%3D%22%23ffffff%22/%3E%0A%3Ccircle%20cx%3D%2258.8%22%20cy%3D%22241.2%22%20r%3D%221.8%22%20fill%3D%22%23ffffff%22/%3E%3Ccircle%20cx%3D%22330%22%20cy%3D%22230%22%20r%3D%2218.7%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Ccircle%20cx%3D%22330%22%20cy%3D%22230%22%20r%3D%226.8%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%22348.7%22%20y1%3D%22230.0%22%20x2%3D%22352.9%22%20y2%3D%22230.0%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%22347.3%22%20y1%3D%22237.2%22%20x2%3D%22351.2%22%20y2%3D%22238.8%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%22343.2%22%20y1%3D%22243.2%22%20x2%3D%22346.2%22%20y2%3D%22246.2%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%22337.2%22%20y1%3D%22247.3%22%20x2%3D%22338.8%22%20y2%3D%22251.2%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%22330.0%22%20y1%3D%22248.7%22%20x2%3D%22330.0%22%20y2%3D%22252.9%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%22322.8%22%20y1%3D%22247.3%22%20x2%3D%22321.2%22%20y2%3D%22251.2%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%22316.8%22%20y1%3D%22243.2%22%20x2%3D%22313.8%22%20y2%3D%22246.2%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%22312.7%22%20y1%3D%22237.2%22%20x2%3D%22308.8%22%20y2%3D%22238.8%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%22311.3%22%20y1%3D%22230.0%22%20x2%3D%22307.1%22%20y2%3D%22230.0%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%22312.7%22%20y1%3D%22222.8%22%20x2%3D%22308.8%22%20y2%3D%22221.2%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%22316.8%22%20y1%3D%22216.8%22%20x2%3D%22313.8%22%20y2%3D%22213.8%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%22322.8%22%20y1%3D%22212.7%22%20x2%3D%22321.2%22%20y2%3D%22208.8%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%22330.0%22%20y1%3D%22211.3%22%20x2%3D%22330.0%22%20y2%3D%22207.1%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%22337.2%22%20y1%3D%22212.7%22%20x2%3D%22338.8%22%20y2%3D%22208.8%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%22343.2%22%20y1%3D%22216.8%22%20x2%3D%22346.2%22%20y2%3D%22213.8%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%0A%3Cline%20x1%3D%22347.3%22%20y1%3D%22222.8%22%20x2%3D%22351.2%22%20y2%3D%22221.2%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%223%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%22350%22%20r%3D%2218.0%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Ccircle%20cx%3D%2290%22%20cy%3D%22350%22%20r%3D%2211.0%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.5%22/%3E%0A%3Ccircle%20cx%3D%2290.0%22%20cy%3D%22337.0%22%20r%3D%222.0%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.5%22/%3E%0A%3Ccircle%20cx%3D%2290.0%22%20cy%3D%22363.0%22%20r%3D%222.0%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.5%22/%3E%0A%3Ccircle%20cx%3D%2277.0%22%20cy%3D%22350.0%22%20r%3D%222.0%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.5%22/%3E%0A%3Ccircle%20cx%3D%22103.0%22%20cy%3D%22350.0%22%20r%3D%222.0%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.5%22/%3E%0A%3Cline%20x1%3D%22108.0%22%20y1%3D%22350.0%22%20x2%3D%22111.0%22%20y2%3D%22350.0%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%22105.6%22%20y1%3D%22359.0%22%20x2%3D%22108.2%22%20y2%3D%22360.5%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%2299.0%22%20y1%3D%22365.6%22%20x2%3D%22100.5%22%20y2%3D%22368.2%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%2290.0%22%20y1%3D%22368.0%22%20x2%3D%2290.0%22%20y2%3D%22371.0%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%2281.0%22%20y1%3D%22365.6%22%20x2%3D%2279.5%22%20y2%3D%22368.2%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%2274.4%22%20y1%3D%22359.0%22%20x2%3D%2271.8%22%20y2%3D%22360.5%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%2272.0%22%20y1%3D%22350.0%22%20x2%3D%2269.0%22%20y2%3D%22350.0%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%2274.4%22%20y1%3D%22341.0%22%20x2%3D%2271.8%22%20y2%3D%22339.5%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%2281.0%22%20y1%3D%22334.4%22%20x2%3D%2279.5%22%20y2%3D%22331.8%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%2290.0%22%20y1%3D%22332.0%22%20x2%3D%2290.0%22%20y2%3D%22329.0%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%2299.0%22%20y1%3D%22334.4%22%20x2%3D%22100.5%22%20y2%3D%22331.8%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Cline%20x1%3D%22105.6%22%20y1%3D%22341.0%22%20x2%3D%22108.2%22%20y2%3D%22339.5%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%3Ccircle%20cx%3D%22290%22%20cy%3D%22360%22%20r%3D%2214.4%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222.5%22/%3E%0A%3Ccircle%20cx%3D%22290%22%20cy%3D%22360%22%20r%3D%228.1%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%222%22/%3E%0A%3Ccircle%20cx%3D%22301.2%22%20cy%3D%22360.0%22%20r%3D%221.6%22%20fill%3D%22%23ffffff%22/%3E%0A%3Ccircle%20cx%3D%22298.0%22%20cy%3D%22368.0%22%20r%3D%221.6%22%20fill%3D%22%23ffffff%22/%3E%0A%3Ccircle%20cx%3D%22290.0%22%20cy%3D%22371.2%22%20r%3D%221.6%22%20fill%3D%22%23ffffff%22/%3E%0A%3Ccircle%20cx%3D%22282.0%22%20cy%3D%22368.0%22%20r%3D%221.6%22%20fill%3D%22%23ffffff%22/%3E%0A%3Ccircle%20cx%3D%22278.8%22%20cy%3D%22360.0%22%20r%3D%221.6%22%20fill%3D%22%23ffffff%22/%3E%0A%3Ccircle%20cx%3D%22282.0%22%20cy%3D%22352.0%22%20r%3D%221.6%22%20fill%3D%22%23ffffff%22/%3E%0A%3Ccircle%20cx%3D%22290.0%22%20cy%3D%22348.8%22%20r%3D%221.6%22%20fill%3D%22%23ffffff%22/%3E%0A%3Ccircle%20cx%3D%22298.0%22%20cy%3D%22352.0%22%20r%3D%221.6%22%20fill%3D%22%23ffffff%22/%3E%3Cellipse%20cx%3D%22212.3%22%20cy%3D%22180%22%20rx%3D%225.5%22%20ry%3D%228.2%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.8%22/%3E%0A%3Cellipse%20cx%3D%22227.7%22%20cy%3D%22180%22%20rx%3D%225.5%22%20ry%3D%228.2%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.8%22%20transform%3D%22rotate%2890%20227.7%20180%29%22/%3E%3Cellipse%20cx%3D%22230.3%22%20cy%3D%22170%22%20rx%3D%225.5%22%20ry%3D%228.2%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.8%22/%3E%0A%3Cellipse%20cx%3D%22245.7%22%20cy%3D%22170%22%20rx%3D%225.5%22%20ry%3D%228.2%22%20fill%3D%22none%22%20stroke%3D%22%23ffffff%22%20stroke-width%3D%221.8%22%20transform%3D%22rotate%2890%20245.7%20170%29%22/%3E%3C/svg%3E%0A");background-size:340px 340px;background-repeat:repeat;opacity:.05;pointer-events:none;z-index:0}
+.main > *{position:relative;z-index:1}
 .page-eye{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--blue-h);margin-bottom:4px}
 .page-title{font-size:22px;font-weight:700;letter-spacing:-.5px;margin-bottom:4px}
 .page-sub{font-size:13px;color:var(--txt2);margin-bottom:22px}
@@ -265,21 +267,40 @@ document.getElementById('js-status').style.display='none';
       </div>
       <div class="moto-col">
         <svg viewBox="0 0 140 140" width="130" height="130" style="filter:drop-shadow(0 0 18px rgba(37,99,235,.35))">
-          <circle cx="70" cy="70" r="64" fill="none" stroke="#1E3A5F" stroke-width="6"/>
-          <circle cx="70" cy="70" r="52" fill="none" stroke="#1A2847" stroke-width="3"/>
-          <g style="transform-origin:70px 70px;animation:girar 4s linear infinite">
-            <line x1="70" y1="18" x2="70" y2="70" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="70" y1="122" x2="70" y2="70" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="18" y1="70" x2="70" y2="70" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="122" y1="70" x2="70" y2="70" stroke="#3B82F6" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="27.5" y1="27.5" x2="70" y2="70" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"/>
-            <line x1="112.5" y1="112.5" x2="70" y2="70" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"/>
-            <line x1="112.5" y1="27.5" x2="70" y2="70" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"/>
-            <line x1="27.5" y1="112.5" x2="70" y2="70" stroke="#60A5FA" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="70" cy="70" r="60" fill="#162033"/>
+          <g style="transform-origin:70px 70px;animation:girar 6s linear infinite">
+            <circle cx="70" cy="70" r="60" fill="none" stroke="#1A2233" stroke-width="14"/>
+            <path d="M123.0 70.0 Q129.8 75.4 137.0 70.0" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M120.4 86.4 Q125.2 93.6 133.7 90.7" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M112.9 101.2 Q115.2 109.5 124.2 109.4" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M101.2 112.9 Q100.8 121.5 109.4 124.2" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M86.4 120.4 Q83.3 128.5 90.7 133.7" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M70.0 123.0 Q64.6 129.8 70.0 137.0" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M53.6 120.4 Q46.4 125.2 49.3 133.7" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M38.8 112.9 Q30.5 115.2 30.6 124.2" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M27.1 101.2 Q18.5 100.8 15.8 109.4" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M19.6 86.4 Q11.5 83.3 6.3 90.7" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M17.0 70.0 Q10.2 64.6 3.0 70.0" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M19.6 53.6 Q14.8 46.4 6.3 49.3" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M27.1 38.8 Q24.8 30.5 15.8 30.6" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M38.8 27.1 Q39.2 18.5 30.6 15.8" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M53.6 19.6 Q56.7 11.5 49.3 6.3" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M70.0 17.0 Q75.4 10.2 70.0 3.0" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M86.4 19.6 Q93.6 14.8 90.7 6.3" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M101.2 27.1 Q109.5 24.8 109.4 15.8" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M112.9 38.8 Q121.5 39.2 124.2 30.6" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M120.4 53.6 Q128.5 56.7 133.7 49.3" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="70" cy="70" r="46" fill="none" stroke="#2D3A52" stroke-width="2"/>
+            <circle cx="70" cy="70" r="38" fill="#0F1726" stroke="#2D3A52" stroke-width="1.5"/>
+            <path d="M83.0 70.0 Q96.3 75.9 103.3 86.1" fill="none" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+            <path d="M76.5 81.3 Q78.1 95.8 72.7 106.9" fill="none" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+            <path d="M63.5 81.3 Q51.7 89.9 39.4 90.8" fill="none" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+            <path d="M57.0 70.0 Q43.7 64.1 36.7 53.9" fill="none" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+            <path d="M63.5 58.7 Q61.9 44.2 67.3 33.1" fill="none" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+            <path d="M76.5 58.7 Q88.3 50.1 100.6 49.2" fill="none" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="70" cy="70" r="11" fill="#0D1628" stroke="#2563EB" stroke-width="2.5"/>
+            <circle cx="70" cy="70" r="4.5" fill="#60A5FA"/>
           </g>
-          <circle cx="70" cy="70" r="14" fill="#0D1628" stroke="#2563EB" stroke-width="2.5"/>
-          <circle cx="70" cy="70" r="7" fill="#2563EB"/>
-          <circle cx="70" cy="70" r="3" fill="#60A5FA"/>
         </svg>
         <div class="moto-spd">
           <div class="moto-bar" style="height:10px;animation-delay:0s"></div>
@@ -606,6 +627,7 @@ var CLI_DB = [];
 var VND_DB = [];
 var RET_DB = [];
 var USR_DB = [];
+var META_DB = [];
 
 // Remove logins duplicados, mantendo a ultima ocorrencia (a mais recente na planilha).
 // Usado sempre que USR_DB e populado a partir da planilha, para a tela nunca
@@ -642,12 +664,14 @@ function lsLoad() {
   try { VND_DB = JSON.parse(lsGet('nxr_vnd') || '[]'); } catch(e) { VND_DB = []; }
   try { RET_DB = JSON.parse(lsGet('nxr_ret') || '[]'); } catch(e) { RET_DB = []; }
   try { USR_DB = JSON.parse(lsGet('nxr_usr') || '[]'); } catch(e) { USR_DB = []; }
+  try { META_DB = JSON.parse(lsGet('nxr_meta') || '[]'); } catch(e) { META_DB = []; }
 }
 function lsSave() {
   lsSet('nxr_cli', JSON.stringify(CLI_DB));
   lsSet('nxr_vnd', JSON.stringify(VND_DB));
   lsSet('nxr_ret', JSON.stringify(RET_DB));
   lsSet('nxr_usr', JSON.stringify(USR_DB));
+  lsSet('nxr_meta', JSON.stringify(META_DB));
 }
 
 // --- TOAST ---------------------------------
@@ -977,6 +1001,14 @@ function retCarregarPlanilha() {
       vndRenderSafe();
     }
   });
+  sheetsGet('getMetas', function(d) {
+    if (d && d.ok && d.data) {
+      META_DB = d.data;
+      lsSet('nxr_meta', JSON.stringify(META_DB));
+      metaRenderSafe();
+      dashRenderSafe();
+    }
+  });
 }
 
 // Renderiza s- se o elemento estiver na tela
@@ -991,6 +1023,14 @@ function retRenderSafe() {
 function vndRenderSafe() {
   var el = document.getElementById('vnd-lista');
   if (el) vndRender();
+}
+function metaRenderSafe() {
+  var el = document.getElementById('meta-lista');
+  if (el) metaRender();
+}
+function dashRenderSafe() {
+  var el = document.getElementById('pg-title');
+  if (el && el.textContent === 'Dashboard') navigate('dashboard');
 }
 
 function launchApp() {
@@ -1051,6 +1091,7 @@ var NAV_MAP = {
     { id: 'clientes', label: 'Todos os Clientes' },
     { id: 'retornos', label: 'Retornos' },
     { id: 'comercial', label: 'Comercial' },
+    { id: 'metas', label: 'Metas' },
     { id: 'graficos', label: 'Graficos' },
     { id: 'mapa', label: 'Mapa' },
     { id: 'relatorio', label: 'Relatorio' },
@@ -1066,6 +1107,7 @@ var NAV_MAP = {
     { id: 'clientes', label: 'Todos os Clientes' },
     { id: 'retornos', label: 'Retornos' },
     { id: 'comercial', label: 'Comercial' },
+    { id: 'metas', label: 'Metas' },
     { id: 'graficos', label: 'Graficos' },
     { id: 'mapa', label: 'Mapa' },
     { id: 'relatorio', label: 'Relatorio' },
@@ -1127,6 +1169,7 @@ function navigate(id) {
 
     if (id === 'admin') setTimeout(usrRender, 50);
     if (id === 'auditoria') setTimeout(audRender, 50);
+    if (id === 'metas') setTimeout(metaRender, 50);
     if (id === 'config') setTimeout(cfgCarregar, 50);
     if (id === 'relatorio') setTimeout(relGerar, 50);
     if (id === 'graficos') setTimeout(grafRender, 50);
@@ -1801,6 +1844,88 @@ function buildPage(id) {
     var pend = 0;
     for (var j = 0; j < ret.length; j++) { if (ret[j].status !== 'concluido') pend++; }
 
+    // Card de retornos urgentes (atrasados ou de hoje), reaproveitando a
+    // mesma logica de calculo ja usada pelo sininho de notificacao.
+    var retUrgentesHtml = '';
+    if (role === 'rep') {
+      var hoje0 = new Date(); hoje0.setHours(0,0,0,0);
+      var urgentes = [];
+      for (var u = 0; u < ret.length; u++) {
+        var rUrg = ret[u];
+        if (rUrg.status === 'concluido') continue;
+        var dUrg = null;
+        if (rUrg.data) {
+          var pUrg = rUrg.data.split('/');
+          if (pUrg.length === 3) { dUrg = new Date(Number(pUrg[2]), Number(pUrg[1])-1, Number(pUrg[0])); }
+          else { pUrg = rUrg.data.split('-'); if (pUrg.length === 3) dUrg = new Date(Number(pUrg[0]), Number(pUrg[1])-1, Number(pUrg[2])); }
+        }
+        if (!dUrg) continue;
+        dUrg.setHours(0,0,0,0);
+        var diffUrg = Math.round((dUrg - hoje0) / 86400000);
+        if (diffUrg <= 0) urgentes.push({ r: rUrg, diff: diffUrg });
+      }
+      if (urgentes.length) {
+        urgentes.sort(function(a,b){ return a.diff - b.diff; });
+        var itensUrg = '';
+        for (var k = 0; k < Math.min(urgentes.length, 4); k++) {
+          var ur = urgentes[k].r;
+          var tagUrg = urgentes[k].diff < 0 ? '<span style="color:var(--red);font-weight:700">atrasado</span>' : '<span style="color:var(--amber);font-weight:700">hoje</span>';
+          itensUrg += '<div style="padding:8px 0;border-bottom:1px solid var(--line)">' +
+            '<div style="font-weight:600">' + (ur.cliente || '-') + ' - ' + tagUrg + '</div>' +
+            '<div style="font-size:11px;color:var(--txt2)">' + (ur.motivo || '') + '</div>' +
+          '</div>';
+        }
+        retUrgentesHtml = '<div class="cap-wrap" style="margin-bottom:14px;border-left:3px solid var(--red)">' +
+          '<div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--red)">Retornos pendentes (' + urgentes.length + ')</div>' +
+          itensUrg +
+        '</div>';
+      }
+    }
+
+    // Indicadores de progresso de meta (diaria/semanal/mensal), apenas para representante
+    var metaHtml = '';
+    if (role === 'rep') {
+      var metaRep = metaBuscarRegistro(me.name);
+      if (Number(metaRep.diaria) > 0 || Number(metaRep.semanal) > 0 || Number(metaRep.mensal) > 0) {
+        var agora = new Date();
+        var inicioDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+        var diaSemana = agora.getDay();
+        var inicioSemana = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() - diaSemana);
+        var inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+
+        var fatDia = 0, fatSemana = 0, fatMes = 0;
+        for (var v = 0; v < vnd.length; v++) {
+          var dv = dashParseData(vnd[v].data);
+          if (!dv) continue;
+          var valv = Number(vnd[v].valor || 0);
+          if (dv >= inicioDia.getTime()) fatDia += valv;
+          if (dv >= inicioSemana.getTime()) fatSemana += valv;
+          if (dv >= inicioMes.getTime()) fatMes += valv;
+        }
+
+        function metaBarra(label, atual, meta) {
+          var pct = meta > 0 ? Math.min(100, Math.round((atual / meta) * 100)) : 0;
+          var cor = pct >= 100 ? 'var(--green)' : (pct >= 60 ? 'var(--blue)' : 'var(--amber)');
+          return '<div style="margin-bottom:12px">' +
+            '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--txt2);margin-bottom:4px">' +
+              '<span>' + label + '</span>' +
+              '<span>R$ ' + atual.toLocaleString('pt-BR',{minimumFractionDigits:0}) + ' / R$ ' + Number(meta).toLocaleString('pt-BR',{minimumFractionDigits:0}) + '</span>' +
+            '</div>' +
+            '<div style="background:var(--s3);border-radius:6px;height:8px;overflow:hidden">' +
+              '<div style="background:' + cor + ';height:100%;width:' + pct + '%"></div>' +
+            '</div>' +
+          '</div>';
+        }
+
+        metaHtml = '<div class="cap-wrap" style="margin-bottom:14px">' +
+          '<div style="font-size:13px;font-weight:700;margin-bottom:12px">Progresso de metas</div>' +
+          (Number(metaRep.diaria) > 0 ? metaBarra('Meta diaria', fatDia, metaRep.diaria) : '') +
+          (Number(metaRep.semanal) > 0 ? metaBarra('Meta semanal', fatSemana, metaRep.semanal) : '') +
+          (Number(metaRep.mensal) > 0 ? metaBarra('Meta mensal', fatMes, metaRep.mensal) : '') +
+        '</div>';
+      }
+    }
+
     // Vendas recentes (cliente + valor), mais recentes primeiro
     var vndOrdenado = vnd.slice().sort(function(a, b) {
       return dashParseData(b.data) - dashParseData(a.data);
@@ -1835,6 +1960,8 @@ function buildPage(id) {
         '<div class="sc"><div class="sc-val">' + vnd.length + '</div><div class="sc-label">Vendas</div></div>' +
         '<div class="sc"><div class="sc-val">R$ ' + fat.toLocaleString('pt-BR') + '</div><div class="sc-label">Faturamento</div></div>' +
         '</div>' +
+        retUrgentesHtml +
+        metaHtml +
         '<div class="cap-wrap" style="margin-bottom:14px">' +
         '<div style="font-size:13px;font-weight:700;margin-bottom:12px">Faturamento mensal</div>' +
         graficoSvg +
@@ -2024,6 +2151,12 @@ function buildPage(id) {
       eye: 'Administracao', title: 'Auditoria', sub: 'Log de acoes',
       body: '<div class="usr-topbar"><input class="usr-search" id="aud-busca" placeholder="Buscar..."></div>' +
         '<div class="usr-table" id="aud-lista"></div>'
+    };
+  }
+  if (id === 'metas') {
+    return {
+      eye: 'Comercial', title: 'Metas', sub: 'Defina metas diarias, semanais e mensais por representante',
+      body: '<div id="meta-lista"></div>'
     };
   }
   if (id === 'config') {
@@ -3172,6 +3305,87 @@ function audAplicarFiltro() {
     '</div>';
   }
   el.innerHTML = h;
+}
+
+// --- METAS ----------------------------------
+// Busca o registro de meta de um representante pelo nome (case-insensitive).
+// Retorna valores zerados se ainda nao houver meta definida.
+function metaBuscarRegistro(nomeRep) {
+  var alvo = String(nomeRep || '').trim().toLowerCase();
+  for (var i = 0; i < META_DB.length; i++) {
+    if (String(META_DB[i].representante || '').trim().toLowerCase() === alvo) {
+      return META_DB[i];
+    }
+  }
+  return { representante: nomeRep, diaria: 0, semanal: 0, mensal: 0 };
+}
+
+function metaRender() {
+  var el = document.getElementById('meta-lista');
+  if (!el) return;
+
+  var reps = [];
+  for (var i = 0; i < USR_DB.length; i++) {
+    if (USR_DB[i].role === 'rep') reps.push(USR_DB[i]);
+  }
+
+  if (!reps.length) {
+    el.innerHTML = '<div class="empty-state">Nenhum representante cadastrado.</div>';
+    return;
+  }
+
+  var h = '';
+  for (var j = 0; j < reps.length; j++) {
+    var rep = reps[j];
+    var m = metaBuscarRegistro(rep.name);
+    var safeId = 'meta-' + j;
+    h += '<div class="cap-wrap" style="margin-bottom:12px">' +
+      '<div style="font-weight:700;margin-bottom:12px">' + (rep.name || rep.user) + '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">' +
+        '<div class="mfield" style="margin-bottom:0">' +
+          '<label>Meta diaria (R$)</label>' +
+          '<input type="number" min="0" step="0.01" id="' + safeId + '-dia" value="' + Number(m.diaria || 0) + '">' +
+        '</div>' +
+        '<div class="mfield" style="margin-bottom:0">' +
+          '<label>Meta semanal (R$)</label>' +
+          '<input type="number" min="0" step="0.01" id="' + safeId + '-sem" value="' + Number(m.semanal || 0) + '">' +
+        '</div>' +
+        '<div class="mfield" style="margin-bottom:0">' +
+          '<label>Meta mensal (R$)</label>' +
+          '<input type="number" min="0" step="0.01" id="' + safeId + '-mes" value="' + Number(m.mensal || 0) + '">' +
+        '</div>' +
+      '</div>' +
+      '<button class="btn-new" style="margin-top:12px" onclick="metaSalvar(\'' + String(rep.name || '').replace(/'/g,"\\'") + '\', \'' + safeId + '\')">Salvar metas</button>' +
+    '</div>';
+  }
+  el.innerHTML = h;
+}
+
+function metaSalvar(nomeRep, safeId) {
+  var dia = Number(document.getElementById(safeId + '-dia') ? document.getElementById(safeId + '-dia').value : 0) || 0;
+  var sem = Number(document.getElementById(safeId + '-sem') ? document.getElementById(safeId + '-sem').value : 0) || 0;
+  var mes = Number(document.getElementById(safeId + '-mes') ? document.getElementById(safeId + '-mes').value : 0) || 0;
+
+  var registro = { representante: nomeRep, diaria: dia, semanal: sem, mensal: mes };
+
+  var idx = -1;
+  for (var i = 0; i < META_DB.length; i++) {
+    if (String(META_DB[i].representante || '').trim().toLowerCase() === String(nomeRep).trim().toLowerCase()) {
+      idx = i; break;
+    }
+  }
+  if (idx >= 0) {
+    META_DB[idx] = registro;
+  } else {
+    META_DB.push(registro);
+  }
+  lsSet('nxr_meta', JSON.stringify(META_DB));
+  showToast('Metas de ' + nomeRep + ' salvas!');
+  auditLog('Definicao de metas', nomeRep + ' - diaria R$' + dia + ' / semanal R$' + sem + ' / mensal R$' + mes);
+
+  sheetsAtualizarLinha('Metas', 'representante', nomeRep, registro, function(ok, err) {
+    if (!ok) showToast('Salvo localmente. Planilha: ' + (err || 'erro'), 'erro');
+  });
 }
 
 // --- CONFIGURACOES -------------------------
