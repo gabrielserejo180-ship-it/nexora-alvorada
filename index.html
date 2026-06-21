@@ -63,6 +63,9 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 .field input:focus{border-color:var(--blue)}
 .btn-blue{width:100%;height:46px;border:none;border-radius:10px;background:var(--blue);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--ff)}
 .login-hint{margin-top:14px;font-size:11px;color:var(--txt3);text-align:center}
+.login-loading{display:none;flex-direction:column;align-items:center;gap:12px;padding:18px 0 22px}
+.login-loading.show{display:flex}
+.login-loading-txt{font-size:12px;color:var(--amber);font-weight:700;letter-spacing:.3px}
 .app-shell{display:none;min-height:100vh;flex-direction:column}
 .app-shell.on{display:flex}
 .topbar{height:56px;background:var(--s1);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 20px;gap:12px;position:sticky;top:0;z-index:100}
@@ -331,6 +334,45 @@ document.getElementById('js-status').style.display='none';
       </div>
     </div>
     <div class="login-body">
+      <div class="login-loading" id="login-loading">
+        <svg viewBox="0 0 140 140" width="56" height="56">
+          <circle cx="70" cy="70" r="60" fill="#162033"/>
+          <g style="transform-origin:70px 70px;animation:girar 1s linear infinite">
+            <circle cx="70" cy="70" r="60" fill="none" stroke="#1A2233" stroke-width="14"/>
+            <path d="M123.0 70.0 Q129.8 75.4 137.0 70.0" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M120.4 86.4 Q125.2 93.6 133.7 90.7" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M112.9 101.2 Q115.2 109.5 124.2 109.4" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M101.2 112.9 Q100.8 121.5 109.4 124.2" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M86.4 120.4 Q83.3 128.5 90.7 133.7" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M70.0 123.0 Q64.6 129.8 70.0 137.0" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M53.6 120.4 Q46.4 125.2 49.3 133.7" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M38.8 112.9 Q30.5 115.2 30.6 124.2" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M27.1 101.2 Q18.5 100.8 15.8 109.4" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M19.6 86.4 Q11.5 83.3 6.3 90.7" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M17.0 70.0 Q10.2 64.6 3.0 70.0" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M19.6 53.6 Q14.8 46.4 6.3 49.3" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M27.1 38.8 Q24.8 30.5 15.8 30.6" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M38.8 27.1 Q39.2 18.5 30.6 15.8" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M53.6 19.6 Q56.7 11.5 49.3 6.3" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M70.0 17.0 Q75.4 10.2 70.0 3.0" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M86.4 19.6 Q93.6 14.8 90.7 6.3" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M101.2 27.1 Q109.5 24.8 109.4 15.8" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M112.9 38.8 Q121.5 39.2 124.2 30.6" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <path d="M120.4 53.6 Q128.5 56.7 133.7 49.3" fill="none" stroke="#0B1220" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="70" cy="70" r="46" fill="none" stroke="#2D3A52" stroke-width="2"/>
+            <circle cx="70" cy="70" r="38" fill="#0F1726" stroke="#2D3A52" stroke-width="1.5"/>
+            <path d="M83.0 70.0 Q96.3 75.9 103.3 86.1" fill="none" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+            <path d="M76.5 81.3 Q78.1 95.8 72.7 106.9" fill="none" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+            <path d="M63.5 81.3 Q51.7 89.9 39.4 90.8" fill="none" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+            <path d="M57.0 70.0 Q43.7 64.1 36.7 53.9" fill="none" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+            <path d="M63.5 58.7 Q61.9 44.2 67.3 33.1" fill="none" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+            <path d="M76.5 58.7 Q88.3 50.1 100.6 49.2" fill="none" stroke="#3B82F6" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="70" cy="70" r="11" fill="#0D1628" stroke="#2563EB" stroke-width="2.5"/>
+            <circle cx="70" cy="70" r="4.5" fill="#60A5FA"/>
+          </g>
+        </svg>
+        <div class="login-loading-txt" id="login-loading-txt">Verificando acesso...</div>
+      </div>
       <div class="alert" id="login-alert"></div>
       <div class="field">
         <label>Usuario</label>
@@ -874,17 +916,18 @@ function doLogin() {
   var user = document.getElementById('inp-user') ? document.getElementById('inp-user').value.trim().toLowerCase() : '';
   var pin = document.getElementById('inp-pin') ? String(document.getElementById('inp-pin').value.trim()) : '';
   var al = document.getElementById('login-alert');
+  var loadingEl0 = document.getElementById('login-loading');
   if (!al) return;
   al.className = 'alert';
+  if (loadingEl0) loadingEl0.className = 'login-loading';
 
   if (!user) { al.textContent = 'Informe o usuario.'; al.className = 'alert show'; return; }
   if (pin.length < 6) { al.textContent = 'Senha deve ter 6 digitos.'; al.className = 'alert show'; return; }
 
-  al.textContent = 'Verificando...'; al.className = 'alert show';
-  al.style.color = '#F59E0B';
+  if (loadingEl0) loadingEl0.className = 'login-loading show';
 
   sheetsGet('getUsuarios', function(d) {
-    al.style.color = '';
+    if (loadingEl0) loadingEl0.className = 'login-loading';
     if (!d || !d.ok || !d.data || d.data.length === 0) {
       // fallback local
       doLoginVerificar(user, pin, al, USR_DB);
@@ -947,9 +990,11 @@ function doLoginVerificar(user, pin, al, db) {
     return;
   }
 
-  al.textContent = 'Verificando acesso...'; al.className = 'alert show'; al.style.color = '#F59E0B';
+  var loadingEl = document.getElementById('login-loading');
+  al.className = 'alert';
+  if (loadingEl) loadingEl.className = 'login-loading show';
   sheetsGet('getConfig', function(d) {
-    al.style.color = '';
+    if (loadingEl) loadingEl.className = 'login-loading';
     var bloqueado = false, msg = SYS_MANUTENCAO_MSG;
     if (d && d.ok && d.data) {
       for (var k = 0; k < d.data.length; k++) {
