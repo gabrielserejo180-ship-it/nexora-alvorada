@@ -162,11 +162,11 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 .notif-hoje{border-left:3px solid var(--amber)}
 .notif-head{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
 .notif-head-title{font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px}
-#help-fab{position:fixed;bottom:22px;right:22px;width:52px;height:52px;border-radius:50%;background:var(--blue);color:#fff;display:none;align-items:center;justify-content:center;font-size:22px;font-weight:700;box-shadow:0 8px 24px rgba(37,99,235,.45);cursor:pointer;z-index:150;border:none;transition:transform .15s ease}
+#help-fab{position:fixed;bottom:22px;right:22px;width:54px;height:54px;border-radius:50%;background:var(--blue);color:#fff;display:none;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(37,99,235,.45);cursor:pointer;z-index:150;border:none;transition:transform .15s ease,box-shadow .15s ease;padding:0}
 .app-shell.on ~ #help-fab{display:flex}
-#help-fab:hover{transform:scale(1.08)}
+#help-fab:hover{transform:scale(1.08);box-shadow:0 10px 28px rgba(37,99,235,.55)}
 #help-fab:active{transform:scale(.96)}
-@media (max-width:768px){#help-fab{bottom:16px;right:16px;width:48px;height:48px;font-size:19px}}
+@media (max-width:768px){#help-fab{bottom:16px;right:16px;width:50px;height:50px}#help-fab svg{width:21px;height:21px}}
 </style>
 </head>
 <body>
@@ -354,7 +354,52 @@ document.getElementById('js-status').style.display='none';
   </div>
 </div>
 
-<button id="help-fab" onclick="window.open('https://docs.google.com/forms/d/1y_DeIUj3wciAKW0_J_8wGOl5S3bW1SCiYKPoCZavksA/viewform','_blank')" title="Precisa de ajuda? Fale com o suporte">?</button>
+<button id="help-fab" onclick="suporteAbrir()" title="Precisa de ajuda? Fale com o suporte">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+</button>
+
+<!-- MODAL SUPORTE -->
+<div class="modal-bg" id="suporte-modal" style="display:none">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-head">
+      <div style="width:38px;height:38px;border-radius:11px;background:rgba(37,99,235,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue-h)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+      </div>
+      <div class="modal-head-title">Central de Suporte</div>
+      <button class="modal-close" id="suporte-modal-close" onclick="document.getElementById('suporte-modal').style.display='none'">X</button>
+    </div>
+    <div class="modal-body" style="padding-top:20px">
+      <div style="font-size:12.5px;color:var(--txt2);line-height:1.6;margin-bottom:18px">
+        Conta pra gente sua duvida, problema ou sugestao. Sua mensagem chega direto para nossa equipe.
+      </div>
+      <div class="mfield">
+        <label>Nome *</label>
+        <input id="sup-nome" placeholder="Seu nome">
+      </div>
+      <div class="mfield">
+        <label>Categoria *</label>
+        <select id="sup-categoria">
+          <option value="">-- Selecione --</option>
+          <option value="Suporte">Suporte</option>
+          <option value="Sistema">Sistema</option>
+          <option value="Inovacao">Inovacao</option>
+          <option value="Atualizacao">Atualizacao</option>
+          <option value="Bug/Erro">Bug/Erro</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <div class="mfield">
+        <label>Mensagem *</label>
+        <textarea id="sup-mensagem" rows="4" placeholder="Descreva com detalhes..." style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none;resize:vertical"></textarea>
+      </div>
+      <div id="sup-status" style="font-size:12px;margin-bottom:10px;display:none"></div>
+      <button id="sup-enviar-btn" onclick="suporteEnviar()" style="width:100%;background:var(--blue);color:#fff;border:none;border-radius:11px;padding:13px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:var(--ff);display:flex;align-items:center;justify-content:center;gap:8px">
+        Enviar mensagem
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL USUARIO -->
 <div class="modal-bg" id="usr-modal" style="display:none">
@@ -3288,6 +3333,91 @@ function notifToggle() {
   _notifAberto = !_notifAberto;
   panel.style.display = _notifAberto ? 'block' : 'none';
   if (_notifAberto) notifVerificar();
+}
+
+function suporteAbrir() {
+  var modal = document.getElementById('suporte-modal');
+  if (modal) modal.style.display = 'flex';
+  var st = document.getElementById('sup-status');
+  if (st) { st.style.display = 'none'; st.textContent = ''; }
+}
+
+// Envia a mensagem de suporte direto para o Google Forms, por baixo dos panos,
+// sem o usuario nunca ver a tela do formulario. Usa um <form> escondido
+// submetido para um <iframe> invisivel - isso evita o bloqueio de CORS que
+// aconteceria se tentassemos usar fetch() direto contra o Google Forms.
+function suporteEnviar() {
+  var nome = document.getElementById('sup-nome') ? document.getElementById('sup-nome').value.trim() : '';
+  var categoria = document.getElementById('sup-categoria') ? document.getElementById('sup-categoria').value : '';
+  var mensagem = document.getElementById('sup-mensagem') ? document.getElementById('sup-mensagem').value.trim() : '';
+  var st = document.getElementById('sup-status');
+  var btn = document.getElementById('sup-enviar-btn');
+
+  if (!nome) { suporteStatus('Informe seu nome.', 'erro'); return; }
+  if (!categoria) { suporteStatus('Selecione uma categoria.', 'erro'); return; }
+  if (!mensagem) { suporteStatus('Escreva sua mensagem.', 'erro'); return; }
+
+  if (btn) { btn.disabled = true; btn.style.opacity = '.6'; }
+  suporteStatus('Enviando...', 'info');
+
+  var FORM_ACTION = 'https://docs.google.com/forms/d/e/1FAIpQLSeAW_UI2J9DGFIz3LgJh_Qc7kFJxwxXT-JkyP9bB1e7gyAcDw/formResponse';
+  var FIELD_NOME = 'entry.1841657617';
+  var FIELD_CATEGORIA = 'entry.524382196';
+  var FIELD_MENSAGEM = 'entry.516282946';
+
+  // Cria iframe invisivel que vai receber a resposta do POST (impede que a
+  // pagina atual navegue/recarregue ao enviar o formulario).
+  var iframeName = 'sup-iframe-' + Date.now();
+  var iframe = document.createElement('iframe');
+  iframe.name = iframeName;
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+
+  // Cria o form escondido com os mesmos campos do Google Forms.
+  var form = document.createElement('form');
+  form.action = FORM_ACTION;
+  form.method = 'POST';
+  form.target = iframeName;
+  form.style.display = 'none';
+
+  function addField(name, value) {
+    var inp = document.createElement('input');
+    inp.type = 'hidden';
+    inp.name = name;
+    inp.value = value;
+    form.appendChild(inp);
+  }
+  addField(FIELD_NOME, nome);
+  addField(FIELD_CATEGORIA, categoria);
+  addField(FIELD_MENSAGEM, mensagem);
+
+  document.body.appendChild(form);
+  form.submit();
+
+  // Como o envio para o Google Forms nao da retorno legivel (cross-origin),
+  // assumimos sucesso apos um pequeno delay e limpamos o formulario.
+  setTimeout(function() {
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    suporteStatus('Mensagem enviada! Obrigado pelo contato.', 'ok');
+    document.getElementById('sup-nome').value = '';
+    document.getElementById('sup-categoria').value = '';
+    document.getElementById('sup-mensagem').value = '';
+    setTimeout(function() {
+      var modal = document.getElementById('suporte-modal');
+      if (modal) modal.style.display = 'none';
+      document.body.removeChild(form);
+      document.body.removeChild(iframe);
+    }, 1500);
+  }, 900);
+}
+
+function suporteStatus(msg, tipo) {
+  var st = document.getElementById('sup-status');
+  if (!st) return;
+  var cores = { erro: 'var(--red)', ok: 'var(--green)', info: 'var(--txt2)' };
+  st.style.color = cores[tipo] || 'var(--txt2)';
+  st.textContent = msg;
+  st.style.display = 'block';
 }
 
 function notifFechar() {
