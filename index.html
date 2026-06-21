@@ -91,6 +91,8 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 .usr-search{flex:1;min-width:160px;background:var(--s1);border:1px solid var(--line2);border-radius:10px;padding:9px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none}
 .usr-sel{background:var(--s1);border:1px solid var(--line2);border-radius:10px;padding:9px 12px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none;cursor:pointer}
 .btn-new{height:38px;padding:0 16px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--ff)}
+.meta-tab-btn{height:36px;padding:0 16px;background:var(--s2);color:var(--txt2);border:1px solid var(--line2);border-radius:10px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--ff)}
+.meta-tab-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
 .btn-save{height:38px;padding:0 14px;background:none;border:1px solid var(--green);color:var(--green);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ff)}
 .usr-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
 .usr-stat{background:var(--s1);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
@@ -170,6 +172,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 #help-fab:active{transform:scale(.96)}
 @media (max-width:768px){#help-fab{bottom:16px;right:16px;width:50px;height:50px}#help-fab svg{width:21px;height:21px}}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -1169,7 +1172,13 @@ function navigate(id) {
 
     if (id === 'admin') setTimeout(usrRender, 50);
     if (id === 'auditoria') setTimeout(audRender, 50);
-    if (id === 'metas') setTimeout(metaRender, 50);
+    if (id === 'metas') {
+      setTimeout(metaRender, 50);
+      setTimeout(function() {
+        var inp = document.getElementById('meta-import-file');
+        if (inp) inp.onchange = metaImportProcessarArquivo;
+      }, 50);
+    }
     if (id === 'config') setTimeout(cfgCarregar, 50);
     if (id === 'relatorio') setTimeout(relGerar, 50);
     if (id === 'graficos') setTimeout(grafRender, 50);
@@ -1585,6 +1594,83 @@ function grafBarrasH(data, containerId) {
   if (cont) cont.innerHTML = svg;
 }
 
+// --- META VS FATURADO (grafico de barras duplas por representante) -----
+var _grafMetaPeriodo = 'diaria';
+
+function grafMetaTrocarPeriodo(periodo) {
+  _grafMetaPeriodo = periodo;
+  var periodos = ['diaria', 'semanal', 'mensal'];
+  for (var i = 0; i < periodos.length; i++) {
+    var btn = document.getElementById('graf-meta-per-' + periodos[i]);
+    if (btn) btn.className = (periodos[i] === periodo) ? 'meta-tab-btn active' : 'meta-tab-btn';
+  }
+  grafMetaVsFatRender();
+}
+
+function grafMetaVsFatRender() {
+  var el = document.getElementById('graf-meta-fat');
+  if (!el) return;
+
+  // Calcula o inicio do periodo (dia/semana/mes atual), mesma logica
+  // ja usada no Dashboard do representante.
+  var agora = new Date();
+  var inicioDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+  var diaSemana = agora.getDay();
+  var inicioSemana = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() - diaSemana);
+  var inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+  var inicioRef = (_grafMetaPeriodo === 'semanal') ? inicioSemana : (_grafMetaPeriodo === 'mensal') ? inicioMes : inicioDia;
+
+  // Monta a lista de representantes que tem meta definida para o periodo escolhido
+  var linhas = [];
+  for (var i = 0; i < META_DB.length; i++) {
+    var m = META_DB[i];
+    var metaVal = Number(m[_grafMetaPeriodo] || 0);
+    if (metaVal <= 0) continue;
+
+    var fatRep = 0;
+    for (var v = 0; v < VND_DB.length; v++) {
+      if (String(VND_DB[v].representante || '').trim().toLowerCase() !== String(m.representante || '').trim().toLowerCase()) continue;
+      var dv = dashParseData(VND_DB[v].data);
+      if (dv && dv >= inicioRef.getTime()) fatRep += Number(VND_DB[v].valor || 0);
+    }
+
+    linhas.push({ nome: m.representante, meta: metaVal, faturado: fatRep });
+  }
+
+  if (!linhas.length) {
+    el.innerHTML = '<div class="empty-state">Nenhum representante com meta ' + (_grafMetaPeriodo === 'diaria' ? 'diaria' : _grafMetaPeriodo) + ' definida ainda.</div>';
+    return;
+  }
+
+  linhas.sort(function(a, b) { return b.meta - a.meta; });
+
+  var max = 0;
+  for (var j = 0; j < linhas.length; j++) if (linhas[j].meta > max) max = linhas[j].meta;
+
+  var w = 500, rowH = 54, pad = 10, labelW = 110, barAreaW = w - labelW - pad * 2;
+  var h = linhas.length * rowH + pad * 2;
+  var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;height:auto;display:block" preserveAspectRatio="xMidYMid meet">';
+
+  for (var k = 0; k < linhas.length; k++) {
+    var ln = linhas[k];
+    var y = pad + k * rowH;
+    var metaBarW = max > 0 ? Math.round((ln.meta / max) * barAreaW) : 0;
+    var fatBarW = max > 0 ? Math.round((Math.min(ln.faturado, ln.meta * 1.5) / max) * barAreaW) : 0;
+    if (fatBarW < 2 && ln.faturado > 0) fatBarW = 2;
+    var corFat = ln.faturado >= ln.meta ? 'var(--green)' : (ln.faturado >= ln.meta * 0.6 ? 'var(--blue-h)' : 'var(--amber)');
+
+    svg += '<text x="' + (labelW - 8) + '" y="' + (y + 14) + '" text-anchor="end" font-size="11" fill="var(--txt2)" font-family="DM Sans,Arial,sans-serif">' + ln.nome + '</text>';
+
+    svg += '<rect x="' + labelW + '" y="' + (y + 2) + '" width="' + metaBarW + '" height="16" rx="3" fill="var(--line2)"></rect>';
+    svg += '<text x="' + (labelW + metaBarW + 6) + '" y="' + (y + 14) + '" font-size="10" fill="var(--txt3)" font-family="DM Sans,Arial,sans-serif">meta R$ ' + ln.meta.toLocaleString('pt-BR') + '</text>';
+
+    svg += '<rect x="' + labelW + '" y="' + (y + 24) + '" width="' + fatBarW + '" height="16" rx="3" fill="' + corFat + '"></rect>';
+    svg += '<text x="' + (labelW + fatBarW + 6) + '" y="' + (y + 36) + '" font-size="10" fill="' + corFat + '" font-family="DM Sans,Arial,sans-serif">faturado R$ ' + ln.faturado.toLocaleString('pt-BR') + '</text>';
+  }
+  svg += '</svg>';
+  el.innerHTML = svg;
+}
+
 // --- FATURAMENTO COM FILTROS -----------------
 var _grafFatVnd = [];
 
@@ -1786,6 +1872,9 @@ function grafRender() {
   var vnd = VND_DB || [];
   var ret = RET_DB || [];
   var cli = CLI_DB || [];
+
+  // 0. Meta vs Faturado por representante (apenas ger/adm)
+  grafMetaVsFatRender();
 
   // 1. Faturamento com filtros interativos
   grafFatRender(vnd);
@@ -2045,9 +2134,25 @@ function buildPage(id) {
     };
   }
   if (id === 'graficos') {
+    var metaBlocoHtml = '';
+    if (role === 'ger' || role === 'adm') {
+      metaBlocoHtml =
+        '<div class=\"cap-wrap\" style=\"margin-bottom:14px\">' +
+        '<div style=\"display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px\">' +
+        '<div style=\"font-size:13px;font-weight:700\">Meta vs Faturado por Representante</div>' +
+        '<div style=\"display:flex;gap:6px\">' +
+        '<button class=\"meta-tab-btn active\" id=\"graf-meta-per-diaria\" onclick=\"grafMetaTrocarPeriodo(' + "'diaria'" + ')\">Diaria</button>' +
+        '<button class=\"meta-tab-btn\" id=\"graf-meta-per-semanal\" onclick=\"grafMetaTrocarPeriodo(' + "'semanal'" + ')\">Semanal</button>' +
+        '<button class=\"meta-tab-btn\" id=\"graf-meta-per-mensal\" onclick=\"grafMetaTrocarPeriodo(' + "'mensal'" + ')\">Mensal</button>' +
+        '</div>' +
+        '</div>' +
+        '<div id=\"graf-meta-fat\"></div>' +
+        '</div>';
+    }
     return {
       eye: 'Analise Visual', title: 'Graficos', sub: 'Visao grafica de clientes, vendas e retornos',
       body:
+        metaBlocoHtml +
         '<div class=\"cap-wrap\" style=\"margin-bottom:14px\">' +
         '<div style=\"font-size:13px;font-weight:700;margin-bottom:12px\">Faturamento Mensal (ultimos 6 meses)</div>' +
         '<div id=\"graf-fat\"></div>' +
@@ -2156,7 +2261,22 @@ function buildPage(id) {
   if (id === 'metas') {
     return {
       eye: 'Comercial', title: 'Metas', sub: 'Defina metas diarias, semanais e mensais por representante',
-      body: '<div id="meta-lista"></div>'
+      body: '<div style="display:flex;gap:8px;margin-bottom:16px">' +
+        '<button class="meta-tab-btn active" id="meta-tab-manual" onclick="metaTrocarAba(\'manual\')">Manual</button>' +
+        '<button class="meta-tab-btn" id="meta-tab-import" onclick="metaTrocarAba(\'import\')">Importar Planilha</button>' +
+        '</div>' +
+        '<div id="meta-aba-manual"><div id="meta-lista"></div></div>' +
+        '<div id="meta-aba-import" style="display:none">' +
+          '<div class="cap-wrap">' +
+            '<div style="font-size:13px;color:var(--txt2);margin-bottom:14px;line-height:1.6">' +
+              'Suba uma planilha (.xlsx, .xls ou .csv) com as colunas: <strong>representante</strong>, <strong>diaria</strong>, <strong>semanal</strong>, <strong>mensal</strong>. ' +
+              'Cada linha define as metas de um representante. Representantes ja existentes serao atualizados.' +
+            '</div>' +
+            '<input type="file" id="meta-import-file" accept=".xlsx,.xls,.csv" style="margin-bottom:14px">' +
+            '<div id="meta-import-status" style="font-size:12px;margin-bottom:10px;display:none"></div>' +
+            '<div id="meta-import-preview"></div>' +
+          '</div>' +
+        '</div>'
     };
   }
   if (id === 'config') {
@@ -3365,27 +3485,176 @@ function metaSalvar(nomeRep, safeId) {
   var dia = Number(document.getElementById(safeId + '-dia') ? document.getElementById(safeId + '-dia').value : 0) || 0;
   var sem = Number(document.getElementById(safeId + '-sem') ? document.getElementById(safeId + '-sem').value : 0) || 0;
   var mes = Number(document.getElementById(safeId + '-mes') ? document.getElementById(safeId + '-mes').value : 0) || 0;
+  metaAplicarRegistro({ representante: nomeRep, diaria: dia, semanal: sem, mensal: mes }, true);
+}
 
-  var registro = { representante: nomeRep, diaria: dia, semanal: sem, mensal: mes };
-
+// Aplica um registro de meta (cria ou atualiza), salva local e na planilha.
+// mostrarToast=false e usado na importacao em lote, para nao disparar um
+// toast por linha - so um resumo no final.
+function metaAplicarRegistro(registro, mostrarToast) {
+  var nomeRep = registro.representante;
   var idx = -1;
   for (var i = 0; i < META_DB.length; i++) {
     if (String(META_DB[i].representante || '').trim().toLowerCase() === String(nomeRep).trim().toLowerCase()) {
       idx = i; break;
     }
   }
-  if (idx >= 0) {
-    META_DB[idx] = registro;
-  } else {
-    META_DB.push(registro);
-  }
+  if (idx >= 0) { META_DB[idx] = registro; } else { META_DB.push(registro); }
   lsSet('nxr_meta', JSON.stringify(META_DB));
-  showToast('Metas de ' + nomeRep + ' salvas!');
-  auditLog('Definicao de metas', nomeRep + ' - diaria R$' + dia + ' / semanal R$' + sem + ' / mensal R$' + mes);
+
+  if (mostrarToast) {
+    showToast('Metas de ' + nomeRep + ' salvas!');
+    auditLog('Definicao de metas', nomeRep + ' - diaria R$' + registro.diaria + ' / semanal R$' + registro.semanal + ' / mensal R$' + registro.mensal);
+  }
 
   sheetsAtualizarLinha('Metas', 'representante', nomeRep, registro, function(ok, err) {
-    if (!ok) showToast('Salvo localmente. Planilha: ' + (err || 'erro'), 'erro');
+    if (!ok && mostrarToast) showToast('Salvo localmente. Planilha: ' + (err || 'erro'), 'erro');
   });
+}
+
+// --- METAS: troca de sub-aba (Manual / Importar Planilha) -----
+function metaTrocarAba(aba) {
+  var btnManual = document.getElementById('meta-tab-manual');
+  var btnImport = document.getElementById('meta-tab-import');
+  var paneManual = document.getElementById('meta-aba-manual');
+  var paneImport = document.getElementById('meta-aba-import');
+  if (!btnManual || !btnImport || !paneManual || !paneImport) return;
+
+  if (aba === 'import') {
+    btnManual.className = 'meta-tab-btn';
+    btnImport.className = 'meta-tab-btn active';
+    paneManual.style.display = 'none';
+    paneImport.style.display = 'block';
+  } else {
+    btnManual.className = 'meta-tab-btn active';
+    btnImport.className = 'meta-tab-btn';
+    paneManual.style.display = 'block';
+    paneImport.style.display = 'none';
+  }
+}
+
+// --- METAS: importacao em lote via planilha --------------------
+// Le um arquivo .xlsx/.xls/.csv com as colunas representante/diaria/
+// semanal/mensal (tolerante a maiusculas e acentos), mostra uma previa,
+// e aplica tudo de uma vez ao confirmar.
+function metaImportNormalizarChave(s) {
+  return String(s || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function metaImportProcessarArquivo() {
+  var inp = document.getElementById('meta-import-file');
+  var statusEl = document.getElementById('meta-import-status');
+  var previewEl = document.getElementById('meta-import-preview');
+  if (!inp || !inp.files || !inp.files[0]) return;
+
+  if (typeof XLSX === 'undefined') {
+    if (statusEl) { statusEl.style.display = 'block'; statusEl.style.color = 'var(--red)'; statusEl.textContent = 'Biblioteca de planilha nao carregou. Verifique sua conexao e tente novamente.'; }
+    return;
+  }
+
+  var file = inp.files[0];
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = new Uint8Array(e.target.result);
+      var wb = XLSX.read(data, { type: 'array' });
+      var sheetName = wb.SheetNames[0];
+      var rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { defval: '' });
+
+      if (!rows.length) {
+        statusEl.style.display = 'block'; statusEl.style.color = 'var(--red)';
+        statusEl.textContent = 'Planilha vazia ou sem linhas de dados.';
+        previewEl.innerHTML = '';
+        return;
+      }
+
+      // Mapeia os nomes de coluna da planilha (tolerando variacoes) para
+      // os 4 campos esperados: representante, diaria, semanal, mensal.
+      var colMap = {};
+      var primeiraLinha = rows[0];
+      var colunas = Object.keys(primeiraLinha);
+      for (var c = 0; c < colunas.length; c++) {
+        var chaveNorm = metaImportNormalizarChave(colunas[c]);
+        if (chaveNorm.indexOf('represent') >= 0) colMap.representante = colunas[c];
+        else if (chaveNorm.indexOf('diari') >= 0) colMap.diaria = colunas[c];
+        else if (chaveNorm.indexOf('seman') >= 0) colMap.semanal = colunas[c];
+        else if (chaveNorm.indexOf('mensal') >= 0) colMap.mensal = colunas[c];
+      }
+
+      if (!colMap.representante) {
+        statusEl.style.display = 'block'; statusEl.style.color = 'var(--red)';
+        statusEl.textContent = 'Nao encontrei a coluna "representante" na planilha. Confira o cabecalho.';
+        previewEl.innerHTML = '';
+        return;
+      }
+
+      var registros = [];
+      for (var r = 0; r < rows.length; r++) {
+        var row = rows[r];
+        var nome = String(row[colMap.representante] || '').trim();
+        if (!nome) continue;
+        registros.push({
+          representante: nome,
+          diaria: Number(row[colMap.diaria] || 0) || 0,
+          semanal: Number(row[colMap.semanal] || 0) || 0,
+          mensal: Number(row[colMap.mensal] || 0) || 0
+        });
+      }
+
+      if (!registros.length) {
+        statusEl.style.display = 'block'; statusEl.style.color = 'var(--red)';
+        statusEl.textContent = 'Nenhuma linha valida encontrada (verifique se a coluna representante esta preenchida).';
+        previewEl.innerHTML = '';
+        return;
+      }
+
+      window._metaImportPendente = registros;
+
+      var h = '<div style="font-size:12px;color:var(--txt2);margin-bottom:10px">' + registros.length + ' representante(s) encontrado(s) na planilha:</div>';
+      for (var p = 0; p < registros.length; p++) {
+        var reg = registros[p];
+        h += '<div class="usr-row" style="cursor:default">' +
+          '<div style="flex:1"><div class="usr-name">' + reg.representante + '</div></div>' +
+          '<div style="font-size:11px;color:var(--txt2);white-space:nowrap">' +
+            'D: R$' + reg.diaria + ' / S: R$' + reg.semanal + ' / M: R$' + reg.mensal +
+          '</div>' +
+        '</div>';
+      }
+      h += '<button class="btn-new" style="margin-top:12px" onclick="metaImportConfirmar()">Confirmar e aplicar ' + registros.length + ' registro(s)</button>';
+      previewEl.innerHTML = h;
+      statusEl.style.display = 'none';
+    } catch (err) {
+      statusEl.style.display = 'block'; statusEl.style.color = 'var(--red)';
+      statusEl.textContent = 'Erro ao ler a planilha: ' + err.message;
+      previewEl.innerHTML = '';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function metaImportConfirmar() {
+  var registros = window._metaImportPendente;
+  if (!registros || !registros.length) return;
+
+  for (var i = 0; i < registros.length; i++) {
+    metaAplicarRegistro(registros[i], false);
+  }
+
+  showToast(registros.length + ' representante(s) atualizado(s) com sucesso!');
+  auditLog('Importacao de metas', registros.length + ' representante(s) via planilha');
+
+  window._metaImportPendente = null;
+  var previewEl = document.getElementById('meta-import-preview');
+  if (previewEl) previewEl.innerHTML = '';
+  var inp = document.getElementById('meta-import-file');
+  if (inp) inp.value = '';
+
+  // Atualiza tambem a aba Manual, para refletir os novos valores
+  metaRender();
+  metaTrocarAba('manual');
 }
 
 // --- CONFIGURACOES -------------------------
