@@ -170,8 +170,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 .notif-hoje{border-left:3px solid var(--amber)}
 .notif-head{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
 .notif-head-title{font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px}
-#help-fab{position:fixed;bottom:22px;right:22px;width:54px;height:54px;border-radius:50%;background:var(--blue);color:#fff;display:none;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(37,99,235,.45);cursor:pointer;z-index:150;border:none;transition:transform .15s ease,box-shadow .15s ease;padding:0}
-.app-shell.on ~ #help-fab{display:flex}
+#help-fab{position:fixed;bottom:22px;right:22px;width:54px;height:54px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(37,99,235,.45);cursor:pointer;z-index:150;border:none;transition:transform .15s ease,box-shadow .15s ease;padding:0}
 #help-fab:hover{transform:scale(1.08);box-shadow:0 10px 28px rgba(37,99,235,.55)}
 #help-fab:active{transform:scale(.96)}
 @media (max-width:768px){#help-fab{bottom:16px;right:16px;width:50px;height:50px}#help-fab svg{width:21px;height:21px}}
@@ -4059,6 +4058,14 @@ var SUP_FAQ = [
 
 var _supChatHistorico = [];
 
+// Devolve "Bom dia", "Boa tarde" ou "Boa noite" conforme o horario atual
+function suporteSaudacaoHorario() {
+  var hora = new Date().getHours();
+  if (hora < 12) return 'Bom dia';
+  if (hora < 18) return 'Boa tarde';
+  return 'Boa noite';
+}
+
 function suporteAbrir() {
   var modal = document.getElementById('suporte-modal');
   if (modal) modal.style.display = 'flex';
@@ -4072,8 +4079,9 @@ function suporteAbrir() {
   var log = document.getElementById('sup-chat-log');
   if (log) {
     log.innerHTML = '';
+    var saudacaoHorario = suporteSaudacaoHorario();
     var nomeUser = (me && me.name) ? me.name.split(' ')[0] : '';
-    suporteAdicionarBolha('bot', 'Oi' + (nomeUser ? ', ' + nomeUser : '') + '! Sou o assistente do Nexora. Pode me perguntar sobre login, senha, retornos, vendas, metas ou como o sistema funciona.');
+    suporteAdicionarBolha('bot', saudacaoHorario + (nomeUser ? ', ' + nomeUser : '') + '! Sou o assistente do Nexora. Pode me perguntar sobre login, senha, retornos, vendas, metas ou como o sistema funciona.');
   }
 }
 
@@ -4158,13 +4166,20 @@ function suporteNormalizar(s) {
 // Busca a melhor pergunta da FAQ que combina com o texto digitado,
 // considerando apenas perguntas liberadas para o perfil atual.
 function suporteBuscarResposta(texto) {
-  var perfilAtual = (me && me.role) ? me.role : 'rep';
+  // Antes do login, usa o perfil que a pessoa escolheu na tela inicial
+  // (rep/ger/adm), guardado em "profile". Apos o login, usa o perfil real
+  // do usuario logado. Se nenhum dos dois existir (tela inicial, antes de
+  // escolher), nao filtra nada por perfil - so respostas comuns aparecem.
+  var perfilAtual = (me && me.role) ? me.role : (profile || null);
   var textoNorm = suporteNormalizar(texto);
   var melhor = null, melhorScore = 0;
 
   for (var i = 0; i < SUP_FAQ.length; i++) {
     var item = SUP_FAQ[i];
-    if (item.perfis && item.perfis.indexOf(perfilAtual) < 0) continue;
+    if (item.perfis) {
+      if (!perfilAtual) continue;
+      if (item.perfis.indexOf(perfilAtual) < 0) continue;
+    }
 
     for (var j = 0; j < item.chaves.length; j++) {
       var chaveNorm = suporteNormalizar(item.chaves[j]);
@@ -4194,22 +4209,27 @@ function suporteDetectarSaudacao(texto) {
   return 'Tudo bem! O que posso te ajudar?';
 }
 
-function suporteListaSugestoes() {
-  var perfilAtual = (me && me.role) ? me.role : 'rep';
-  var vistos = {};
-  var html = '<div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">';
-  for (var i = 0; i < SUP_FAQ.length; i++) {
-    var item = SUP_FAQ[i];
-    if (item.perfis && item.perfis.indexOf(perfilAtual) < 0) continue;
-    var label = item.chaves[0];
-    if (vistos[label]) continue;
-    vistos[label] = true;
-    var labelCap = label.charAt(0).toUpperCase() + label.slice(1);
-    var labelEscaped = label.split("'").join("\\'");
-    html += '<button onclick="suporteChatPerguntarDireto(\'' + labelEscaped + '\')" style="text-align:left;background:var(--s2);border:1px solid var(--line2);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--txt);cursor:pointer;font-family:var(--ff)">' + labelCap + '</button>';
-  }
-  html += '</div>';
-  return html;
+// Reconhece quando a pessoa esta encerrando a conversa (agradecendo, dizendo
+// que ja entendeu etc.) e devolve uma despedida amigavel, com variacoes.
+var SUP_DESPEDIDAS = [
+  'Estou aqui sempre que precisar!',
+  'Fico feliz em ajudar! Qualquer duvida, e so chamar.',
+  'Por nada! Disposicao sempre que precisar.',
+  'Que bom que ajudou! Ate a proxima.',
+  'Imagina! Estou por aqui se precisar de mais alguma coisa.'
+];
+
+function suporteDetectarDespedida(texto) {
+  var t = suporteNormalizar(texto);
+
+  var ehDespedida = t.indexOf('obrigad') >= 0 || t.indexOf('valeu') >= 0 ||
+    t.indexOf('ja entendi') >= 0 || t.indexOf('entendi, obrigado') >= 0 ||
+    t.indexOf('esta bom') >= 0 || t.indexOf('ta bom') >= 0 || t.indexOf('tudo certo') >= 0 ||
+    t.indexOf('era isso') >= 0 || t.indexOf('e isso') >= 0 || t.indexOf('ok obrigado') >= 0 ||
+    t === 'ok' || t === 'beleza' || t === 'show' || t === 'blz';
+
+  if (!ehDespedida) return null;
+  return SUP_DESPEDIDAS[Math.floor(Math.random() * SUP_DESPEDIDAS.length)];
 }
 
 function suporteChatPerguntarDireto(texto) {
@@ -4234,14 +4254,23 @@ function suporteChatEnviar() {
       return;
     }
 
+    var despedida = suporteDetectarDespedida(texto);
+    if (despedida) {
+      suporteAdicionarBolha('bot', despedida);
+      setTimeout(function() {
+        var modal = document.getElementById('suporte-modal');
+        if (modal) modal.style.display = 'none';
+      }, 1800);
+      return;
+    }
+
     var resposta = suporteBuscarResposta(texto);
     if (resposta) {
       suporteAdicionarBolha('bot', resposta.resposta);
     } else {
       var textoEscaped = texto.split("'").join("\\'");
-      var btnHtml = '<button onclick="suporteMostrarForm(\'' + textoEscaped + '\')" style="margin-top:6px;background:var(--blue);color:#fff;border:none;border-radius:18px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--ff)">Falar com o suporte</button>' +
-        suporteListaSugestoes();
-      suporteAdicionarBolha('bot', 'Nao encontrei essa resposta na minha lista. Voce pode tentar uma das perguntas abaixo, ou conversar com o suporte:', btnHtml);
+      var btnHtml = '<button onclick="suporteMostrarForm(\'' + textoEscaped + '\')" style="margin-top:6px;background:var(--blue);color:#fff;border:none;border-radius:18px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--ff)">Falar com o suporte</button>';
+      suporteAdicionarBolha('bot', 'Nao encontrei essa resposta na minha lista. Voce deseja conversar com o suporte?', btnHtml);
     }
   });
 }
