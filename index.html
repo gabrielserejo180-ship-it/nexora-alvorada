@@ -1217,10 +1217,26 @@ function navigate(id) {
 // --- DASHBOARD: HELPERS ---------------------
 function dashParseData(str) {
   if (!str) return 0;
-  var p = String(str).split('/');
-  if (p.length !== 3) return 0;
-  var d = new Date(Number(p[2]), Number(p[1]) - 1, Number(p[0]));
-  return d.getTime() || 0;
+  var s = String(str).trim();
+
+  // Formato dd/mm/aaaa (string digitada manualmente, formato esperado padrao)
+  var p = s.split('/');
+  if (p.length === 3) {
+    var d = new Date(Number(p[2]), Number(p[1]) - 1, Number(p[0]));
+    return d.getTime() || 0;
+  }
+
+  // Formato aaaa-mm-dd ou ISO completo (aaaa-mm-ddTHH:mm:ss.sssZ) - acontece
+  // quando o Google Sheets retorna a celula como objeto Date nativo, que o
+  // Apps Script serializa em JSON como string ISO em vez de texto dd/mm/aaaa.
+  var partesData = s.split('T')[0];
+  var p2 = partesData.split('-');
+  if (p2.length === 3) {
+    var d2 = new Date(Number(p2[0]), Number(p2[1]) - 1, Number(p2[2]));
+    return d2.getTime() || 0;
+  }
+
+  return 0;
 }
 function dashGraficoFaturamento(vndList) {
   var MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
