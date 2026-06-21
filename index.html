@@ -1636,6 +1636,8 @@ function grafMetaVsFatRender() {
   var inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
   var inicioRef = (_grafMetaPeriodo === 'semanal') ? inicioSemana : (_grafMetaPeriodo === 'mensal') ? inicioMes : inicioDia;
 
+  var labelPeriodo = (_grafMetaPeriodo === 'semanal') ? 'semanal' : (_grafMetaPeriodo === 'mensal') ? 'mensal' : 'diaria';
+
   // Monta a lista de representantes que tem meta definida para o periodo escolhido
   var linhas = [];
   for (var i = 0; i < META_DB.length; i++) {
@@ -1654,37 +1656,45 @@ function grafMetaVsFatRender() {
   }
 
   if (!linhas.length) {
-    el.innerHTML = '<div class="empty-state">Nenhum representante com meta ' + (_grafMetaPeriodo === 'diaria' ? 'diaria' : _grafMetaPeriodo) + ' definida ainda.</div>';
+    el.innerHTML = '<div class="empty-state">Nenhum representante com meta ' + labelPeriodo + ' definida ainda.</div>';
     return;
   }
 
   linhas.sort(function(a, b) { return b.meta - a.meta; });
 
-  var max = 0;
-  for (var j = 0; j < linhas.length; j++) if (linhas[j].meta > max) max = linhas[j].meta;
-
-  var w = 500, rowH = 54, pad = 10, labelW = 110, barAreaW = w - labelW - pad * 2;
-  var h = linhas.length * rowH + pad * 2;
-  var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;height:auto;display:block" preserveAspectRatio="xMidYMid meet">';
-
+  var h = '';
   for (var k = 0; k < linhas.length; k++) {
     var ln = linhas[k];
-    var y = pad + k * rowH;
-    var metaBarW = max > 0 ? Math.round((ln.meta / max) * barAreaW) : 0;
-    var fatBarW = max > 0 ? Math.round((Math.min(ln.faturado, ln.meta * 1.5) / max) * barAreaW) : 0;
-    if (fatBarW < 2 && ln.faturado > 0) fatBarW = 2;
-    var corFat = ln.faturado >= ln.meta ? 'var(--green)' : (ln.faturado >= ln.meta * 0.6 ? 'var(--blue-h)' : 'var(--amber)');
+    var pct = ln.meta > 0 ? Math.round((ln.faturado / ln.meta) * 100) : 0;
+    var bateu = ln.faturado >= ln.meta;
+    var corFat = bateu ? 'var(--green)' : (pct >= 60 ? 'var(--blue-h)' : 'var(--amber)');
+    var metaBarPct = 100;
+    var fatBarPct = ln.meta > 0 ? Math.min(100, Math.round((ln.faturado / ln.meta) * 100)) : 0;
 
-    svg += '<text x="' + (labelW - 8) + '" y="' + (y + 14) + '" text-anchor="end" font-size="11" fill="var(--txt2)" font-family="DM Sans,Arial,sans-serif">' + ln.nome + '</text>';
+    h += '<div style="margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--line)">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+        '<div style="font-weight:700;font-size:13px">' + ln.nome + '</div>' +
+        '<div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:' + (bateu ? 'var(--green)' : 'var(--red)') + '">' +
+          (bateu ?
+            '<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--green);color:#fff;font-size:10px">&#10003;</span> Meta batida' :
+            '<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--red);color:#fff;font-size:10px">&#10005;</span> Nao atingida') +
+        '</div>' +
+      '</div>' +
 
-    svg += '<rect x="' + labelW + '" y="' + (y + 2) + '" width="' + metaBarW + '" height="16" rx="3" fill="var(--line2)"></rect>';
-    svg += '<text x="' + (labelW + metaBarW + 6) + '" y="' + (y + 14) + '" font-size="10" fill="var(--txt3)" font-family="DM Sans,Arial,sans-serif">meta R$ ' + ln.meta.toLocaleString('pt-BR') + '</text>';
+      '<div style="font-size:10px;color:var(--txt3);margin-bottom:3px">meta</div>' +
+      '<div style="background:var(--s3);border-radius:5px;height:18px;position:relative;margin-bottom:8px">' +
+        '<div style="background:var(--line2);height:100%;border-radius:5px;width:100%"></div>' +
+        '<div style="position:absolute;inset:0;display:flex;align-items:center;padding:0 8px;font-size:10px;color:var(--txt2);font-weight:700">R$ ' + ln.meta.toLocaleString('pt-BR') + '</div>' +
+      '</div>' +
 
-    svg += '<rect x="' + labelW + '" y="' + (y + 24) + '" width="' + fatBarW + '" height="16" rx="3" fill="' + corFat + '"></rect>';
-    svg += '<text x="' + (labelW + fatBarW + 6) + '" y="' + (y + 36) + '" font-size="10" fill="' + corFat + '" font-family="DM Sans,Arial,sans-serif">faturado R$ ' + ln.faturado.toLocaleString('pt-BR') + '</text>';
+      '<div style="font-size:10px;color:var(--txt3);margin-bottom:3px">faturado</div>' +
+      '<div style="background:var(--s3);border-radius:5px;height:18px;position:relative">' +
+        '<div style="background:' + corFat + ';height:100%;border-radius:5px;width:' + Math.max(fatBarPct, ln.faturado > 0 ? 4 : 0) + '%"></div>' +
+        '<div style="position:absolute;inset:0;display:flex;align-items:center;padding:0 8px;font-size:10px;color:var(--txt2);font-weight:700">R$ ' + ln.faturado.toLocaleString('pt-BR') + ' (' + pct + '%)</div>' +
+      '</div>' +
+    '</div>';
   }
-  svg += '</svg>';
-  el.innerHTML = svg;
+  el.innerHTML = h;
 }
 
 // --- FATURAMENTO COM FILTROS -----------------
