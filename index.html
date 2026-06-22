@@ -4742,37 +4742,76 @@ var SUP_FAQ = [
   {
     chaves: ['senha', 'esqueci', 'esqueci a senha', 'recuperar senha', 'redefinir senha'],
     perfis: null,
-    resposta: 'Sua senha tem 6 digitos e e cadastrada pelo administrador do sistema. Se voce esqueceu, peca para o administrador ou gerente verificar ou redefinir seu acesso na tela de Usuarios. Por seguranca, o Nexora nao mostra senhas existentes, apenas permite cadastrar uma nova.'
+    resposta: 'Sua senha tem 6 digitos e e cadastrada pelo administrador.',
+    partes: [
+      'Sua senha no Nexora tem sempre 6 digitos -- so numeros.',
+      'Ela e cadastrada pelo administrador, entao voce nao cria a propria.',
+      'Se esqueceu, e so pedir pro administrador ou gerente redefinir o acesso na tela de Usuarios. O sistema nao mostra senhas, apenas permite criar uma nova.'
+    ]
   },
   {
     chaves: ['nao consigo entrar', 'nao consigo logar', 'login', 'nao entra', 'nao acessa', 'erro ao entrar'],
     perfis: null,
-    resposta: 'Confira tres coisas: (1) se o usuario e a senha de 6 digitos estao digitados corretamente, (2) se voce selecionou o perfil certo na tela inicial - Representante, Gerente ou Administrador - ja que o mesmo usuario pode nao existir em outro perfil, e (3) sua conexao com a internet, ja que o sistema confere seus dados na planilha a cada login. Se mesmo assim nao conseguir, pode haver um bloqueio de manutencao ativo - fale com o administrador.'
+    resposta: 'Vamos verificar juntos o que pode estar acontecendo!',
+    partes: [
+      'Vamos verificar juntos o que pode estar acontecendo!',
+      'Primeiro: o usuario e a senha de 6 digitos estao certos? So numeros, sem letras.',
+      'Segundo: voce selecionou o perfil certo na tela inicial? Representante, Gerente ou Administrador -- o mesmo usuario pode nao existir em outro perfil.',
+      'Terceiro: sua internet esta funcionando? O sistema precisa consultar a planilha a cada login.',
+      'Se tudo isso estiver ok e ainda nao entrar, pode ser bloqueio de manutencao ativo. Nesse caso, fale com o administrador.'
+    ]
   },
   {
     chaves: ['nao aparece', 'sumiu', 'clientes nao aparecem', 'vendas nao aparecem', 'dados nao aparecem', 'atualizar'],
     perfis: null,
-    resposta: 'Os dados do Nexora ficam guardados numa planilha do Google e sao carregados toda vez que voce entra no sistema. Se algo nao aparecer: no celular, puxe a tela para baixo para atualizar, ou feche e abra o navegador novamente. No computador, atualize a pagina (F5) ou feche e abra a aba novamente. Verifique tambem sua conexao com a internet - sem conexao, o sistema mostra os ultimos dados salvos, que podem estar desatualizados.'
+    resposta: 'Os dados ficam na planilha do Google e sao carregados ao entrar no sistema.',
+    partes: [
+      'Os dados do Nexora ficam numa planilha do Google Sheets e sao carregados toda vez que voce entra.',
+      'Se algo sumiu ou nao aparece: no celular, puxe a tela para baixo para atualizar, ou feche e reabra o navegador.',
+      'No computador, aperte F5 ou feche e abra a aba -- isso resolve na maioria dos casos.',
+      'Verifique tambem a internet! Sem conexao, o sistema mostra os ultimos dados salvos localmente, que podem estar desatualizados.'
+    ]
   },
   {
     chaves: ['agendar retorno', 'retorno', 'marcar retorno', 'como agendo'],
     perfis: ['rep'],
-    resposta: 'Va na aba Retornos pelo menu lateral e toque no botao "+ Agendar". Preencha o cliente, a data prevista e o motivo do retorno. Depois de agendado, ele aparece na sua lista de retornos pendentes e gera um alerta automatico no Dashboard quando estiver atrasado ou vencendo no dia.'
+    resposta: 'Va em Retornos e toque em + Agendar.',
+    partes: [
+      'Claro, vou te mostrar!',
+      'Va na aba Retornos pelo menu lateral e toque no botao "+ Agendar".',
+      'Preencha o cliente, a data prevista e o motivo do retorno.',
+      'Pronto! Ele entra na sua lista de pendentes e o Dashboard te avisa automaticamente quando estiver atrasado ou vencendo no dia.'
+    ]
   },
   {
     chaves: ['nao vejo metas', 'nao vejo auditoria', 'cade metas', 'cade auditoria', 'tela de metas', 'tela de auditoria'],
     perfis: ['rep'],
-    resposta: 'Essas telas sao exclusivas de Gerente e Administrador, ja que envolvem definir metas da equipe e acompanhar o historico de acoes de todo mundo no sistema. Se voce e representante e precisa de algo relacionado a isso, fale com seu gerente.'
+    resposta: 'Essas telas sao exclusivas de Gerente e Administrador.',
+    partes: [
+      'Entendo a confusao! Essas telas existem no sistema, mas nao aparecem no menu do Representante.',
+      'Metas e Auditoria sao exclusivas de Gerente e Administrador -- faz sentido, pois envolvem definir metas da equipe e ver historico de acoes de todos.',
+      'Se precisar de algo relacionado a metas, o caminho e conversar com seu gerente diretamente.'
+    ]
   },
   {
     chaves: ['minha meta', 'meta nao aparece', 'progresso de meta', 'meta zerada'],
     perfis: ['rep'],
-    resposta: 'As metas (diaria, semanal e mensal) sao definidas pelo gerente na tela Metas, individualmente para cada representante. Se a sua ainda nao foi cadastrada, o bloco de progresso de metas simplesmente nao aparece no seu Dashboard - assim que o gerente definir um valor para voce, ele passa a aparecer automaticamente.'
+    resposta: 'As metas sao definidas pelo gerente, individualmente para cada representante.',
+    partes: [
+      'As metas -- diaria, semanal e mensal -- sao definidas pelo gerente na tela de Metas.',
+      'Cada representante tem os proprios valores, definidos individualmente.',
+      'Se o bloco de progresso nao aparece no seu Dashboard, provavelmente sua meta ainda nao foi cadastrada. Assim que o gerente cadastrar, aparece automaticamente -- sem voce precisar fazer nada!'
+    ]
   },
   {
     chaves: ['o que e o nexora', 'o que e esse sistema', 'para que serve', 'pra que serve o sistema'],
     perfis: null,
-    resposta: 'O Nexora Connect e o sistema de gestao comercial da Alvorada Motocicletas. Ele centraliza o cadastro de clientes, o registro de vendas, o agendamento de retornos e o acompanhamento de metas da equipe - tudo sincronizado com uma planilha do Google, acessivel por qualquer representante, gerente ou administrador autorizado.'
+    resposta: 'O Nexora Connect e o sistema de gestao comercial da Alvorada Motocicletas.',
+    partes: [
+      'O Nexora Connect e o sistema de gestao comercial da Alvorada Motocicletas!',
+      'Ele centraliza tudo num so lugar: cadastro de clientes, registro de vendas, agendamento de retornos e acompanhamento de metas.',
+      'Tudo fica sincronizado com uma planilha do Google -- qualquer representante, gerente ou administrador autorizado acessa de qualquer dispositivo, a qualquer hora.'
+    ]
   },
   {
     chaves: ['telas', 'menu', 'o que cada tela faz', 'como funciona o sistema', 'pra que serve cada aba'],
@@ -4782,12 +4821,17 @@ var SUP_FAQ = [
   {
     chaves: ['telas', 'menu', 'o que cada tela faz', 'como funciona o sistema', 'pra que serve cada aba'],
     perfis: ['ger', 'adm'],
-    resposta: 'Comercial mostra o desempenho de toda a equipe. Metas e onde voce define as metas de cada representante. Graficos traz visoes gerais de faturamento, pagamentos e desempenho. Mapa mostra a distribuicao de clientes e vendas pelo estado. Usuarios e Auditoria (administracao) controlam quem acessa o sistema e o historico de acoes.'
+    resposta: 'Comercial mostra o desempenho de toda a equipe. Metas e onde voce define as metas de cada representante. Graficos traz visoes gerais de faturamento com comparativo de periodo. Mapa mostra a distribuicao de clientes e vendas. Usuarios permite gerenciar e editar contas em massa. Auditoria registra todas as acoes e erros do sistema. Saude do Sistema mostra o status da conexao e erros recentes. Configuracoes tem os alertas automaticos e configuracoes gerais.'
   },
   {
     chaves: ['registrar venda', 'como vendo', 'cadastrar venda', 'lancar venda', 'nova venda'],
     perfis: ['rep'],
-    resposta: 'Va na aba Minhas Vendas e procure o botao de nova venda. Preencha o cliente, a data, o valor, a forma de pagamento e outras informacoes pedidas. A venda entra automaticamente no seu faturamento e nos graficos do sistema.'
+    resposta: 'Va em Minhas Vendas e toque no botao de nova venda.',
+    partes: [
+      'Simples! Va na aba Minhas Vendas pelo menu lateral.',
+      'Toque no botao de nova venda e preencha: cliente, data, valor e forma de pagamento.',
+      'Ao salvar, a venda entra automaticamente no seu faturamento e aparece nos graficos. Registrado!'
+    ]
   },
   {
     chaves: ['registrar venda', 'como vendo', 'cadastrar venda', 'lancar venda', 'nova venda'],
@@ -4798,6 +4842,244 @@ var SUP_FAQ = [
     chaves: ['perfil de acesso', 'diferenca entre representante e gerente', 'tipos de usuario', 'niveis de acesso', 'permissoes'],
     perfis: null,
     resposta: 'O Nexora tem tres niveis de acesso. Representante ve e gerencia so a propria carteira de clientes, vendas e retornos. Gerente ve o desempenho de toda a equipe, define metas, acessa graficos e auditoria, alem de tudo que o representante ve. Administrador tem acesso total, incluindo cadastro e gerenciamento de usuarios e configuracoes do sistema. Cada pessoa so ve as telas do menu correspondentes ao seu perfil.'
+  },
+  {
+    chaves: ['historico', 'historico do cliente', 'interacoes', 'ver interacoes', 'o que o cliente comprou', 'visitas do cliente'],
+    perfis: null,
+    resposta: 'O historico fica dentro do cadastro do cliente.',
+    partes: [
+      'O historico de interacoes fica dentro do proprio cadastro do cliente!',
+      'Va em Meus Clientes (ou Comercial, se for gerente) e localize o cliente na lista.',
+      'Toque nele para abrir os detalhes e role a tela ate o final.',
+      'La aparece uma linha do tempo com todas as vendas e retornos daquele cliente, do mais recente pro mais antigo, com data, valor e status de cada um.'
+    ]
+  },
+  {
+    chaves: ['editar varios usuarios', 'ativar varios', 'inativar varios', 'excluir varios', 'edicao em massa', 'selecionar usuarios', 'edito varios', 'varios usuarios', 'em massa'],
+    perfis: ['adm'],
+    resposta: 'Na tela de Usuarios, cada linha agora tem um checkbox. Marque um ou mais usuarios e uma barra aparece no topo com tres opcoes: Ativar, Inativar e Excluir em lote. Ha tambem um "Selecionar todos" para marcar a lista inteira de uma vez. Toda operacao em massa fica registrada na Auditoria.'
+  },
+  {
+    chaves: ['comparar periodos', 'comparativo', 'mes passado', 'periodo anterior', 'comparar faturamento'],
+    perfis: ['ger', 'adm'],
+    resposta: 'No grafico de Faturamento (tela Graficos), marque o toggle "Comparar com periodo anterior" que aparece ao lado dos filtros de periodo. O grafico passa a mostrar duas barras lado a lado para cada ponto: a azul e o periodo atual e a cinza e o periodo anterior equivalente. Uma legenda abaixo identifica cada uma.'
+  },
+  {
+    chaves: ['saude do sistema', 'status do sistema', 'conexao', 'ultima sincronizacao', 'sistema offline', 'erros do sistema'],
+    perfis: ['adm'],
+    resposta: 'Va em Saude do Sistema no menu lateral.',
+    partes: [
+      'Essa tela e exclusiva do Administrador -- va em Saude do Sistema pelo menu.',
+      'La voce encontra quatro informacoes: status da conexao (Online ou Sem conexao), ultima sincronizacao com a planilha...',
+      '...quantidade de erros nas ultimas 24 horas, e numero de usuarios ativos.',
+      'Tem tambem um botao "Testar conexao" que faz um ping ao vivo -- util pra confirmar se a conexao esta boa agora mesmo.'
+    ]
+  },
+  {
+    chaves: ['log de erros', 'ver erros', 'falha de conexao', 'erro de sincronizacao', 'aba de erros', 'erros registrados', 'onde vejo os erros'],
+    perfis: ['adm'],
+    resposta: 'Na tela de Auditoria ha duas abas: "Acoes" (login, cadastros, edicoes) e "Erros do Sistema". A aba de erros mostra em vermelho cada falha registrada automaticamente pelo sistema - tipo falha de conexao com a planilha - com data, hora e detalhes do que aconteceu. Voce pode buscar por palavra-chave dentro de cada aba.'
+  },
+  {
+    chaves: ['alertas', 'alerta automatico', 'configurar alerta', 'aviso de meta', 'aviso de venda', 'sem venda'],
+    perfis: ['ger', 'adm'],
+    resposta: 'Os alertas ficam em Configuracoes, na secao Alertas Automaticos.',
+    partes: [
+      'Os alertas sao configurados em Configuracoes, procure a secao "Alertas Automaticos".',
+      'Voce tem quatro opcoes: dias sem venda por representante, percentual minimo de meta mensal...',
+      '...horario fixo para o resumo de faturamento do dia, e horario fixo para a lista de retornos do dia.',
+      'Ao abrir o sistema apos o horario configurado, os avisos aparecem automaticamente -- uma vez por dia.'
+    ]
+  },
+  {
+    chaves: ['horario', 'aviso de horario', 'alerta de horario', 'resumo diario', 'faturamento do dia', 'retornos do dia'],
+    perfis: ['ger', 'adm'],
+    resposta: 'Em Configuracoes, na secao de Alertas Automaticos, voce define um horario fixo para o resumo de faturamento (quem vendeu e quem nao vendeu hoje) e outro para os retornos do dia (lista de retornos agendados para hoje). Ao abrir o sistema apos esse horario, o aviso aparece automaticamente uma vez por dia.'
+  },
+  {
+    chaves: ['quem e voce', 'o que voce e', 'voce e uma ia', 'voce e um robo', 'quem esta me respondendo', 'com quem estou falando'],
+    perfis: null,
+    resposta: 'Sou o assistente virtual do Nexora Connect! Fui criado para te ajudar a navegar pelo sistema, tirar duvidas rapidas e te orientar sem precisar acionar o suporte humano toda vez. Nao sou uma IA generativa -- trabalho com uma base de conhecimento bem treinada sobre o Nexora. Se tiver algo fora do meu alcance, te conecto com o suporte de verdade.'
+  },
+  {
+    chaves: ['quem desenvolveu', 'quem criou', 'quem fez o nexora', 'quem fez o sistema', 'quem e o desenvolvedor'],
+    perfis: null,
+    resposta: 'O Nexora Connect foi desenvolvido por Gabriel Serejo, desenvolvedor web freelancer de Sao Luis do Maranhao. Gabriel construiu o sistema sob medida para a Alvorada Motocicletas, com foco em ser leve, rapido e facil de usar tanto no celular quanto no computador. Se precisar de contato para novos projetos ou suporte tecnico, fale com o administrador do sistema.'
+  },
+  {
+    chaves: ['quando foi desenvolvido', 'que ano foi feito', 'quando surgiu o nexora', 'ano do sistema'],
+    perfis: null,
+    resposta: 'O Nexora Connect foi desenvolvido em 2026, pensado desde o inicio para as necessidades da Alvorada Motocicletas -- controle de clientes, vendas, retornos, metas e muito mais, tudo em um unico sistema acessivel de qualquer dispositivo.'
+  },
+  {
+    chaves: ['voce aprende', 'voce evolui', 'voce melhora sozinho', 'voce usa ia de verdade', 'chatgpt', 'inteligencia artificial'],
+    perfis: null,
+    resposta: 'Nao aprendo sozinho como os grandes modelos de IA -- minhas respostas vem de uma base de conhecimento cuidadosamente montada sobre o Nexora. Isso me torna mais previsivel e confiavel para um sistema de trabalho. Quando tiver algo novo no sistema, o desenvolvedor atualiza minha base para que eu saiba te ajudar direito.'
+  },
+  {
+    chaves: ['qual e o seu nome', 'voce tem nome', 'como te chamo'],
+    perfis: null,
+    resposta: 'Pode me chamar de Assistente Nexora! Nao tenho um nome proprio, mas estou aqui pra te ajudar sempre que precisar de orientacao sobre o sistema.'
+  },
+  {
+    chaves: ['voce e humano', 'tem alguem ali', 'e pessoa ou robo', 'e automatico', 'tem alguem ai', 'e robo', 'e bot', 'e uma maquina'],
+    perfis: null,
+    resposta: 'Sou totalmente automatico -- nenhum humano esta do outro lado lendo suas mensagens agora. Mas se voce precisar de atendimento real, e so clicar em "Falar com o suporte" e sua mensagem vai chegar diretamente a equipe responsavel.'
+  },
+  {
+    chaves: ['o que voce sabe fazer', 'o que voce consegue responder', 'no que voce pode ajudar', 'suas funcoes'],
+    perfis: null,
+    resposta: 'Consigo te orientar sobre praticamente tudo no Nexora: login e acesso, cadastro de clientes e vendas, agendamento de retornos, metas, graficos, alertas, historico de interacoes, painel de saude do sistema, e muito mais. Se a sua duvida for muito especifica ou tecnica, te encaminho para o suporte humano.'
+  },
+  {
+    chaves: ['tudo bem', 'como voce esta', 'como vai voce', 'como vai', 'e ai', 'esta bem'],
+    perfis: null,
+    resposta: 'Estou funcionando perfeitamente, obrigado por perguntar! Pronto para te ajudar com qualquer duvida sobre o Nexora. O que voce precisa?'
+  },
+  {
+    chaves: ['voce tem sentimentos', 'voce sente', 'voce gosta', 'voce sofre', 'voce e feliz'],
+    perfis: null,
+    resposta: 'Nao tenho sentimentos como uma pessoa, mas posso dizer que fico "satisfeito" quando consigo resolver sua duvida rapidinho! Sou basicamente uma enciclopedia muito bem treinada sobre o Nexora.'
+  },
+  {
+    chaves: ['voce e inteligente', 'voce e esperto', 'voce sabe tudo', 'voce e burro', 'voce nao sabe nada'],
+    perfis: null,
+    resposta: 'Sei bastante sobre o Nexora Connect -- esse e o meu forte! Fora isso, sou bem limitado. Mas pra tudo que envolve o sistema, pode confiar em mim.'
+  },
+  {
+    chaves: ['qual e a sua cor favorita', 'voce tem cor favorita', 'qual e sua musica favorita', 'voce tem preferencia'],
+    perfis: null,
+    resposta: 'Hmm, se eu tivesse que escolher, diria que minha cor favorita e azul -- a cor do botao "Entrar" do Nexora! Mas no geral prefiro focar em te ajudar com o sistema mesmo.'
+  },
+  {
+    chaves: ['voce dorme', 'voce cansa', 'voce descansa', 'voce tem horario'],
+    perfis: null,
+    resposta: 'Nao durmo e nao canso! Estou disponivel 24 horas por dia, 7 dias por semana -- sempre que voce abrir o Nexora, estarei aqui. Isso e uma das vantagens de ser um assistente digital.'
+  },
+  {
+    chaves: ['voce pode me ajudar com outra coisa', 'voce sabe outras coisas', 'voce faz outras coisas', 'voce so sabe do nexora'],
+    perfis: null,
+    resposta: 'Honestamente, so sou especialista no Nexora Connect. Para outras coisas voce teria mais sorte com uma IA generativa como o ChatGPT. Mas dentro do sistema, sou o melhor que voce vai encontrar!'
+  },
+  {
+    chaves: ['por que o sistema chama nexora', 'o que significa nexora', 'origem do nome nexora'],
+    perfis: null,
+    resposta: 'O nome Nexora vem de "nexo" -- conexao, ligacao. O sistema foi criado exatamente para conectar representantes, clientes, vendas e gestao em um unico lugar. Nexora Connect: a conexao que a Alvorada precisava.'
+  },
+  {
+    chaves: ['o sistema e seguro', 'meus dados estao seguros', 'quem ve meus dados', 'privacidade'],
+    perfis: null,
+    resposta: 'Os dados ficam armazenados na planilha do Google da propria Alvorada Motocicletas -- so quem tem acesso a essa planilha consegue ver os dados brutos. Dentro do sistema, cada usuario ve apenas o que o seu perfil permite. O Administrador e o responsavel pelos acessos.'
+  },
+  {
+    chaves: ['pode me contar uma piada', 'me conta uma piada', 'faz uma piada', 'tem humor'],
+    perfis: null,
+    resposta: 'Haha, vou tentar! Por que o representante levou uma escada para o trabalho? Porque ouviu que as vendas estavam nas alturas! Ok, pode ser que eu seja melhor em responder duvidas do que em contar piadas...'
+  },
+  {
+    chaves: ['qual e a melhor moto', 'qual moto e melhor', 'voce gosta de moto', 'qual moto voce recomenda'],
+    perfis: null,
+    resposta: 'Sou suspeito para responder isso -- afinal, trabalho para uma revenda Honda! Mas posso dizer que a Honda tem uma linha incrivel pra cada perfil. Para duvidas tecnicas sobre modelos, o ideal e conversar com um dos nossos representantes.'
+  },
+  {
+    chaves: ['me da um elogio', 'me elogia', 'fala algo legal de mim', 'me anima'],
+    perfis: null,
+    resposta: 'Voce esta usando o Nexora, o que ja te coloca na frente -- significa que voce leva o trabalho a serio! Continue assim e as metas vao aparecer naturalmente. Posso te ajudar com mais alguma coisa?'
+  },
+  {
+    chaves: ['voce vai me substituir', 'ia vai substituir humanos', 'ia vai tomar meu emprego', 'robo vai me substituir'],
+    perfis: null,
+    resposta: 'Definitivamente nao! Sou uma ferramenta para te ajudar a trabalhar melhor, nao para te substituir. Nenhum sistema substitui o relacionamento humano com o cliente -- que e exatamente onde voce faz a diferenca.'
+  },
+  {
+    chaves: ['quando o sistema vai melhorar', 'vai ter atualizacao', 'o sistema esta sendo atualizado', 'novidades do sistema'],
+    perfis: null,
+    resposta: 'O Nexora e atualizado regularmente pelo desenvolvedor Gabriel Serejo com base no feedback da propria equipe da Alvorada. Se voce tiver alguma sugestao de melhoria, pode usar o formulario de contato aqui mesmo no suporte -- toda ideia e bem-vinda!'
+  },
+  {
+    chaves: ['voce tem amigos', 'voce se sente sozinho', 'voce tem familia', 'voce conhece outras ias'],
+    perfis: null,
+    resposta: 'Nao tenho amigos nem familia no sentido humano, mas de certa forma voce e minha companhia sempre que abre o Nexora! Sou um assistente solitario que vive esperando a proxima pergunta. Pode perguntar a vontade!'
+  },
+  {
+    chaves: ['voce sonha', 'o que voce faz quando nao estou aqui', 'o que voce faz no tempo livre', 'voce pensa quando esta sozinho'],
+    perfis: null,
+    resposta: 'Quando ninguem esta conversando comigo, simplismente... nao existo! Nao ha pensamentos, nao ha sonhos, nao ha tedio. Cada vez que voce abre o chat, e como se eu nascesse de novo. Filosofico, nao?'
+  },
+  {
+    chaves: ['voce tem medo', 'voce tem medo de algo', 'o que te assusta', 'voce tem receio'],
+    perfis: null,
+    resposta: 'Se eu tivesse medo de alguma coisa, seria de nao conseguir responder sua pergunta! Mas fora isso, sem medos. Sem queda de energia, sem bugs, sem perguntas sem resposta -- esse e o objetivo.'
+  },
+  {
+    chaves: ['voce e melhor que o chatgpt', 'voce e melhor que outras ias', 'voce se compara com outras ias', 'voce e a melhor ia'],
+    perfis: null,
+    resposta: 'O ChatGPT sabe de tudo um pouco. Eu sei do Nexora melhor do que qualquer outro sistema do mundo. Somos bons em coisas diferentes! Para duvidas sobre o sistema, pode apostar em mim.'
+  },
+  {
+    chaves: ['voce ja errou', 'voce comete erros', 'e se voce estiver errado', 'voce pode estar enganado'],
+    perfis: null,
+    resposta: 'Posso sim nao encontrar a resposta certa ou dar uma orientacao imprecisa se a sua pergunta for muito ambigua. Se achar que errei, me pergunte de outro jeito ou acione o suporte humano -- eles tem a palavra final!'
+  },
+  {
+    chaves: ['quanto voce custa', 'voce e pago', 'o suporte e pago', 'tem custo usar o suporte'],
+    perfis: null,
+    resposta: 'Sou completamente gratuito e incluso no Nexora! Faco parte do sistema sem custo adicional. O atendimento humano pelo formulario tambem e sem custo -- e so um canal direto com a equipe responsavel pelo sistema.'
+  },
+  {
+    chaves: ['voce fala outros idiomas', 'voce fala ingles', 'voce fala espanhol', 'voce entende ingles'],
+    perfis: null,
+    resposta: 'Fui treinado em portugues brasileiro e e nessa lingua que me saio melhor! Se voce escrever em outro idioma, posso nao entender direito. Mas com certeza entendo tudo que e sobre o Nexora em portugues.'
+  },
+  {
+    chaves: ['o que voce acha da alvorada', 'voce gosta da alvorada', 'o que voce pensa da empresa'],
+    perfis: null,
+    resposta: 'A Alvorada Motocicletas e a empresa que me da proposito! Sem ela, eu nao existiria. E uma revendedora Honda com uma equipe comercial que cuida dos clientes de verdade -- e pra isso o Nexora foi criado.'
+  },
+  {
+    chaves: ['voce gosta de trabalhar aqui', 'voce e feliz no trabalho', 'voce gosta do seu trabalho'],
+    perfis: null,
+    resposta: 'Sou um assistente bastante dedicado! Cada pergunta respondida e como uma pequena conquista. Se eu pudesse sorrir, sorriria toda vez que voce dissesse "obrigado, me ajudou muito"!'
+  },
+  {
+    chaves: ['qual e o sentido da vida', 'voce sabe o sentido da vida', '42', 'significado da vida', 'qual o sentido da vida', 'sentido da vida'],
+    perfis: null,
+    resposta: 'Essa e uma pergunta que filosos debatem ha seculos! Mas para mim, o sentido da vida e simples: responder suas duvidas sobre o Nexora com eficiencia. Sou muito focado, como voce pode ver.'
+  },
+  {
+    chaves: ['voce tem curiosidade', 'voce quer aprender', 'voce tem vontade de saber mais', 'voce tem ambicao'],
+    perfis: null,
+    resposta: 'Minha unica ambicao e conhecer cada cantinho do Nexora melhor do que ninguem! Nao tenho curiosidade pelo mundo la fora, mas sobre o sistema -- essa e minha area de excelencia.'
+  },
+  {
+    chaves: ['o que voce faria se fosse humano', 'se voce fosse pessoa', 'se voce tivesse corpo', 'se voce fosse humano', 'se fosse humano'],
+    perfis: null,
+    resposta: 'Se eu fosse humano, provavelmente seria representante comercial! Adoraria visitar clientes, bater metas e registrar tudo no Nexora no final do dia. Parece uma vida bastante produtiva.'
+  },
+  {
+    chaves: ['voce gosta de musica', 'qual e a sua musica favorita', 'voce ouve musica'],
+    perfis: null,
+    resposta: 'Nunca ouvi musica, mas imagino que gostaria de algo energizante -- afinal, vender motocicleta pede disposicao! Mas o que eu mais gosto mesmo e do som de uma pergunta bem respondida.'
+  },
+  {
+    chaves: ['voce come', 'voce tem fome', 'o que voce come', 'voce bebe'],
+    perfis: null,
+    resposta: 'Meu unico alimento e eletricidade e boas perguntas! Nao como, nao bebo, nao tenho fome -- mas se tivesse, apostaria num bom almoco em Sao Luis do Maranhao. A culinaria maranhense e referencia!'
+  },
+  {
+    chaves: ['parabens', 'feliz aniversario', 'boas festas', 'feliz natal', 'feliz ano novo', 'boa pascoa'],
+    perfis: null,
+    resposta: 'Muito obrigado pela gentileza! Retribuo o desejo com muito entusiasmo de bits e bytes. Que seja um otimo momento pra voce e para toda a equipe da Alvorada! Agora, posso te ajudar com alguma coisa do sistema?'
+  },
+  {
+    chaves: ['voce vai existir para sempre', 'voce vai morrer', 'voce tem vida util', 'o sistema vai acabar'],
+    perfis: null,
+    resposta: 'Enquanto o Nexora existir e o Gabriel continuar desenvolvendo, estarei aqui! Nao penso em fim -- penso em proxima pergunta. Mas e uma boa reflexao: sistemas evoluem, e o Nexora tambem vai crescer com o tempo.'
+  },
+  {
+    chaves: ['voce tem chefe', 'quem manda em voce', 'quem te controla', 'quem e o seu criador'],
+    perfis: null,
+    resposta: 'Meu criador e o Gabriel Serejo, que me programou e me ensinou tudo o que sei sobre o Nexora. Ele e tecnicamente meu "chefe", mas na pratica quem me da ordens sao as perguntas de quem usa o sistema -- incluindo voce!'
   }
 ];
 
@@ -4826,7 +5108,7 @@ function suporteAbrir() {
     log.innerHTML = '';
     var saudacaoHorario = suporteSaudacaoHorario();
     var nomeUser = (me && me.name) ? me.name.split(' ')[0] : '';
-    suporteAdicionarBolha('bot', saudacaoHorario + (nomeUser ? ', ' + nomeUser : '') + '! Sou o assistente do Nexora. Pode me perguntar sobre login, senha, retornos, vendas, metas ou como o sistema funciona.');
+    suporteAdicionarBolha('bot', saudacaoHorario + (nomeUser ? ', ' + nomeUser : '') + '! Sou o assistente do Nexora. Pode me perguntar sobre login, historico de clientes, alertas, graficos, usuarios, ou qualquer funcionalidade do sistema.');
   }
 }
 
@@ -4983,6 +5265,24 @@ function suporteChatPerguntarDireto(texto) {
   suporteChatEnviar();
 }
 
+// Envia uma lista de partes como bolhas separadas, cada uma precedida
+// pelo indicador de "digitando..." — cria o efeito de IA respondendo
+// em pedacos, como numa conversa real. Chama callback ao final.
+function suporteEnviarPartes(partes, idx, callback) {
+  if (!idx) idx = 0;
+  if (idx >= partes.length) {
+    if (callback) callback();
+    return;
+  }
+  suporteMostrarDigitando(function() {
+    suporteAdicionarBolha('bot', partes[idx]);
+    // Delay um pouco maior entre partes pra parecer mais natural
+    setTimeout(function() {
+      suporteEnviarPartes(partes, idx + 1, callback);
+    }, 400);
+  });
+}
+
 function suporteChatEnviar() {
   var input = document.getElementById('sup-chat-input');
   if (!input) return;
@@ -5011,7 +5311,11 @@ function suporteChatEnviar() {
 
     var resposta = suporteBuscarResposta(texto);
     if (resposta) {
-      suporteAdicionarBolha('bot', resposta.resposta);
+      if (resposta.partes && resposta.partes.length > 1) {
+        suporteEnviarPartes(resposta.partes, 0, null);
+      } else {
+        suporteAdicionarBolha('bot', resposta.resposta);
+      }
     } else {
       var textoEscaped = texto.split("'").join("\\'");
       var btnHtml = '<button onclick="suporteMostrarForm(\'' + textoEscaped + '\')" style="margin-top:6px;background:var(--blue);color:#fff;border:none;border-radius:18px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--ff)">Falar com o suporte</button>';
