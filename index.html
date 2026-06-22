@@ -4881,7 +4881,7 @@ var SUP_FAQ = [
     resposta: 'Na tela de Auditoria ha duas abas: "Acoes" (login, cadastros, edicoes) e "Erros do Sistema". A aba de erros mostra em vermelho cada falha registrada automaticamente pelo sistema - tipo falha de conexao com a planilha - com data, hora e detalhes do que aconteceu. Voce pode buscar por palavra-chave dentro de cada aba.'
   },
   {
-    chaves: ['alertas', 'alerta automatico', 'configurar alerta', 'aviso de meta', 'aviso de venda', 'sem venda'],
+    chaves: ['alertas', 'alerta automatico', 'configurar alerta', 'aviso de meta', 'aviso de venda', 'sem venda', 'configuracoes de alerta'],
     perfis: ['ger', 'adm'],
     resposta: 'Os alertas ficam em Configuracoes, na secao Alertas Automaticos.',
     partes: [
@@ -4987,7 +4987,7 @@ var SUP_FAQ = [
     resposta: 'Voce esta usando o Nexora, o que ja te coloca na frente -- significa que voce leva o trabalho a serio! Continue assim e as metas vao aparecer naturalmente. Posso te ajudar com mais alguma coisa?'
   },
   {
-    chaves: ['voce vai me substituir', 'ia vai substituir humanos', 'ia vai tomar meu emprego', 'robo vai me substituir'],
+    chaves: ['voce vai me substituir', 'ia vai substituir humanos', 'ia vai tomar meu emprego', 'robo vai me substituir', 'voce vai mesmo me substituir'],
     perfis: null,
     resposta: 'Definitivamente nao! Sou uma ferramenta para te ajudar a trabalhar melhor, nao para te substituir. Nenhum sistema substitui o relacionamento humano com o cliente -- que e exatamente onde voce faz a diferenca.'
   },
@@ -5186,11 +5186,46 @@ function suporteMostrarDigitando(callback) {
 }
 
 // Normaliza texto para comparacao: minusculas, sem acento
+// Mapa de abreviacoes informais -> forma completa
+// Aplicado antes da busca, entao nao precisa duplicar chaves no FAQ
+var SUP_ABREV = {
+  'vc': 'voce', 'vcs': 'voces', 'vce': 'voce',
+  'tb': 'tambem', 'tbm': 'tambem',
+  'pq': 'porque', 'pk': 'porque',
+  'q': 'que', 'qd': 'quando', 'qdo': 'quando',
+  'td': 'tudo', 'tds': 'todos', 'tdo': 'todo',
+  'mt': 'muito', 'mto': 'muito', 'mts': 'muitos',
+  'msm': 'mesmo', 'mms': 'mesmo',
+  'n': 'nao', 'nn': 'nao',
+  'eh': 'e', 'eh?': 'e?',
+  'ta': 'esta', 'to': 'estou', 'tao': 'estao',
+  'num': 'nao', 'nao': 'nao',
+  'aq': 'aqui', 'aki': 'aqui',
+  'blz': 'beleza', 'vlw': 'valeu', 'obg': 'obrigado', 'obrg': 'obrigado',
+  'pfv': 'por favor', 'pff': 'por favor',
+  'fzr': 'fazer', 'fz': 'faz',
+  'kd': 'cade', 'cade': 'cade',
+  'sys': 'sistema', 'sist': 'sistema',
+  'rep': 'representante', 'ger': 'gerente', 'adm': 'administrador',
+  'msg': 'mensagem', 'msgs': 'mensagens',
+  'info': 'informacao', 'infos': 'informacoes',
+  'config': 'configuracoes', 'cfg': 'configuracoes', 'configurar': 'configurar',
+  'att': 'atualizacao',
+  'hist': 'historico', 'hst': 'historico'
+};
+
 function suporteNormalizar(s) {
-  return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  var texto = String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  // Expandir abreviacoes palavra por palavra
+  var palavras = texto.split(/\s+/);
+  for (var i = 0; i < palavras.length; i++) {
+    var p = palavras[i].replace(/[?!.,;:]+$/, ''); // remove pontuacao final pra checar
+    if (SUP_ABREV[p]) palavras[i] = palavras[i].replace(p, SUP_ABREV[p]);
+  }
+  return palavras.join(' ');
 }
 
-// Busca a melhor pergunta da FAQ que combina com o texto digitado,
+
 // considerando apenas perguntas liberadas para o perfil atual.
 function suporteBuscarResposta(texto) {
   // Antes do login, usa o perfil que a pessoa escolheu na tela inicial
