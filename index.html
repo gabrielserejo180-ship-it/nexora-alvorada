@@ -1084,7 +1084,10 @@ function retCarregarPlanilha() {
   var _cargaTotal = 4, _cargaFeita = 0;
   function _onCargaPronta() {
     _cargaFeita++;
-    if (_cargaFeita >= _cargaTotal) setTimeout(alertasVerificar, 600);
+    if (_cargaFeita >= _cargaTotal) {
+      setTimeout(alertasVerificar, 600);
+      setTimeout(alertasHorarioVerificar, 1000);
+    }
   }
 
   sheetsGet('getClientes', function(d) {
@@ -2525,6 +2528,16 @@ function buildPage(id) {
         '<div style="display:flex;align-items:center;gap:8px">' +
         '<input type="number" id="cfg-alerta-meta" min="1" max="100" placeholder="ex: 50" style="width:90px;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">' +
         '<span style="font-size:12px;color:var(--txt2)">% — avisar se algum rep estiver abaixo desse progresso na meta mensal</span>' +
+        '</div></div>' +
+        '<div class="mfield"><label>&#128178; Horario do resumo de faturamento do dia</label>' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+        '<input type="time" id="cfg-alerta-hora-fat" style="background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none;cursor:pointer">' +
+        '<span style="font-size:12px;color:var(--txt2)">ao abrir o sistema apos esse horario, aparece quem ja vendeu e quem nao vendeu hoje</span>' +
+        '</div></div>' +
+        '<div class="mfield"><label>&#128197; Horario do resumo de retornos do dia</label>' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+        '<input type="time" id="cfg-alerta-hora-ret" style="background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none;cursor:pointer">' +
+        '<span style="font-size:12px;color:var(--txt2)">ao abrir o sistema apos esse horario, aparece a lista de retornos programados pra hoje</span>' +
         '</div></div>' +
         '<button id="cfg-alerta-salvar-btn" style="height:38px;padding:0 16px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--ff)">Salvar alertas</button>' +
         '<div id="cfg-alerta-status" style="margin-top:10px;font-size:12px;color:var(--txt2)"></div>' +
@@ -4200,10 +4213,16 @@ function cfgCarregar() {
   // Carrega configs de alerta salvas
   var diasSalvo = lsGet('nxr_alerta_dias') || '';
   var metaSalvo = lsGet('nxr_alerta_meta') || '';
+  var horaFatSalvo = lsGet('nxr_alerta_hora_fat') || '';
+  var horaRetSalvo = lsGet('nxr_alerta_hora_ret') || '';
   var diasInp = document.getElementById('cfg-alerta-dias');
   var metaInp = document.getElementById('cfg-alerta-meta');
+  var horaFatInp = document.getElementById('cfg-alerta-hora-fat');
+  var horaRetInp = document.getElementById('cfg-alerta-hora-ret');
   if (diasInp) diasInp.value = diasSalvo;
   if (metaInp) metaInp.value = metaSalvo;
+  if (horaFatInp) horaFatInp.value = horaFatSalvo;
+  if (horaRetInp) horaRetInp.value = horaRetSalvo;
 
   var alertaSalvarBtn = document.getElementById('cfg-alerta-salvar-btn');
   if (alertaSalvarBtn) alertaSalvarBtn.onclick = cfgAlertaSalvar;
@@ -4212,8 +4231,12 @@ function cfgCarregar() {
 function cfgAlertaSalvar() {
   var dias = document.getElementById('cfg-alerta-dias') ? document.getElementById('cfg-alerta-dias').value.trim() : '';
   var meta = document.getElementById('cfg-alerta-meta') ? document.getElementById('cfg-alerta-meta').value.trim() : '';
+  var horaFat = document.getElementById('cfg-alerta-hora-fat') ? document.getElementById('cfg-alerta-hora-fat').value.trim() : '';
+  var horaRet = document.getElementById('cfg-alerta-hora-ret') ? document.getElementById('cfg-alerta-hora-ret').value.trim() : '';
   lsSet('nxr_alerta_dias', dias);
   lsSet('nxr_alerta_meta', meta);
+  lsSet('nxr_alerta_hora_fat', horaFat);
+  lsSet('nxr_alerta_hora_ret', horaRet);
   var st = document.getElementById('cfg-alerta-status');
   if (st) {
     st.style.color = 'var(--green)';
@@ -4450,6 +4473,101 @@ function cfgExcluir(tipo) {
 // -------------------------------------------
 // INIT - Registrar todos os eventos aqui
 // -------------------------------------------
+
+// --- ALERTAS DE HORARIO -------------------
+// Chave usada pra saber se o alerta de horario ja foi exibido hoje.
+// Formato: "fat:2026-06-21" ou "ret:2026-06-21"
+function _alertaHorarioChave(tipo) {
+  var hoje = new Date();
+  return 'nxr_alerta_visto_' + tipo + '_' + hoje.getFullYear() + '-' + String(hoje.getMonth()+1).padStart(2,'0') + '-' + String(hoje.getDate()).padStart(2,'0');
+}
+
+// Verifica se o horario configurado (formato "HH:MM") ja passou hoje e
+// se o alerta ainda nao foi exibido. Retorna true se deve exibir agora.
+function _alertaHorarioDeve(horaConfig, tipo) {
+  if (!horaConfig) return false;
+  var partes = horaConfig.split(':');
+  if (partes.length < 2) return false;
+  var hConf = parseInt(partes[0]), mConf = parseInt(partes[1]);
+  var agora = new Date();
+  var hAgora = agora.getHours(), mAgora = agora.getMinutes();
+  // So exibe se horario atual >= horario configurado
+  var passou = (hAgora > hConf) || (hAgora === hConf && mAgora >= mConf);
+  if (!passou) return false;
+  // So exibe uma vez por dia (guarda no localStorage)
+  var chave = _alertaHorarioChave(tipo);
+  if (lsGet(chave) === '1') return false;
+  return true;
+}
+
+function alertasHorarioVerificar() {
+  if (!me || (me.role !== 'ger' && me.role !== 'adm')) return;
+
+  var horaFat = lsGet('nxr_alerta_hora_fat') || '';
+  var horaRet = lsGet('nxr_alerta_hora_ret') || '';
+
+  // --- Resumo de faturamento do dia ---
+  if (_alertaHorarioDeve(horaFat, 'fat')) {
+    lsSet(_alertaHorarioChave('fat'), '1');
+    var hoje = new Date();
+    var dataHojeStr = String(hoje.getDate()).padStart(2,'0') + '/' + String(hoje.getMonth()+1).padStart(2,'0') + '/' + hoje.getFullYear();
+    // Monta set de quem vendeu hoje
+    var vendeuHoje = {};
+    for (var i = 0; i < VND_DB.length; i++) {
+      var v = VND_DB[i];
+      var ts = dashParseData(v.data);
+      if (!ts) continue;
+      var dv = new Date(ts);
+      if (dv.getDate() === hoje.getDate() && dv.getMonth() === hoje.getMonth() && dv.getFullYear() === hoje.getFullYear()) {
+        var repNome = String(v.representante || '').trim();
+        if (repNome) vendeuHoje[repNome] = (vendeuHoje[repNome] || 0) + Number(v.valor || 0);
+      }
+    }
+    var comVenda = [], semVenda = [];
+    for (var j = 0; j < USR_DB.length; j++) {
+      var u = USR_DB[j];
+      if (u.role !== 'rep' || u.status !== 'active') continue;
+      var nome = u.name || u.user;
+      if (vendeuHoje[nome]) {
+        comVenda.push(nome + ' (R$' + Math.round(vendeuHoje[nome]).toLocaleString('pt-BR') + ')');
+      } else {
+        semVenda.push(nome);
+      }
+    }
+    var msgFat = '&#128178; Faturamento de hoje (' + dataHojeStr + '):';
+    if (comVenda.length) msgFat += ' COM venda: ' + comVenda.join(', ') + '.';
+    if (semVenda.length) msgFat += ' SEM venda: ' + semVenda.join(', ') + '.';
+    if (!comVenda.length && !semVenda.length) msgFat += ' Nenhum representante ativo encontrado.';
+    setTimeout(function() { showToast(msgFat, 'alerta'); }, 600);
+  }
+
+  // --- Resumo de retornos do dia ---
+  if (_alertaHorarioDeve(horaRet, 'ret')) {
+    lsSet(_alertaHorarioChave('ret'), '1');
+    var hojeRet = new Date();
+    hojeRet.setHours(0, 0, 0, 0);
+    var retHoje = [];
+    for (var k = 0; k < RET_DB.length; k++) {
+      var r = RET_DB[k];
+      var tsR = dashParseData(r.data);
+      if (!tsR) continue;
+      var dvR = new Date(tsR); dvR.setHours(0, 0, 0, 0);
+      if (dvR.getTime() === hojeRet.getTime()) {
+        var status = String(r.status || '').toLowerCase();
+        var label = status === 'concluido' ? '(concluido)' : '(pendente)';
+        retHoje.push((r.cliente || r.representante || 'N/I') + ' ' + label);
+      }
+    }
+    var delay = horaFat ? 4500 : 600;
+    var msgRet = '&#128197; Retornos de hoje: ';
+    if (retHoje.length) {
+      msgRet += retHoje.length + ' agendado(s) — ' + retHoje.slice(0, 3).join(', ') + (retHoje.length > 3 ? ' e mais ' + (retHoje.length - 3) + '.' : '.');
+    } else {
+      msgRet += 'Nenhum retorno agendado para hoje.';
+    }
+    setTimeout(function() { showToast(msgRet, 'alerta'); }, delay);
+  }
+}
 
 // --- NOTIFICACOES --------------------------
 var _notifAberto = false;
