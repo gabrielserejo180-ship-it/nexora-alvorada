@@ -47,6 +47,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 @keyframes girar{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @keyframes supDigitando{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
 @keyframes supPiscar{0%,49%{opacity:1}50%,100%{opacity:.15}}
+@keyframes alertaBannerEntrar{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
 @keyframes sb{from{opacity:.25;transform:scaleY(.5)}to{opacity:1;transform:scaleY(1)}}
 .moto-spd{display:flex;gap:3px;align-items:flex-end}
 .moto-bar{width:5px;border-radius:3px;background:var(--blue);animation:sb .9s ease-in-out infinite alternate}
@@ -236,6 +237,21 @@ document.getElementById('js-status').style.display='none';
 </script>
 
 <div id="toast"></div>
+
+<!-- Banner de alertas automaticos no Dashboard -->
+<div id="alerta-banner" style="display:none;position:fixed;top:56px;left:0;right:0;z-index:800;padding:10px 16px;background:linear-gradient(135deg,rgba(217,119,6,.97),rgba(180,83,9,.97));color:#fff;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:alertaBannerEntrar .4s ease">
+  <div style="max-width:900px;margin:0 auto;display:flex;align-items:flex-start;gap:12px">
+    <div style="font-size:20px;flex-shrink:0;margin-top:2px">&#128276;</div>
+    <div style="flex:1">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;opacity:.85">Alertas Automaticos</div>
+      <div id="alerta-banner-lista" style="display:flex;flex-direction:column;gap:4px"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+      <button onclick="alertaBannerFechar()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:var(--ff)">Fechar</button>
+      <div id="alerta-banner-timer" style="font-size:10px;opacity:.7">60s</div>
+    </div>
+  </div>
+</div>
 
 <!-- HOME -->
 <div class="screen" id="screen-home">
@@ -4414,21 +4430,15 @@ function alertasVerificar() {
 
   if (!alertas.length) return;
 
-  // Exibe os alertas como toasts sequenciais com pequeno delay entre eles
-  var delay = 800;
-  for (var a = 0; a < Math.min(alertas.length, 5); a++) {
-    (function(alerta, d) {
-      setTimeout(function() {
-        showToast('&#128276; ' + alerta.msg, 'alerta');
-      }, d);
-    })(alertas[a], delay);
-    delay += 3500;
+  // Mostrar no banner do Dashboard (1 minuto visível)
+  alertas.slice(0, 10).forEach(function(al) {
+    alertaBannerAdicionar('🔔 ' + al.msg);
+  });
+  if (alertas.length > 10) {
+    alertaBannerAdicionar('... e mais ' + (alertas.length - 10) + ' alerta(s). Veja Configuracoes.');
   }
-  if (alertas.length > 5) {
-    setTimeout(function() {
-      showToast('... e mais ' + (alertas.length - 5) + ' alerta(s). Veja Configuracoes.', 'info');
-    }, delay);
-  }
+  // Pequeno delay pra garantir que o dashboard já renderizou
+  setTimeout(alertaBannerMostrar, 800);
 }
 function cfgTestar() {
   var st = document.getElementById('cfg-status');
@@ -4601,7 +4611,6 @@ function alertasHorarioVerificar() {
     lsSet(_alertaHorarioChave('fat'), '1');
     var hoje = new Date();
     var dataHojeStr = String(hoje.getDate()).padStart(2,'0') + '/' + String(hoje.getMonth()+1).padStart(2,'0') + '/' + hoje.getFullYear();
-    // Monta set de quem vendeu hoje
     var vendeuHoje = {};
     for (var i = 0; i < VND_DB.length; i++) {
       var v = VND_DB[i];
@@ -4624,11 +4633,16 @@ function alertasHorarioVerificar() {
         semVenda.push(nome);
       }
     }
-    var msgFat = '&#128178; Faturamento de hoje (' + dataHojeStr + '):';
-    if (comVenda.length) msgFat += ' COM venda: ' + comVenda.join(', ') + '.';
-    if (semVenda.length) msgFat += ' SEM venda: ' + semVenda.join(', ') + '.';
+    var msgFat = 'Faturamento de hoje (' + dataHojeStr + '):';
+    if (comVenda.length) msgFat += ' Com venda: ' + comVenda.join(', ') + '.';
+    if (semVenda.length) msgFat += ' Sem venda: ' + semVenda.join(', ') + '.';
     if (!comVenda.length && !semVenda.length) msgFat += ' Nenhum representante ativo encontrado.';
-    setTimeout(function() { showToast(msgFat, 'alerta'); }, 600);
+    alertaBannerAdicionar('💰 ' + msgFat);
+    // Se nao tiver alerta de retornos, mostrar o banner agora
+    // Se tiver, o banner sera mostrado pelo bloco de retornos
+    if (!_alertaHorarioDeve(horaRet, 'ret')) {
+      setTimeout(alertaBannerMostrar, 800);
+    }
   }
 
   // --- Resumo de retornos do dia ---
@@ -4648,15 +4662,59 @@ function alertasHorarioVerificar() {
         retHoje.push((r.cliente || r.representante || 'N/I') + ' ' + label);
       }
     }
-    var delay = horaFat ? 4500 : 600;
-    var msgRet = '&#128197; Retornos de hoje: ';
+    var msgRet = 'Retornos de hoje: ';
     if (retHoje.length) {
       msgRet += retHoje.length + ' agendado(s) — ' + retHoje.slice(0, 3).join(', ') + (retHoje.length > 3 ? ' e mais ' + (retHoje.length - 3) + '.' : '.');
     } else {
       msgRet += 'Nenhum retorno agendado para hoje.';
     }
-    setTimeout(function() { showToast(msgRet, 'alerta'); }, delay);
+    alertaBannerAdicionar('📅 ' + msgRet);
+    // Mostrar o banner com todas as mensagens acumuladas (fat + ret)
+    setTimeout(alertaBannerMostrar, 800);
   }
+}
+
+// --- BANNER DE ALERTAS NO DASHBOARD -------
+var _alertaBannerTimer = null;
+var _alertaBannerSegundos = 60;
+var _alertaBannerMensagens = [];
+
+function alertaBannerAdicionar(msg) {
+  _alertaBannerMensagens.push(msg);
+}
+
+function alertaBannerMostrar() {
+  if (!_alertaBannerMensagens.length) return;
+  var banner = document.getElementById('alerta-banner');
+  var lista = document.getElementById('alerta-banner-lista');
+  if (!banner || !lista) return;
+
+  lista.innerHTML = '';
+  _alertaBannerMensagens.forEach(function(msg) {
+    var linha = document.createElement('div');
+    linha.style.cssText = 'font-size:13px;line-height:1.4';
+    linha.textContent = msg;
+    lista.appendChild(linha);
+  });
+
+  banner.style.display = 'block';
+  _alertaBannerMensagens = [];
+
+  // Iniciar contagem regressiva de 60s
+  _alertaBannerSegundos = 60;
+  if (_alertaBannerTimer) clearInterval(_alertaBannerTimer);
+  _alertaBannerTimer = setInterval(function() {
+    _alertaBannerSegundos--;
+    var timerEl = document.getElementById('alerta-banner-timer');
+    if (timerEl) timerEl.textContent = _alertaBannerSegundos + 's';
+    if (_alertaBannerSegundos <= 0) alertaBannerFechar();
+  }, 1000);
+}
+
+function alertaBannerFechar() {
+  if (_alertaBannerTimer) { clearInterval(_alertaBannerTimer); _alertaBannerTimer = null; }
+  var banner = document.getElementById('alerta-banner');
+  if (banner) banner.style.display = 'none';
 }
 
 // --- NOTIFICACOES --------------------------
