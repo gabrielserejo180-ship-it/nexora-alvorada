@@ -596,6 +596,15 @@ document.getElementById('js-status').style.display='none';
         <label>Observacao</label>
         <input id="vnd-obs" placeholder="Observacao opcional" style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
       </div>
+      <div class="mfield">
+        <label>Endereco do Cliente</label>
+        <input id="vnd-endereco" placeholder="Opcional - preenchido automaticamente pelo MicroWork" style="width:100%;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">
+      </div>
+      <div class="mfield" id="vnd-itens-div" style="display:none">
+        <label>Itens do Orcamento</label>
+        <div id="vnd-itens-resumo" style="background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;font-size:12px;color:var(--txt2);line-height:1.6;max-height:100px;overflow-y:auto"></div>
+        <input type="hidden" id="vnd-itens-json">
+      </div>
     </div>
     <div class="modal-foot">
       <button class="btn-cancel" id="vnd-modal-cancel">Cancelar</button>
@@ -3464,6 +3473,14 @@ function vndNova() {
   if (valInp) valInp.value = '';
   var obsInp = document.getElementById('vnd-obs');
   if (obsInp) obsInp.value = '';
+  var endInp = document.getElementById('vnd-endereco');
+  if (endInp) endInp.value = '';
+  var itensJson = document.getElementById('vnd-itens-json');
+  if (itensJson) itensJson.value = '';
+  var itensDiv = document.getElementById('vnd-itens-div');
+  if (itensDiv) itensDiv.style.display = 'none';
+  var itensResumo = document.getElementById('vnd-itens-resumo');
+  if (itensResumo) itensResumo.innerHTML = '';
   // Inicializar parcelas
   var pgtoSel = document.getElementById('vnd-pgto');
   if (pgtoSel) pgtoSel.value = 'Boleto';
@@ -3490,7 +3507,9 @@ function vndSalvar() {
     valor: Number(val),
     parcelas: parcelas,
     pgto: pgto,
-    obs: document.getElementById('vnd-obs') ? document.getElementById('vnd-obs').value : ''
+    obs: document.getElementById('vnd-obs') ? document.getElementById('vnd-obs').value : '',
+    endereco: document.getElementById('vnd-endereco') ? document.getElementById('vnd-endereco').value : '',
+    itens: document.getElementById('vnd-itens-json') ? document.getElementById('vnd-itens-json').value : ''
   };
   VND_DB.push(novo);
   lsSet('nxr_vnd', JSON.stringify(VND_DB));
@@ -6007,8 +6026,43 @@ var SUP_PERGUNTAR_MAIS = [
   'Ficou mais claro? Pode perguntar o que mais precisar!',
   'Foi util? Se quiser saber mais alguma coisa, estou a disposicao!',
   'Conseguiu entender? Tem mais alguma duvida que eu possa resolver?',
-  'Certo! Precisa de mais alguma informacao?'
+  'Certo! Precisa de mais alguma informacao?',
+  'Deu pra entender? Pode me perguntar o que mais precisar, sem pressao!',
+  'Espero ter sido claro! Tem mais alguma coisa em mente?',
+  'Pronto, isso cobre sua duvida? Estou aqui se precisar de mais!',
+  'Ficou ok? Qualquer outra coisa, e so falar!',
+  'Conseguiu? Se tiver mais alguma pergunta, pode mandar!',
+  'Isso ajuda? Tem mais alguma coisa que eu possa explicar?',
+  'Deu certo? Pode perguntar mais o que quiser, sem pressa!'
 ];
+
+// Respostas quando a pessoa confirma que entendeu ("sim", "entendi", "ficou claro")
+// sem ser uma despedida -- o assistente reage positivamente e pergunta se precisa de mais
+var SUP_RESPOSTA_SIM_ENTENDEU = [
+  'Que otimo! Fico feliz que tenha ficado claro.',
+  'Perfeito! Bom saber que ajudou.',
+  'Excelente! E para isso que estou aqui.',
+  'Maravilha! Que bom que ficou mais claro.',
+  'Show! Fico satisfeito quando consigo ajudar.',
+  'Que bom! Era exatamente isso que eu queria explicar.',
+  'Otimo! Fico feliz que tenha entendido.',
+  'Entendido da sua parte, missao cumprida da minha!'
+];
+
+// Detecta quando a pessoa confirma que entendeu (sem ser despedida completa)
+function suporteDetectarEntendeu(texto) {
+  var t = suporteNormalizar(texto);
+  return t === 'sim' || t === 'entendi' || t === 'ficou claro' || t === 'claro' ||
+    t === 'certo' || t === 'perfeito' || t === 'otimo' || t === 'excelente' ||
+    t === 'show' || t === 'legal' || t === 'bacana' || t === 'top' || t === 'maneiro' ||
+    t === 'compreendi' || t === 'sim entendi' || t === 'sim ficou claro' ||
+    t === 'ah entendi' || t === 'ah sim' || t === 'ah certo' || t === 'ah ok' ||
+    t === 'sim sim' || t === 'sim claro' || t === 'ficou otimo' || t === 'ficou bom' ||
+    t.indexOf('ficou claro') >= 0 || t.indexOf('entendi agora') >= 0 ||
+    t.indexOf('agora entendi') >= 0 || t.indexOf('ficou mais claro') >= 0 ||
+    t.indexOf('consegui entender') >= 0 || t.indexOf('faz sentido') >= 0 ||
+    t.indexOf('fez sentido') >= 0 || t.indexOf('agora faz sentido') >= 0;
+}
 
 function _supRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -6066,6 +6120,17 @@ function suporteChatEnviar() {
           var modal = document.getElementById('suporte-modal');
           if (modal) modal.style.display = 'none';
         }, 1800);
+        return;
+      }
+      // Pessoa confirmou que entendeu -- reage positivamente e pergunta se quer mais
+      if (suporteDetectarEntendeu(texto)) {
+        suporteAdicionarBolha('bot', _supRandom(SUP_RESPOSTA_SIM_ENTENDEU));
+        setTimeout(function() {
+          suporteMostrarDigitando(function() {
+            suporteAdicionarBolha('bot', _supRandom(SUP_PERGUNTAR_MAIS));
+            _supAguardandoMaisAlgo = true;
+          });
+        }, 800);
         return;
       }
       // Pessoa quer mais alguma coisa -- continua o fluxo normal abaixo
