@@ -159,6 +159,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 }
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10B981;color:#fff;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;display:none;box-shadow:0 8px 32px rgba(0,0,0,.4)}
 #toast.erro{background:#EF4444}
+#toast.alerta{background:#D97706}
 #notif-badge{position:fixed;top:12px;right:60px;background:var(--red);color:#fff;border-radius:99px;font-size:11px;font-weight:700;padding:4px 10px;z-index:200;cursor:pointer;display:none;box-shadow:0 4px 16px rgba(239,68,68,.4)}
 #notif-panel{position:fixed;top:50px;right:12px;width:320px;background:var(--s1);border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.6);z-index:201;display:none;max-height:400px;overflow-y:auto}
 .notif-item{padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer}
@@ -738,18 +739,56 @@ function showToast(msg, tipo) {
   var t = document.getElementById('toast');
   if (!t) return;
   t.textContent = msg;
-  t.className = tipo === 'erro' ? 'erro' : '';
+  t.className = tipo === 'erro' ? 'erro' : (tipo === 'alerta' ? 'alerta' : '');
   t.style.display = 'block';
-  setTimeout(function() { t.style.display = 'none'; }, 3000);
+  var duracao = tipo === 'alerta' ? 4000 : 3000;
+  setTimeout(function() { t.style.display = 'none'; }, duracao);
 }
 
 // --- SHEETS --------------------------------
+// Registra um erro do sistema na aba Auditoria (mesma aba usada para acoes
+// normais), marcado com acao = 'ERRO_SISTEMA' para poder ser filtrado depois
+// numa visualizacao separada. Tem protecao contra loop infinito: se o
+// proprio envio do log de erro falhar, nao tenta logar de novo.
+var _errorLogEmAndamento = false;
+function errorLog(tipo, mensagem, contexto) {
+  try {
+    if (_errorLogEmAndamento) return; // evita loop se o log de erro tambem falhar
+    var agora = new Date();
+    var dataStr = String(agora.getDate()).padStart(2, '0') + '/' +
+                  String(agora.getMonth() + 1).padStart(2, '0') + '/' +
+                  agora.getFullYear();
+    var horaStr = String(agora.getHours()).padStart(2, '0') + ':' +
+                  String(agora.getMinutes()).padStart(2, '0');
+    var registro = {
+      data: dataStr,
+      hora: horaStr,
+      usuario: me ? (me.name || me.user || '') : (profile || 'desconhecido'),
+      perfil: me ? (me.role || '') : (profile || ''),
+      acao: 'ERRO_SISTEMA',
+      detalhe: '[' + (tipo || 'erro') + '] ' + (mensagem || '') + (contexto ? ' | ' + contexto : '')
+    };
+    _errorLogEmAndamento = true;
+    sheetsSalvarLinha('Auditoria', registro, function() {
+      _errorLogEmAndamento = false;
+    });
+  } catch(e) { _errorLogEmAndamento = false; }
+}
+
 function sheetsGet(action, cb) {
   var url = APPS_URL + '?action=' + action;
   fetch(url)
     .then(function(r) { return r.json(); })
-    .then(function(d) { if (cb) cb(d); })
-    .catch(function() { if (cb) cb(null); });
+    .then(function(d) {
+      if (d && d.ok === false) {
+        errorLog('sheetsGet', 'Acao "' + action + '" retornou erro', d.msg || '');
+      }
+      if (cb) cb(d);
+    })
+    .catch(function(e) {
+      errorLog('conexao', 'Falha ao buscar dados (acao: ' + action + ')', e && e.message ? e.message : '');
+      if (cb) cb(null);
+    });
 }
 function sheetsPost(action, sheet, row) {
   var r = '';
@@ -758,7 +797,9 @@ function sheetsPost(action, sheet, row) {
     r += (r ? '&' : '') + encodeURIComponent(keys[i]) + '=' + encodeURIComponent(row[keys[i]]);
   }
   var url = APPS_URL + '?action=' + action + '&sheet=' + sheet + '&' + r;
-  fetch(url).catch(function() {});
+  fetch(url).catch(function(e) {
+    errorLog('conexao', 'Falha ao salvar em "' + sheet + '" (acao: ' + action + ')', e && e.message ? e.message : '');
+  });
 }
 // Registra uma acao no log de auditoria (aba 'Auditoria' na planilha).
 // Usado em login, e em cadastro/edicao/exclusao de clientes, vendas,
@@ -1040,13 +1081,19 @@ function doLoginVerificar(user, pin, al, db) {
 // --- CARREGAMENTO DE DADOS DA PLANILHA ----
 function retCarregarPlanilha() {
   // Planilha - a fonte de verdade - substitui completamente os dados locais
+  var _cargaTotal = 4, _cargaFeita = 0;
+  function _onCargaPronta() {
+    _cargaFeita++;
+    if (_cargaFeita >= _cargaTotal) setTimeout(alertasVerificar, 600);
+  }
+
   sheetsGet('getClientes', function(d) {
     if (d && d.ok && d.data) {
       CLI_DB = d.data;
       lsSet('nxr_cli', JSON.stringify(CLI_DB));
-      // Sempre re-renderizar
       cliRenderSafe();
     }
+    _onCargaPronta();
   });
   sheetsGet('getRetornos', function(d) {
     if (d && d.ok && d.data) {
@@ -1055,6 +1102,7 @@ function retCarregarPlanilha() {
       retRenderSafe();
       setTimeout(notifVerificar, 200);
     }
+    _onCargaPronta();
   });
   sheetsGet('getVendas', function(d) {
     if (d && d.ok && d.data) {
@@ -1062,6 +1110,7 @@ function retCarregarPlanilha() {
       lsSet('nxr_vnd', JSON.stringify(VND_DB));
       vndRenderSafe();
     }
+    _onCargaPronta();
   });
   sheetsGet('getMetas', function(d) {
     if (d && d.ok && d.data) {
@@ -1070,6 +1119,7 @@ function retCarregarPlanilha() {
       metaRenderSafe();
       dashRenderSafe();
     }
+    _onCargaPronta();
   });
 }
 
@@ -1178,6 +1228,7 @@ var NAV_MAP = {
     { sect: 'Administracao' },
     { id: 'admin', label: 'Usuarios' },
     { id: 'auditoria', label: 'Auditoria' },
+    { id: 'saude', label: 'Saude do Sistema' },
     { id: 'config', label: 'Configuracoes' }
   ]
 };
@@ -1231,6 +1282,7 @@ function navigate(id) {
 
     if (id === 'admin') setTimeout(usrRender, 50);
     if (id === 'auditoria') setTimeout(audRender, 50);
+    if (id === 'saude') setTimeout(saudeRender, 50);
     if (id === 'metas') {
       setTimeout(metaRender, 50);
       setTimeout(function() {
@@ -1768,11 +1820,11 @@ function grafFatRender(vndList) {
   var modo = (document.getElementById('fat-modo') ? document.getElementById('fat-modo').value : 'mes');
   var anoSel = parseInt(document.getElementById('fat-ano') ? document.getElementById('fat-ano').value : hoje.getFullYear());
   var mesSel = parseInt(document.getElementById('fat-mes') ? document.getElementById('fat-mes').value : (hoje.getMonth() + 1));
+  var comparar = document.getElementById('fat-comparar') ? document.getElementById('fat-comparar').checked : false;
 
   var MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  var MESES_FULL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var MESES_FULL = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-  // Anos disponíveis a partir dos dados
   var anosSet = {};
   _grafFatVnd.forEach(function(v) {
     var t = dashParseData(v.data);
@@ -1781,114 +1833,134 @@ function grafFatRender(vndList) {
   if (!anosSet[hoje.getFullYear()]) anosSet[hoje.getFullYear()] = 1;
   var anos = Object.keys(anosSet).map(Number).sort();
 
-  // Mostra/oculta seletor de mês
   var mostrarMes = (modo === 'dia' || modo === 'semana');
+
+  // Label do periodo anterior, para legenda
+  function labelPeriodoAnterior() {
+    if (modo === 'mes') return String(anoSel - 1);
+    if (modo === 'ano') return 'Todos os anos anteriores';
+    var mesAnt = mesSel - 1 < 1 ? 12 : mesSel - 1;
+    var anoAnt = mesSel - 1 < 1 ? anoSel - 1 : anoSel;
+    return MESES_FULL[mesAnt - 1] + '/' + anoAnt;
+  }
 
   // Monta controles
   var ctrlHtml =
     '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px">' +
-    // Modo
     '<div style="display:flex;background:var(--s3);border-radius:10px;padding:3px;gap:2px">' +
     ['dia','semana','mes','ano'].map(function(m) {
-      var labels = { dia:'Dia', semana:'Semana', mes:'Mês', ano:'Ano' };
+      var labels = { dia:'Dia', semana:'Semana', mes:'Mes', ano:'Ano' };
       var ativo = (modo === m);
       return '<button onclick="document.getElementById(\'fat-modo\').value=\'' + m + '\';grafFatRender()" ' +
         'style="padding:6px 14px;border:none;border-radius:8px;font-size:12px;font-weight:' + (ativo?'700':'500') + ';cursor:pointer;font-family:var(--ff);' +
         'background:' + (ativo?'var(--blue)':'none') + ';color:' + (ativo?'#fff':'var(--txt2)') + '">' + labels[m] + '</button>';
     }).join('') +
     '</div>' +
-    // Ano
     '<select id="fat-ano" onchange="grafFatRender()" style="background:var(--s1);border:1px solid var(--line2);border-radius:9px;padding:7px 12px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none;cursor:pointer">' +
     anos.map(function(a) { return '<option value="' + a + '"' + (a===anoSel?' selected':'') + '>' + a + '</option>'; }).join('') +
     '</select>' +
-    // Mês (só para dia/semana)
     '<select id="fat-mes" onchange="grafFatRender()" style="background:var(--s1);border:1px solid var(--line2);border-radius:9px;padding:7px 12px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none;cursor:pointer;' + (mostrarMes?'':'display:none') + '">' +
     MESES_FULL.map(function(m,i) { return '<option value="' + (i+1) + '"' + ((i+1)===mesSel?' selected':'') + '>' + m + '</option>'; }).join('') +
     '</select>' +
-    // Input hidden para modo
     '<input type="hidden" id="fat-modo" value="' + modo + '">' +
+    // Toggle de comparativo — nao aparece no modo "ano" pois la ja ficam todos os anos lado a lado
+    (modo !== 'ano' ?
+      '<label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--txt2);cursor:pointer;white-space:nowrap">' +
+      '<input type="checkbox" id="fat-comparar" onchange="grafFatRender()"' + (comparar?' checked':'') + ' style="cursor:pointer">' +
+      'Comparar com periodo anterior</label>'
+    : '') +
     '</div>';
 
-  // Monta dados do gráfico conforme modo
-  var itens = []; // [{label, valor, rep: {nome: valor}}]
-
-  if (modo === 'dia') {
-    // Cada dia do mês selecionado
-    var diasNoMes = new Date(anoSel, mesSel, 0).getDate();
-    for (var d = 1; d <= diasNoMes; d++) {
-      itens.push({ label: String(d).padStart(2,'0'), valor: 0, reps: {} });
+  // --- Funcao auxiliar: agrega vendas num mapa de itens dado um filtro de periodo ---
+  function agregarVendas(filtroFn) {
+    var itens = [];
+    if (modo === 'dia') {
+      var diasNoMes = new Date(anoSel, mesSel, 0).getDate();
+      for (var d = 1; d <= diasNoMes; d++) itens.push({ label: String(d).padStart(2,'0'), valor: 0, reps: {} });
+      _grafFatVnd.forEach(function(v) {
+        var t = dashParseData(v.data); if (!t) return;
+        var dv = new Date(t); if (!filtroFn(dv)) return;
+        var idx = dv.getDate() - 1;
+        if (idx >= 0 && idx < itens.length) {
+          itens[idx].valor += Number(v.valor || 0);
+          var r = v.representante || 'N/I';
+          itens[idx].reps[r] = (itens[idx].reps[r] || 0) + Number(v.valor || 0);
+        }
+      });
+      while (itens.length > 1 && itens[itens.length-1].valor === 0) itens.pop();
+    } else if (modo === 'semana') {
+      for (var s = 1; s <= 5; s++) itens.push({ label: 'S'+s, valor: 0, reps: {}, semana: s });
+      _grafFatVnd.forEach(function(v) {
+        var t = dashParseData(v.data); if (!t) return;
+        var dv = new Date(t); if (!filtroFn(dv)) return;
+        var sem = Math.ceil(dv.getDate() / 7); if (sem > 5) sem = 5;
+        itens[sem-1].valor += Number(v.valor || 0);
+        var r = v.representante || 'N/I';
+        itens[sem-1].reps[r] = (itens[sem-1].reps[r] || 0) + Number(v.valor || 0);
+      });
+      while (itens.length > 1 && itens[itens.length-1].valor === 0) itens.pop();
+    } else if (modo === 'mes') {
+      for (var m2 = 0; m2 < 12; m2++) itens.push({ label: MESES[m2], valor: 0, reps: {} });
+      _grafFatVnd.forEach(function(v) {
+        var t = dashParseData(v.data); if (!t) return;
+        var dv = new Date(t); if (!filtroFn(dv)) return;
+        itens[dv.getMonth()].valor += Number(v.valor || 0);
+        var r = v.representante || 'N/I';
+        itens[dv.getMonth()].reps[r] = (itens[dv.getMonth()].reps[r] || 0) + Number(v.valor || 0);
+      });
+    } else if (modo === 'ano') {
+      anos.forEach(function(a) { itens.push({ label: String(a), valor: 0, reps: {}, ano: a }); });
+      _grafFatVnd.forEach(function(v) {
+        var t = dashParseData(v.data); if (!t) return;
+        var dv = new Date(t);
+        var idx2 = anos.indexOf(dv.getFullYear()); if (idx2 < 0) return;
+        itens[idx2].valor += Number(v.valor || 0);
+        var r = v.representante || 'N/I';
+        itens[idx2].reps[r] = (itens[idx2].reps[r] || 0) + Number(v.valor || 0);
+      });
     }
-    _grafFatVnd.forEach(function(v) {
-      var t = dashParseData(v.data);
-      if (!t) return;
-      var dv = new Date(t);
-      if (dv.getFullYear() !== anoSel || (dv.getMonth()+1) !== mesSel) return;
-      var idx = dv.getDate() - 1;
-      itens[idx].valor += Number(v.valor || 0);
-      var r = v.representante || 'N/I';
-      itens[idx].reps[r] = (itens[idx].reps[r] || 0) + Number(v.valor || 0);
-    });
-    // Remove dias vazios do final
-    while (itens.length > 1 && itens[itens.length-1].valor === 0) itens.pop();
-
-  } else if (modo === 'semana') {
-    // Semanas do mês selecionado (S1..S5)
-    for (var s = 1; s <= 5; s++) itens.push({ label: 'S'+s, valor: 0, reps: {}, semana: s });
-    _grafFatVnd.forEach(function(v) {
-      var t = dashParseData(v.data);
-      if (!t) return;
-      var dv = new Date(t);
-      if (dv.getFullYear() !== anoSel || (dv.getMonth()+1) !== mesSel) return;
-      var sem = Math.ceil(dv.getDate() / 7); if (sem > 5) sem = 5;
-      itens[sem-1].valor += Number(v.valor || 0);
-      var r = v.representante || 'N/I';
-      itens[sem-1].reps[r] = (itens[sem-1].reps[r] || 0) + Number(v.valor || 0);
-    });
-    while (itens.length > 1 && itens[itens.length-1].valor === 0) itens.pop();
-
-  } else if (modo === 'mes') {
-    // Meses do ano selecionado
-    for (var m2 = 0; m2 < 12; m2++) itens.push({ label: MESES[m2], valor: 0, reps: {} });
-    _grafFatVnd.forEach(function(v) {
-      var t = dashParseData(v.data);
-      if (!t) return;
-      var dv = new Date(t);
-      if (dv.getFullYear() !== anoSel) return;
-      itens[dv.getMonth()].valor += Number(v.valor || 0);
-      var r = v.representante || 'N/I';
-      itens[dv.getMonth()].reps[r] = (itens[dv.getMonth()].reps[r] || 0) + Number(v.valor || 0);
-    });
-
-  } else if (modo === 'ano') {
-    // Todos os anos disponíveis
-    anos.forEach(function(a) { itens.push({ label: String(a), valor: 0, reps: {}, ano: a }); });
-    _grafFatVnd.forEach(function(v) {
-      var t = dashParseData(v.data);
-      if (!t) return;
-      var dv = new Date(t);
-      var idx2 = anos.indexOf(dv.getFullYear());
-      if (idx2 < 0) return;
-      itens[idx2].valor += Number(v.valor || 0);
-      var r = v.representante || 'N/I';
-      itens[idx2].reps[r] = (itens[idx2].reps[r] || 0) + Number(v.valor || 0);
-    });
+    return itens;
   }
 
-  // Gera SVG de barras
-  var max = 0;
-  itens.forEach(function(it) { if (it.valor > max) max = it.valor; });
+  // Filtro do periodo atual
+  function filtroAtual(dv) {
+    if (modo === 'dia' || modo === 'semana') return dv.getFullYear() === anoSel && (dv.getMonth()+1) === mesSel;
+    if (modo === 'mes') return dv.getFullYear() === anoSel;
+    return true; // ano: todos
+  }
+
+  // Filtro do periodo anterior
+  function filtroAnterior(dv) {
+    if (modo === 'mes') return dv.getFullYear() === anoSel - 1;
+    var mesAnt = mesSel - 1 < 1 ? 12 : mesSel - 1;
+    var anoAnt = mesSel - 1 < 1 ? anoSel - 1 : anoSel;
+    return dv.getFullYear() === anoAnt && (dv.getMonth()+1) === mesAnt;
+  }
+
+  var itens = agregarVendas(filtroAtual);
+  var itensAnt = comparar ? agregarVendas(filtroAnterior) : [];
+
+  // Gera SVG de barras (simples ou duplas se comparar ativo)
+  var maxAtual = 0, maxAnt = 0;
+  itens.forEach(function(it) { if (it.valor > maxAtual) maxAtual = it.valor; });
+  if (comparar) itensAnt.forEach(function(it) { if (it.valor > maxAnt) maxAnt = it.valor; });
+  var max = Math.max(maxAtual, maxAnt);
 
   var svgHtml = '';
-  if (max <= 0) {
-    svgHtml = '<div class="empty-state">Sem vendas no período selecionado.</div>';
+  if (max <= 0 && !comparar) {
+    svgHtml = '<div class="empty-state">Sem vendas no periodo selecionado.</div>';
   } else {
     var W = 620, H = 220, padB = 30, padT = 20, padL = 60, padR = 10;
     var n = itens.length;
-    var barGap = Math.max(4, Math.floor((W - padL - padR) / n * 0.18));
-    var barW = Math.max(8, Math.floor((W - padL - padR - barGap * (n + 1)) / n));
+    // Barras duplas ocupam mais espaco horizontal
+    var barsPerGroup = comparar ? 2 : 1;
+    var barGap = Math.max(3, Math.floor((W - padL - padR) / n * 0.15));
+    var innerGap = comparar ? 2 : 0;
+    var totalBarW = Math.max(6, Math.floor((W - padL - padR - barGap * (n + 1)) / n));
+    var barW = comparar ? Math.max(4, Math.floor((totalBarW - innerGap) / 2)) : totalBarW;
+
     var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;display:block" preserveAspectRatio="xMidYMid meet">';
 
-    // Linhas de grade
     for (var g = 1; g <= 4; g++) {
       var gy = padT + ((H - padB - padT) / 4) * (4 - g);
       var gval = Math.round((max / 4) * g);
@@ -1896,35 +1968,65 @@ function grafFatRender(vndList) {
       svg += '<text x="' + (padL - 5) + '" y="' + (gy + 4) + '" text-anchor="end" font-size="9" fill="var(--txt3)" font-family="DM Sans,Arial,sans-serif">R$' + (gval >= 1000 ? Math.round(gval/1000)+'k' : gval) + '</text>';
     }
 
-    // Barras
     for (var bi = 0; bi < n; bi++) {
       var item = itens[bi];
-      var barH2 = max > 0 ? Math.round(((H - padB - padT) * item.valor) / max) : 0;
-      if (item.valor > 0 && barH2 < 4) barH2 = 4;
-      var bx = padL + barGap + bi * (barW + barGap);
-      var by = H - padB - barH2;
-      // Hoje ou mês atual destaca em azul mais vivo
+      var itemAnt = itensAnt[bi] || { valor: 0 };
+      var groupX = padL + barGap + bi * (totalBarW + barGap);
+
       var isAtual = (modo === 'dia' && parseInt(item.label) === hoje.getDate() && anoSel === hoje.getFullYear() && mesSel === (hoje.getMonth()+1)) ||
                     (modo === 'mes' && bi === hoje.getMonth() && anoSel === hoje.getFullYear()) ||
                     (modo === 'semana' && item.semana === Math.ceil(hoje.getDate()/7) && anoSel === hoje.getFullYear() && mesSel === (hoje.getMonth()+1)) ||
                     (modo === 'ano' && item.ano === hoje.getFullYear());
+
+      // Barra do periodo atual
+      var barH2 = max > 0 ? Math.round(((H - padB - padT) * item.valor) / max) : 0;
+      if (item.valor > 0 && barH2 < 4) barH2 = 4;
+      var bx = comparar ? groupX : groupX;
+      var by = H - padB - barH2;
       var cor = isAtual ? 'var(--blue-h)' : 'var(--blue)';
-      svg += '<rect x="' + bx + '" y="' + by + '" width="' + barW + '" height="' + barH2 + '" rx="4" fill="' + cor + '"></rect>';
+      svg += '<rect x="' + bx + '" y="' + by + '" width="' + barW + '" height="' + barH2 + '" rx="3" fill="' + cor + '"></rect>';
       if (item.valor > 0) {
         var lblVal = item.valor >= 1000 ? 'R$' + (item.valor/1000).toFixed(1).replace('.',',') + 'k' : 'R$' + Math.round(item.valor);
-        svg += '<text x="' + (bx + barW/2) + '" y="' + (by - 5) + '" text-anchor="middle" font-size="9" fill="var(--txt2)" font-family="DM Sans,Arial,sans-serif">' + lblVal + '</text>';
+        svg += '<text x="' + (bx + barW/2) + '" y="' + (by - 4) + '" text-anchor="middle" font-size="8" fill="var(--txt2)" font-family="DM Sans,Arial,sans-serif">' + lblVal + '</text>';
       }
-      // Label eixo X (mostrar menos labels se muitas barras)
+
+      // Barra do periodo anterior (se comparar ativo)
+      if (comparar) {
+        var barHAnt = max > 0 ? Math.round(((H - padB - padT) * itemAnt.valor) / max) : 0;
+        if (itemAnt.valor > 0 && barHAnt < 4) barHAnt = 4;
+        var bxAnt = groupX + barW + innerGap;
+        var byAnt = H - padB - barHAnt;
+        svg += '<rect x="' + bxAnt + '" y="' + byAnt + '" width="' + barW + '" height="' + barHAnt + '" rx="3" fill="var(--line2)" opacity="0.8"></rect>';
+        if (itemAnt.valor > 0) {
+          var lblAnt = itemAnt.valor >= 1000 ? 'R$' + (itemAnt.valor/1000).toFixed(1).replace('.',',') + 'k' : 'R$' + Math.round(itemAnt.valor);
+          svg += '<text x="' + (bxAnt + barW/2) + '" y="' + (byAnt - 4) + '" text-anchor="middle" font-size="8" fill="var(--txt3)" font-family="DM Sans,Arial,sans-serif">' + lblAnt + '</text>';
+        }
+      }
+
       var showLabel = (n <= 12) || (n <= 31 && bi % 5 === 0) || bi === n-1 || bi === 0;
       if (showLabel) {
-        svg += '<text x="' + (bx + barW/2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10" fill="var(--txt3)" font-family="DM Sans,Arial,sans-serif">' + item.label + '</text>';
+        var labelX = comparar ? (groupX + barW + innerGap/2) : (groupX + barW/2);
+        svg += '<text x="' + labelX + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10" fill="var(--txt3)" font-family="DM Sans,Arial,sans-serif">' + item.label + '</text>';
       }
     }
-
     svg += '</svg>';
+
+    // Legenda do comparativo
+    if (comparar) {
+      svg += '<div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap">' +
+        '<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--txt2)">' +
+          '<div style="width:12px;height:12px;border-radius:3px;background:var(--blue);flex-shrink:0"></div>' +
+          '<span>' + (modo === 'mes' ? String(anoSel) : (MESES_FULL[mesSel-1] + '/' + anoSel)) + ' (atual)</span>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--txt2)">' +
+          '<div style="width:12px;height:12px;border-radius:3px;background:var(--line2);flex-shrink:0"></div>' +
+          '<span>' + labelPeriodoAnterior() + ' (anterior)</span>' +
+        '</div>' +
+      '</div>';
+    }
     svgHtml = svg;
 
-    // Detalhamento por representante do período (top 3 ou todos)
+    // Detalhamento por representante
     var repTotais = {};
     itens.forEach(function(it) {
       Object.keys(it.reps).forEach(function(r) {
@@ -1952,6 +2054,7 @@ function grafFatRender(vndList) {
 
   el.innerHTML = ctrlHtml + svgHtml;
 }
+
 
 function grafRender() {
   var vnd = VND_DB || [];
@@ -2332,15 +2435,47 @@ function buildPage(id) {
         '<input class="usr-search" id="usr-busca" placeholder="Buscar...">' +
         '<button class="btn-new" id="usr-novo-btn" onclick="usrNovo()">+ Novo</button>' +
         '</div>' +
+        '<div id="usr-massa-bar" style="display:none;background:var(--s2);border:1px solid var(--line2);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:none;align-items:center;gap:10px;flex-wrap:wrap">' +
+          '<span id="usr-massa-count" style="font-size:12px;font-weight:700;color:var(--txt);flex:1">0 selecionados</span>' +
+          '<button onclick="usrMassaAtivar()" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--ff)">Ativar</button>' +
+          '<button onclick="usrMassaInativar()" style="background:var(--amber);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--ff)">Inativar</button>' +
+          '<button onclick="usrMassaExcluir()" style="background:var(--red);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--ff)">Excluir</button>' +
+          '<button onclick="usrMassaCancelar()" style="background:var(--s3);color:var(--txt2);border:1px solid var(--line2);border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:var(--ff)">Cancelar</button>' +
+        '</div>' +
         '<div class="usr-stats" id="usr-stats"></div>' +
+        '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px" id="usr-sel-todos-wrap" style="display:none">' +
+          '<input type="checkbox" id="usr-sel-todos" onchange="usrSelecionarTodos(this.checked)" style="width:15px;height:15px;cursor:pointer">' +
+          '<label for="usr-sel-todos" style="font-size:12px;color:var(--txt2);cursor:pointer">Selecionar todos</label>' +
+        '</div>' +
         '<div class="usr-table" id="usr-lista"></div>'
+    };
+  }
+  if (id === 'saude') {
+    return {
+      eye: 'Administracao', title: 'Saude do Sistema', sub: 'Status de conexao e erros recentes',
+      body: '<div class="usr-stats" id="saude-stats"></div>' +
+        '<div style="margin:18px 0 10px;display:flex;justify-content:space-between;align-items:center">' +
+          '<div style="font-size:13px;font-weight:700;color:var(--txt)">Erros recentes (ultimas 24h)</div>' +
+          '<button class="btn-new" id="saude-testar-btn" onclick="saudeTestarConexao()">Testar conexao</button>' +
+        '</div>' +
+        '<div class="usr-table" id="saude-erros-lista"></div>'
     };
   }
   if (id === 'auditoria') {
     return {
-      eye: 'Administracao', title: 'Auditoria', sub: 'Log de acoes',
-      body: '<div class="usr-topbar"><input class="usr-search" id="aud-busca" placeholder="Buscar..."></div>' +
-        '<div class="usr-table" id="aud-lista"></div>'
+      eye: 'Administracao', title: 'Auditoria', sub: 'Log de acoes e erros do sistema',
+      body: '<div style="display:flex;gap:8px;margin-bottom:16px">' +
+        '<button class="meta-tab-btn active" id="aud-tab-acoes" onclick="audTrocarAba(\'acoes\')">Acoes</button>' +
+        '<button class="meta-tab-btn" id="aud-tab-erros" onclick="audTrocarAba(\'erros\')">Erros do Sistema</button>' +
+        '</div>' +
+        '<div id="aud-aba-acoes">' +
+          '<div class="usr-topbar"><input class="usr-search" id="aud-busca" placeholder="Buscar..."></div>' +
+          '<div class="usr-table" id="aud-lista"></div>' +
+        '</div>' +
+        '<div id="aud-aba-erros" style="display:none">' +
+          '<div class="usr-topbar"><input class="usr-search" id="aud-erros-busca" placeholder="Buscar nos erros..."></div>' +
+          '<div class="usr-table" id="aud-erros-lista"></div>' +
+        '</div>'
     };
   }
   if (id === 'metas') {
@@ -2377,6 +2512,22 @@ function buildPage(id) {
         '<button id="cfg-man-ativar" style="height:38px;padding:0 16px;background:var(--amber);color:#1a1200;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--ff)">&#128274; Ativar bloqueio</button>' +
         '<button id="cfg-man-desativar" style="height:38px;padding:0 16px;background:none;border:1px solid var(--green);color:var(--green);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ff)">&#128275; Desativar bloqueio</button>' +
         '</div>' +
+        '</div>' +
+        '<div class="cap-wrap" style="margin-top:12px;border-color:rgba(37,99,235,.3)">' +
+        '<div style="font-size:13px;font-weight:600;margin-bottom:4px">&#128276; Alertas Automaticos</div>' +
+        '<div style="font-size:11px;color:var(--txt3);margin-bottom:14px">Quando as condicoes abaixo forem detectadas ao entrar no sistema, voce sera avisado. Deixe um campo em branco para desativar aquele alerta.</div>' +
+        '<div class="mfield"><label>Dias sem venda por representante</label>' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+        '<input type="number" id="cfg-alerta-dias" min="1" max="90" placeholder="ex: 3" style="width:90px;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">' +
+        '<span style="font-size:12px;color:var(--txt2)">dias — avisar se algum representante nao registrar venda nesse periodo</span>' +
+        '</div></div>' +
+        '<div class="mfield"><label>Meta mensal abaixo de (%)</label>' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+        '<input type="number" id="cfg-alerta-meta" min="1" max="100" placeholder="ex: 50" style="width:90px;background:var(--s3);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;color:var(--txt);font-size:13px;font-family:var(--ff);outline:none">' +
+        '<span style="font-size:12px;color:var(--txt2)">% — avisar se algum rep estiver abaixo desse progresso na meta mensal</span>' +
+        '</div></div>' +
+        '<button id="cfg-alerta-salvar-btn" style="height:38px;padding:0 16px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--ff)">Salvar alertas</button>' +
+        '<div id="cfg-alerta-status" style="margin-top:10px;font-size:12px;color:var(--txt2)"></div>' +
         '</div>' +
         '<div class="cap-wrap">' +
         '<div style="font-size:13px;font-weight:600;margin-bottom:10px">URL do Apps Script</div>' +
@@ -3301,6 +3452,9 @@ function usrRender() {
   if (!el) return;
   if (!lista.length) { el.innerHTML = '<div class="empty-state">Nenhum usuario encontrado.</div>'; return; }
 
+  var selTodosWrap = document.getElementById('usr-sel-todos-wrap');
+  if (selTodosWrap) selTodosWrap.style.display = lista.length > 1 ? 'flex' : 'none';
+
   var roleTag = { rep: 'tag-rep', ger: 'tag-ger', adm: 'tag-adm' };
   var roleLabel = { rep: 'Rep.', ger: 'Gerente', adm: 'ADM' };
   var html = '';
@@ -3311,7 +3465,8 @@ function usrRender() {
     for (var n = 0; n < ws.length; n++) { if (ws[n]) ini += ws[n][0]; }
     ini = ini.slice(0, 2).toUpperCase();
     var isActive = u.status === 'active';
-    html += '<div class="usr-row">' +
+    html += '<div class="usr-row" id="usr-row-' + u.user + '">' +
+      '<input type="checkbox" class="usr-chk" data-ulogin="' + u.user + '" onchange="usrCheckChange()" style="width:15px;height:15px;cursor:pointer;flex-shrink:0">' +
       '<div class="usr-av">' + ini + '</div>' +
       '<div style="flex:1"><div class="usr-name">' + (u.name || '') + '</div>' +
       '<div class="usr-login">' + (u.user || '') + '</div></div>' +
@@ -3372,6 +3527,121 @@ function usrAcao(act, login) {
     usrRender();
     return;
   }
+}
+
+// Retorna a lista de logins dos checkboxes marcados
+function usrGetSelecionados() {
+  var selecionados = [];
+  var chks = document.querySelectorAll('.usr-chk:checked');
+  for (var i = 0; i < chks.length; i++) {
+    selecionados.push(chks[i].getAttribute('data-ulogin'));
+  }
+  return selecionados;
+}
+
+// Chamado toda vez que um checkbox muda — atualiza a barra de edicao em massa
+function usrCheckChange() {
+  var selecionados = usrGetSelecionados();
+  var bar = document.getElementById('usr-massa-bar');
+  var count = document.getElementById('usr-massa-count');
+  if (!bar) return;
+  if (selecionados.length > 0) {
+    bar.style.display = 'flex';
+    if (count) count.textContent = selecionados.length + (selecionados.length === 1 ? ' usuario selecionado' : ' usuarios selecionados');
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+// Marca/desmarca todos os checkboxes visiveis
+function usrSelecionarTodos(marcado) {
+  var chks = document.querySelectorAll('.usr-chk');
+  for (var i = 0; i < chks.length; i++) {
+    chks[i].checked = marcado;
+  }
+  usrCheckChange();
+}
+
+// Esconde a barra e desmarca todos
+function usrMassaCancelar() {
+  usrSelecionarTodos(false);
+  var selTodos = document.getElementById('usr-sel-todos');
+  if (selTodos) selTodos.checked = false;
+  var bar = document.getElementById('usr-massa-bar');
+  if (bar) bar.style.display = 'none';
+}
+
+function usrMassaAtivar() {
+  var sel = usrGetSelecionados();
+  if (!sel.length) return;
+  var alterados = 0;
+  for (var i = 0; i < USR_DB.length; i++) {
+    if (sel.indexOf(USR_DB[i].user) >= 0 && USR_DB[i].status !== 'active') {
+      USR_DB[i].status = 'active';
+      sheetsAtualizarLinha('Usuarios', 'user', USR_DB[i].user, USR_DB[i]);
+      alterados++;
+    }
+  }
+  if (alterados > 0) {
+    lsSet('nxr_usr', JSON.stringify(USR_DB));
+    auditLog('Ativacao em massa', alterados + ' usuario(s) ativados');
+    showToast(alterados + ' usuario(s) ativados!');
+  } else {
+    showToast('Todos os selecionados ja estao ativos.', 'info');
+  }
+  usrMassaCancelar();
+  usrRender();
+}
+
+function usrMassaInativar() {
+  var sel = usrGetSelecionados();
+  if (!sel.length) return;
+  // Protecao: nao deixa o admin inativar o proprio usuario
+  if (me && sel.indexOf(me.user) >= 0) {
+    showToast('Voce nao pode inativar o proprio usuario.', 'erro');
+    return;
+  }
+  var alterados = 0;
+  for (var i = 0; i < USR_DB.length; i++) {
+    if (sel.indexOf(USR_DB[i].user) >= 0 && USR_DB[i].status !== 'inactive') {
+      USR_DB[i].status = 'inactive';
+      sheetsAtualizarLinha('Usuarios', 'user', USR_DB[i].user, USR_DB[i]);
+      alterados++;
+    }
+  }
+  if (alterados > 0) {
+    lsSet('nxr_usr', JSON.stringify(USR_DB));
+    auditLog('Inativacao em massa', alterados + ' usuario(s) inativados');
+    showToast(alterados + ' usuario(s) inativados!');
+  } else {
+    showToast('Todos os selecionados ja estao inativos.', 'info');
+  }
+  usrMassaCancelar();
+  usrRender();
+}
+
+function usrMassaExcluir() {
+  var sel = usrGetSelecionados();
+  if (!sel.length) return;
+  // Protecao: nao deixa excluir o proprio usuario do admin
+  if (me && sel.indexOf(me.user) >= 0) {
+    showToast('Voce nao pode excluir o proprio usuario.', 'erro');
+    return;
+  }
+  if (!confirm('Excluir ' + sel.length + ' usuario(s)? Essa acao nao pode ser desfeita.')) return;
+  var excluidos = [];
+  for (var i = USR_DB.length - 1; i >= 0; i--) {
+    if (sel.indexOf(USR_DB[i].user) >= 0) {
+      excluidos.push(USR_DB[i].name + ' (' + USR_DB[i].user + ')');
+      sheetsExcluirLinha('Usuarios', 'user', USR_DB[i].user);
+      USR_DB.splice(i, 1);
+    }
+  }
+  lsSet('nxr_usr', JSON.stringify(USR_DB));
+  auditLog('Exclusao em massa', excluidos.join(', '));
+  showToast(excluidos.length + ' usuario(s) excluido(s)!');
+  usrMassaCancelar();
+  usrRender();
 }
 
 function usrNovo() {
@@ -3460,6 +3730,108 @@ function usrFecharModal() {
 
 // --- AUDITORIA -----------------------------
 var _audListaAtual = [];
+var _audErrosListaAtual = [];
+
+// Combina os campos separados "data" (dd/mm/aaaa ou ISO) e "hora" (HH:MM)
+// de um registro de Auditoria num timestamp unico, para calculos de tempo.
+function saudeDataHoraTimestamp(registro) {
+  var diaBase = dashParseData(registro.data);
+  if (!diaBase) return 0;
+  var horaPartes = String(registro.hora || '00:00').split(':');
+  var h = Number(horaPartes[0]) || 0;
+  var m = Number(horaPartes[1]) || 0;
+  return diaBase + (h * 3600000) + (m * 60000);
+}
+
+function saudeRender() {
+  var statsEl = document.getElementById('saude-stats');
+  var listaEl = document.getElementById('saude-erros-lista');
+  if (statsEl) statsEl.innerHTML = '<div class="usr-stat"><div class="usr-stat-val">...</div><div class="usr-stat-label">Carregando</div></div>';
+  if (listaEl) listaEl.innerHTML = '<div class="aud-row" style="color:var(--txt2)">Carregando...</div>';
+
+  sheetsGet('getAuditoria', function(d) {
+    var agora = Date.now();
+    var ultimaSinc = null;
+    var erros24h = [];
+    var totalErros = 0;
+
+    if (d && d.ok && d.data) {
+      for (var i = 0; i < d.data.length; i++) {
+        var r = d.data[i];
+        var ts = saudeDataHoraTimestamp(r);
+        if (!ultimaSinc || ts > ultimaSinc) ultimaSinc = ts;
+        if (String(r.acao || '') === 'ERRO_SISTEMA') {
+          totalErros++;
+          if (agora - ts <= 24 * 3600000) erros24h.push(r);
+        }
+      }
+    }
+
+    var ativos = 0;
+    for (var j = 0; j < USR_DB.length; j++) {
+      if (USR_DB[j].status === 'active') ativos++;
+    }
+
+    var conexaoOk = d && d.ok;
+    var statusLabel = conexaoOk ? 'Online' : 'Sem conexao';
+    var statusCor = conexaoOk ? 'var(--green)' : 'var(--red)';
+
+    var ultimaSincLabel = '-';
+    if (ultimaSinc) {
+      var dt = new Date(ultimaSinc);
+      var diffMin = Math.round((agora - ultimaSinc) / 60000);
+      var quando = diffMin < 1 ? 'agora mesmo' : (diffMin < 60 ? 'ha ' + diffMin + ' min' : 'ha ' + Math.round(diffMin / 60) + 'h');
+      ultimaSincLabel = quando;
+    }
+
+    if (statsEl) statsEl.innerHTML =
+      '<div class="usr-stat"><div class="usr-stat-val" style="color:' + statusCor + '">' + statusLabel + '</div><div class="usr-stat-label">Status da conexao</div></div>' +
+      '<div class="usr-stat"><div class="usr-stat-val">' + ultimaSincLabel + '</div><div class="usr-stat-label">Ultima sincronizacao</div></div>' +
+      '<div class="usr-stat"><div class="usr-stat-val" style="color:' + (erros24h.length ? 'var(--red)' : 'var(--green)') + '">' + erros24h.length + '</div><div class="usr-stat-label">Erros (24h)</div></div>' +
+      '<div class="usr-stat"><div class="usr-stat-val">' + ativos + '</div><div class="usr-stat-label">Usuarios ativos</div></div>';
+
+    if (listaEl) {
+      if (!erros24h.length) {
+        listaEl.innerHTML = '<div class="aud-row" style="color:var(--txt2)">Nenhum erro nas ultimas 24 horas. Tudo funcionando normalmente.</div>';
+      } else {
+        erros24h.reverse();
+        var h = '';
+        for (var k = 0; k < erros24h.length; k++) {
+          var er = erros24h[k];
+          h += '<div class="usr-row" style="cursor:default;border-left:3px solid var(--red)">' +
+            '<div class="usr-avatar" style="background:rgba(239,68,68,.15);color:var(--red);font-size:11px">!</div>' +
+            '<div style="flex:1;min-width:0">' +
+              '<div class="usr-name" style="color:var(--red)">' + (er.detalhe || 'Erro nao especificado') + '</div>' +
+              '<div class="usr-login">' + (er.usuario || '-') + (er.perfil ? ' (' + er.perfil + ')' : '') + '</div>' +
+            '</div>' +
+            '<div style="font-size:11px;color:var(--txt3);white-space:nowrap">' + (er.data || '') + ' ' + (er.hora || '') + '</div>' +
+          '</div>';
+        }
+        listaEl.innerHTML = h;
+      }
+    }
+  });
+}
+
+// Faz um teste de conexao ao vivo (ping no Apps Script), sem depender
+// do historico de Auditoria - util para confirmar o status agora mesmo.
+function saudeTestarConexao() {
+  var btn = document.getElementById('saude-testar-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Testando...'; }
+  var inicio = Date.now();
+  fetch(APPS_URL + '?action=ping')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var tempo = Date.now() - inicio;
+      showToast(d && d.ok ? ('Conexao OK (' + tempo + 'ms)') : 'Conexao falhou.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Testar conexao'; }
+      saudeRender();
+    })
+    .catch(function() {
+      showToast('Sem conexao com o servidor.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Testar conexao'; }
+    });
+}
 function audRender() {
   var el = document.getElementById('aud-lista');
   if (!el) return;
@@ -3468,15 +3840,46 @@ function audRender() {
   sheetsGet('getAuditoria', function(d) {
     if (!d || !d.ok || !d.data) {
       el.innerHTML = '<div class="aud-row" style="color:var(--txt2)">Nenhum registro de auditoria encontrado ainda.</div>';
+      _audListaAtual = [];
+      _audErrosListaAtual = [];
       return;
     }
-    // Mais recente primeiro
-    _audListaAtual = d.data.slice().reverse();
+    // Mais recente primeiro. Separa erros do sistema das acoes normais,
+    // ja que ambos ficam guardados na mesma aba "Auditoria".
+    var todos = d.data.slice().reverse();
+    var acoes = [], erros = [];
+    for (var i = 0; i < todos.length; i++) {
+      if (String(todos[i].acao || '') === 'ERRO_SISTEMA') erros.push(todos[i]);
+      else acoes.push(todos[i]);
+    }
+    _audListaAtual = acoes;
+    _audErrosListaAtual = erros;
     audAplicarFiltro();
+    audErrosAplicarFiltro();
   });
 
   var bc = document.getElementById('aud-busca');
   if (bc) bc.oninput = audAplicarFiltro;
+  var bcErros = document.getElementById('aud-erros-busca');
+  if (bcErros) bcErros.oninput = audErrosAplicarFiltro;
+}
+
+function audTrocarAba(aba) {
+  var btnAcoes = document.getElementById('aud-tab-acoes');
+  var btnErros = document.getElementById('aud-tab-erros');
+  var abaAcoes = document.getElementById('aud-aba-acoes');
+  var abaErros = document.getElementById('aud-aba-erros');
+  if (aba === 'erros') {
+    if (btnAcoes) btnAcoes.className = 'meta-tab-btn';
+    if (btnErros) btnErros.className = 'meta-tab-btn active';
+    if (abaAcoes) abaAcoes.style.display = 'none';
+    if (abaErros) abaErros.style.display = 'block';
+  } else {
+    if (btnAcoes) btnAcoes.className = 'meta-tab-btn active';
+    if (btnErros) btnErros.className = 'meta-tab-btn';
+    if (abaAcoes) abaAcoes.style.display = 'block';
+    if (abaErros) abaErros.style.display = 'none';
+  }
 }
 
 function audAplicarFiltro() {
@@ -3505,6 +3908,41 @@ function audAplicarFiltro() {
       '<div style="flex:1;min-width:0">' +
         '<div class="usr-name">' + (r.acao || '-') + '</div>' +
         '<div class="usr-login">' + (r.usuario || '-') + (r.perfil ? ' (' + r.perfil + ')' : '') + (r.detalhe ? ' - ' + r.detalhe : '') + '</div>' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--txt3);white-space:nowrap">' + (r.data || '') + ' ' + (r.hora || '') + '</div>' +
+    '</div>';
+  }
+  el.innerHTML = h;
+}
+
+// Mostra os registros de erro do sistema (acao = ERRO_SISTEMA), com
+// destaque visual em vermelho para diferenciar das acoes normais.
+function audErrosAplicarFiltro() {
+  var el = document.getElementById('aud-erros-lista');
+  if (!el) return;
+  var busca = document.getElementById('aud-erros-busca') ? document.getElementById('aud-erros-busca').value.toLowerCase().trim() : '';
+
+  var lista = _audErrosListaAtual;
+  if (busca) {
+    lista = _audErrosListaAtual.filter(function(r) {
+      var texto = (String(r.usuario||'') + ' ' + String(r.detalhe||'')).toLowerCase();
+      return texto.indexOf(busca) >= 0;
+    });
+  }
+
+  if (!lista.length) {
+    el.innerHTML = '<div class="aud-row" style="color:var(--txt2)">Nenhum erro registrado. Sistema funcionando normalmente.</div>';
+    return;
+  }
+
+  var h = '';
+  for (var i = 0; i < lista.length; i++) {
+    var r = lista[i];
+    h += '<div class="usr-row" style="cursor:default;border-left:3px solid var(--red)">' +
+      '<div class="usr-avatar" style="background:rgba(239,68,68,.15);color:var(--red);font-size:11px">!</div>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div class="usr-name" style="color:var(--red)">' + (r.detalhe || 'Erro nao especificado') + '</div>' +
+        '<div class="usr-login">' + (r.usuario || '-') + (r.perfil ? ' (' + r.perfil + ')' : '') + '</div>' +
       '</div>' +
       '<div style="font-size:11px;color:var(--txt3);white-space:nowrap">' + (r.data || '') + ' ' + (r.hora || '') + '</div>' +
     '</div>';
@@ -3758,6 +4196,126 @@ function cfgCarregar() {
   var desativarBtn = document.getElementById('cfg-man-desativar');
   if (desativarBtn) desativarBtn.onclick = function() { cfgManutencaoSalvar(false); };
   cfgManutencaoCarregar();
+
+  // Carrega configs de alerta salvas
+  var diasSalvo = lsGet('nxr_alerta_dias') || '';
+  var metaSalvo = lsGet('nxr_alerta_meta') || '';
+  var diasInp = document.getElementById('cfg-alerta-dias');
+  var metaInp = document.getElementById('cfg-alerta-meta');
+  if (diasInp) diasInp.value = diasSalvo;
+  if (metaInp) metaInp.value = metaSalvo;
+
+  var alertaSalvarBtn = document.getElementById('cfg-alerta-salvar-btn');
+  if (alertaSalvarBtn) alertaSalvarBtn.onclick = cfgAlertaSalvar;
+}
+
+function cfgAlertaSalvar() {
+  var dias = document.getElementById('cfg-alerta-dias') ? document.getElementById('cfg-alerta-dias').value.trim() : '';
+  var meta = document.getElementById('cfg-alerta-meta') ? document.getElementById('cfg-alerta-meta').value.trim() : '';
+  lsSet('nxr_alerta_dias', dias);
+  lsSet('nxr_alerta_meta', meta);
+  var st = document.getElementById('cfg-alerta-status');
+  if (st) {
+    st.style.color = 'var(--green)';
+    st.textContent = 'Alertas salvos!';
+    setTimeout(function() { if (st) st.textContent = ''; }, 2000);
+  }
+  showToast('Alertas salvos!');
+}
+
+// Verifica as condicoes de alerta e exibe avisos pro gerente/admin.
+// Roda automaticamente apos o carregamento de dados ao entrar no sistema.
+function alertasVerificar() {
+  if (!me || (me.role !== 'ger' && me.role !== 'adm')) return;
+
+  var diasLimite = parseInt(lsGet('nxr_alerta_dias') || '');
+  var metaLimite = parseInt(lsGet('nxr_alerta_meta') || '');
+
+  if (!diasLimite && !metaLimite) return; // nenhum alerta configurado
+
+  var alertas = [];
+  var agora = Date.now();
+
+  // Alerta 1: representantes sem venda ha X dias
+  if (diasLimite > 0) {
+    var limiteMs = diasLimite * 24 * 3600000;
+    // Monta mapa de ultima venda por representante
+    var ultimaVenda = {};
+    for (var i = 0; i < VND_DB.length; i++) {
+      var v = VND_DB[i];
+      var rep = String(v.representante || '').trim();
+      if (!rep) continue;
+      var ts = dashParseData(v.data);
+      if (!ts) continue;
+      if (!ultimaVenda[rep] || ts > ultimaVenda[rep]) ultimaVenda[rep] = ts;
+    }
+    // Verifica cada representante ativo
+    for (var j = 0; j < USR_DB.length; j++) {
+      var u = USR_DB[j];
+      if (u.role !== 'rep' || u.status !== 'active') continue;
+      var nome = u.name || u.user;
+      var ultima = ultimaVenda[nome];
+      if (!ultima || (agora - ultima) > limiteMs) {
+        var diasSem = ultima ? Math.floor((agora - ultima) / 86400000) : null;
+        alertas.push({
+          tipo: 'dias',
+          msg: nome + ' — ' + (diasSem !== null ? diasSem + ' dias sem venda' : 'nunca registrou venda'),
+          cor: 'var(--red)'
+        });
+      }
+    }
+  }
+
+  // Alerta 2: meta mensal abaixo de X%
+  if (metaLimite > 0) {
+    var mesAtual = new Date().getMonth() + 1;
+    var anoAtual = new Date().getFullYear();
+    // Faturamento do mes atual por representante
+    var fatMes = {};
+    for (var k = 0; k < VND_DB.length; k++) {
+      var vk = VND_DB[k];
+      var repk = String(vk.representante || '').trim();
+      if (!repk) continue;
+      var tsk = dashParseData(vk.data);
+      if (!tsk) continue;
+      var dvk = new Date(tsk);
+      if (dvk.getFullYear() !== anoAtual || (dvk.getMonth()+1) !== mesAtual) continue;
+      fatMes[repk] = (fatMes[repk] || 0) + Number(vk.valor || 0);
+    }
+    for (var m = 0; m < META_DB.length; m++) {
+      var mt = META_DB[m];
+      var nomeRep = String(mt.representante || '').trim();
+      var metaMensal = Number(mt.mensal || 0);
+      if (!nomeRep || metaMensal <= 0) continue;
+      var fat = fatMes[nomeRep] || 0;
+      var pct = Math.round((fat / metaMensal) * 100);
+      if (pct < metaLimite) {
+        alertas.push({
+          tipo: 'meta',
+          msg: nomeRep + ' — meta mensal em ' + pct + '% (R$ ' + fat.toLocaleString('pt-BR',{minimumFractionDigits:0}) + ' de R$ ' + metaMensal.toLocaleString('pt-BR',{minimumFractionDigits:0}) + ')',
+          cor: 'var(--amber)'
+        });
+      }
+    }
+  }
+
+  if (!alertas.length) return;
+
+  // Exibe os alertas como toasts sequenciais com pequeno delay entre eles
+  var delay = 800;
+  for (var a = 0; a < Math.min(alertas.length, 5); a++) {
+    (function(alerta, d) {
+      setTimeout(function() {
+        showToast('&#128276; ' + alerta.msg, 'alerta');
+      }, d);
+    })(alertas[a], delay);
+    delay += 3500;
+  }
+  if (alertas.length > 5) {
+    setTimeout(function() {
+      showToast('... e mais ' + (alertas.length - 5) + ' alerta(s). Veja Configuracoes.', 'info');
+    }, delay);
+  }
 }
 function cfgTestar() {
   var st = document.getElementById('cfg-status');
