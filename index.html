@@ -663,7 +663,7 @@ document.getElementById('js-status').style.display='none';
       <div class="modal-head-title" id="cli-view-nome">Cliente</div>
       <button class="modal-close" id="cli-view-close">X</button>
     </div>
-    <div class="modal-body" id="cli-view-body"></div>
+    <div class="modal-body" id="cli-view-body" style="max-height:70vh;overflow-y:auto"></div>
     <div class="modal-foot">
       <button class="btn-cancel" id="cli-view-fechar">Fechar</button>
       <button class="btn-save2" id="cli-view-edit-btn">Editar</button>
@@ -2837,6 +2837,71 @@ function cliVerIdx(idx) {
   if (nome) nome.textContent = c.nome || 'Cliente';
   if (body) {
     var tel = String(c.telefne || c.telefone || '').replace(/\D/g, '');
+    var nomeCliente = String(c.nome || '').trim().toLowerCase();
+
+    // Coleta interacoes: vendas e retornos vinculados a esse cliente
+    var interacoes = [];
+
+    for (var vi = 0; vi < VND_DB.length; vi++) {
+      var v = VND_DB[vi];
+      if (String(v.cliente || '').trim().toLowerCase() === nomeCliente) {
+        var tsV = dashParseData(v.data);
+        interacoes.push({
+          ts: tsV || 0,
+          data: v.data || '-',
+          tipo: 'venda',
+          titulo: 'Venda registrada',
+          detalhe: 'R$ ' + Number(v.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}) + (v.pgto ? ' — ' + v.pgto : '') + (v.representante ? ' por ' + v.representante : ''),
+          cor: 'var(--green)'
+        });
+      }
+    }
+
+    for (var ri = 0; ri < RET_DB.length; ri++) {
+      var r = RET_DB[ri];
+      if (String(r.cliente || '').trim().toLowerCase() === nomeCliente) {
+        var tsR = dashParseData(r.data);
+        var statusRet = String(r.status || 'pendente').toLowerCase();
+        var corRet = statusRet === 'concluido' ? 'var(--green)' : (tsR && tsR < Date.now() ? 'var(--red)' : 'var(--amber)');
+        var labelRet = statusRet === 'concluido' ? 'Retorno concluido' : (tsR && tsR < Date.now() ? 'Retorno atrasado' : 'Retorno agendado');
+        interacoes.push({
+          ts: tsR || 0,
+          data: r.data || '-',
+          tipo: 'retorno',
+          titulo: labelRet,
+          detalhe: (r.motivo || r.obs || '-') + (r.representante ? ' — ' + r.representante : ''),
+          cor: corRet
+        });
+      }
+    }
+
+    // Ordena do mais recente pro mais antigo
+    interacoes.sort(function(a, b) { return b.ts - a.ts; });
+
+    var timelineHtml = '';
+    if (interacoes.length === 0) {
+      timelineHtml = '<div style="font-size:12px;color:var(--txt3);text-align:center;padding:12px 0">Nenhuma interacao registrada para este cliente.</div>';
+    } else {
+      timelineHtml = '<div style="display:flex;flex-direction:column;gap:0">';
+      for (var ii = 0; ii < interacoes.length; ii++) {
+        var item = interacoes[ii];
+        var isLast = ii === interacoes.length - 1;
+        timelineHtml +=
+          '<div style="display:flex;gap:12px;align-items:flex-start">' +
+            '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">' +
+              '<div style="width:10px;height:10px;border-radius:50%;background:' + item.cor + ';margin-top:4px;flex-shrink:0"></div>' +
+              (!isLast ? '<div style="width:2px;flex:1;min-height:24px;background:var(--line2);margin:3px 0"></div>' : '') +
+            '</div>' +
+            '<div style="flex:1;padding-bottom:' + (isLast ? '0' : '14px') + '">' +
+              '<div style="font-size:12px;font-weight:700;color:var(--txt)">' + item.titulo + '</div>' +
+              '<div style="font-size:11px;color:var(--txt2);margin-top:2px">' + item.detalhe + '</div>' +
+              '<div style="font-size:10px;color:var(--txt3);margin-top:2px">' + item.data + '</div>' +
+            '</div>' +
+          '</div>';
+      }
+      timelineHtml += '</div>';
+    }
+
     body.innerHTML =
       '<div style="margin-bottom:8px"><strong>CNPJ/CPF:</strong> ' + (c.cnpj || c.cpf || '-') + '</div>' +
       '<div style="margin-bottom:8px"><strong>Status:</strong> ' + (c.status || '-') + '</div>' +
@@ -2846,7 +2911,11 @@ function cliVerIdx(idx) {
       '<div style="margin-bottom:8px"><strong>Representante:</strong> ' + (c.representante || '-') + '</div>' +
       '<div style="margin-bottom:8px"><strong>Cadastrado em:</strong> ' + (c.criado_em || '-') + '</div>' +
       (c.obs ? '<div style="margin-bottom:8px"><strong>Obs:</strong> ' + c.obs + '</div>' : '') +
-      (tel.length >= 10 ? '<div style="margin-top:12px"><a class="link-btn link-wa" href="https://wa.me/55' + tel + '" target="_blank">WhatsApp</a></div>' : '');
+      (tel.length >= 10 ? '<div style="margin-top:12px"><a class="link-btn link-wa" href="https://wa.me/55' + tel + '" target="_blank">WhatsApp</a></div>' : '') +
+      '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line2)">' +
+        '<div style="font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Historico de interacoes (' + interacoes.length + ')</div>' +
+        timelineHtml +
+      '</div>';
   }
   modal.style.display = 'flex';
 }
