@@ -5724,7 +5724,9 @@ function suporteIdentificarTelaResposta(resposta) {
   return melhor;
 }
 
-// Navega para uma tela e faz o item do menu piscar 3 vezes em azul
+// Navega para uma tela e indica onde ela fica --
+// no desktop pisca o item do menu lateral;
+// no celular (sidebar escondido) mostra um banner flutuante na tela.
 function suporteGuiarParaTela(telaId) {
   var modal = document.getElementById('suporte-modal');
   if (modal) modal.style.display = 'none';
@@ -5732,13 +5734,54 @@ function suporteGuiarParaTela(telaId) {
   if (typeof navigate === 'function') navigate(telaId);
 
   setTimeout(function() {
-    var item = document.getElementById('nav-' + telaId);
-    if (!item) return;
-    item.classList.add('piscando');
-    setTimeout(function() {
-      item.classList.remove('piscando');
-    }, 3200);
-  }, 300);
+    var isMobile = window.innerWidth <= 768;
+
+    if (!isMobile) {
+      // Desktop: pisca o item do menu lateral
+      var item = document.getElementById('nav-' + telaId);
+      if (item) {
+        item.classList.add('piscando');
+        setTimeout(function() { item.classList.remove('piscando'); }, 3200);
+      }
+    } else {
+      // Mobile: mostra um banner flutuante indicando a tela
+      var labels = {
+        dashboard:'Dashboard', captacao:'Captacao', clientes:'Clientes',
+        retornos:'Retornos', vendas:'Minhas Vendas', pecas:'Consulta de Pecas',
+        consultas:'Consultas', comercial:'Comercial', metas:'Metas',
+        graficos:'Graficos', mapa:'Mapa', relatorio:'Relatorio',
+        admin:'Usuarios', auditoria:'Auditoria', saude:'Saude do Sistema',
+        config:'Configuracoes'
+      };
+      var label = labels[telaId] || telaId;
+
+      // Criar ou reutilizar o banner
+      var banner = document.getElementById('sup-guia-banner');
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'sup-guia-banner';
+        banner.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);' +
+          'background:var(--blue);color:#fff;padding:12px 24px;border-radius:12px;' +
+          'font-size:13px;font-weight:700;z-index:9999;box-shadow:0 8px 24px rgba(37,99,235,.5);' +
+          'text-align:center;pointer-events:none;transition:opacity .3s';
+        document.body.appendChild(banner);
+      }
+      banner.textContent = '📍 Voce esta em: ' + label;
+      banner.style.opacity = '1';
+      banner.style.display = 'block';
+
+      // Pisca o banner 3 vezes antes de sumir
+      var v = 0;
+      var blinkInt = setInterval(function() {
+        v++;
+        banner.style.opacity = v % 2 === 0 ? '1' : '0.2';
+        if (v >= 6) {
+          clearInterval(blinkInt);
+          setTimeout(function() { banner.style.display = 'none'; }, 400);
+        }
+      }, 400);
+    }
+  }, 400);
 }
 
 // Variacoes de "posso te mostrar onde fica?"
