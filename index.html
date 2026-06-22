@@ -46,6 +46,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 .moto-col{width:190px;flex-shrink:0;border-left:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;pointer-events:none;user-select:none;background:linear-gradient(180deg,var(--s2) 0%,var(--s1) 100%)}
 @keyframes girar{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @keyframes supDigitando{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+@keyframes supPiscar{0%,100%{background:var(--s2);color:var(--txt)}50%{background:var(--blue);color:#fff;box-shadow:0 0 12px rgba(37,99,235,.6)}}
 @keyframes sb{from{opacity:.25;transform:scaleY(.5)}to{opacity:1;transform:scaleY(1)}}
 .moto-spd{display:flex;gap:3px;align-items:flex-end}
 .moto-bar{width:5px;border-radius:3px;background:var(--blue);animation:sb .9s ease-in-out infinite alternate}
@@ -5418,6 +5419,9 @@ function suporteAbrir() {
 
   // Toda vez que o assistente e aberto, a conversa comeca do zero
   _supChatHistorico = [];
+  _supUltimaResposta = null;
+  _supAguardandoConfirmacao = false;
+  _supAguardandoMaisAlgo = false;
   var log = document.getElementById('sup-chat-log');
   if (log) {
     log.innerHTML = '';
@@ -5633,6 +5637,139 @@ function suporteEnviarPartes(partes, idx, callback) {
   });
 }
 
+// Estado da ultima resposta dada -- usado pra saber qual tela destacar
+// se a pessoa disser que nao entendeu
+var _supUltimaResposta = null;
+var _supAguardandoConfirmacao = false; // true quando perguntou "posso te mostrar?"
+var _supAguardandoMaisAlgo = false;   // true quando perguntou "precisa de mais algo?"
+
+// Mapa de IDs de tela -> ID do item no menu lateral (para highlight)
+var SUP_TELA_MENU = {
+  'dashboard': 'dashboard',
+  'captacao': 'captacao',
+  'clientes': 'clientes',
+  'retornos': 'retornos',
+  'vendas': 'vendas',
+  'pecas': 'pecas',
+  'consultas': 'consultas',
+  'comercial': 'comercial',
+  'metas': 'metas',
+  'graficos': 'graficos',
+  'mapa': 'mapa',
+  'relatorio': 'relatorio',
+  'admin': 'admin',
+  'auditoria': 'auditoria',
+  'saude': 'saude',
+  'config': 'config'
+};
+
+// Mapa de chaves de telas para ID de navegacao
+var SUP_TELA_NAV = {
+  'dashboard': 'dashboard', 'captacao': 'captacao',
+  'meus clientes': 'clientes', 'todos os clientes': 'clientes', 'clientes': 'clientes',
+  'retornos': 'retornos', 'minhas vendas': 'vendas', 'vendas': 'vendas',
+  'consulta de pecas': 'pecas', 'pecas': 'pecas',
+  'consultas': 'consultas', 'comercial': 'comercial',
+  'metas': 'metas', 'graficos': 'graficos', 'mapa': 'mapa',
+  'relatorio': 'relatorio', 'usuarios': 'admin', 'admin': 'admin',
+  'auditoria': 'auditoria', 'saude do sistema': 'saude', 'saude': 'saude',
+  'configuracoes': 'config', 'config': 'config'
+};
+
+// Detecta quando a pessoa diz que nao entendeu
+function suporteDetectarNaoEntendeu(texto) {
+  var t = suporteNormalizar(texto);
+  return t.indexOf('nao entendi') >= 0 || t.indexOf('nao to entendendo') >= 0 ||
+    t.indexOf('nao estou entendendo') >= 0 || t.indexOf('ainda nao entendi') >= 0 ||
+    t.indexOf('nao ficou claro') >= 0 || t.indexOf('nao entendo') >= 0 ||
+    t.indexOf('pode explicar de novo') >= 0 || t.indexOf('explica de novo') >= 0 ||
+    t.indexOf('ainda nao sei') >= 0 || t.indexOf('nao sei onde') >= 0 ||
+    t.indexOf('nao achei') >= 0 || t.indexOf('nao consigo achar') >= 0 ||
+    t.indexOf('nao encontrei') >= 0 || t.indexOf('nao to achando') >= 0 ||
+    t.indexOf('ainda nao achei') >= 0 || t.indexOf('continuo sem entender') >= 0 ||
+    t === 'nao' || t === 'n' || t === 'nao entendi' || t === 'nao to entendendo';
+}
+
+// Detecta confirmacao positiva (usado apos perguntar "posso te mostrar?" ou "precisa de mais algo?")
+function suporteDetectarSim(texto) {
+  var t = suporteNormalizar(texto);
+  return t === 'sim' || t === 's' || t === 'sim por favor' || t === 'pode' ||
+    t === 'pode sim' || t === 'pode ser' || t === 'quero' || t === 'quero sim' ||
+    t === 'claro' || t === 'por favor' || t === 'pfv' || t === 'me mostra' ||
+    t === 'me mostre' || t === 'vai' || t === 'vai la' || t === 'blz' || t === 'ok';
+}
+
+// Detecta negacao direta (usado apos perguntar "precisa de mais algo?")
+function suporteDetectarNao(texto) {
+  var t = suporteNormalizar(texto);
+  return t === 'nao' || t === 'n' || t === 'nao preciso' || t === 'nao obrigado' ||
+    t === 'nao obg' || t === 'ta bom' || t === 'ta otimo' || t === 'pode nao' ||
+    t === 'nao por enquanto' || t === 'por enquanto nao' || t === 'nao vlw' ||
+    t === 'nao valeu' || t === 'nao brigado' || t === 'nao precisa';
+}
+
+// Tenta identificar qual tela a ultima resposta se referia
+function suporteIdentificarTelaResposta(resposta) {
+  if (!resposta) return null;
+  var texto = suporteNormalizar((resposta.resposta || '') + ' ' + (resposta.partes ? resposta.partes.join(' ') : ''));
+  var melhor = null, melhorLen = 0;
+  var chaves = Object.keys(SUP_TELA_NAV);
+  for (var i = 0; i < chaves.length; i++) {
+    if (texto.indexOf(chaves[i]) >= 0 && chaves[i].length > melhorLen) {
+      melhorLen = chaves[i].length;
+      melhor = SUP_TELA_NAV[chaves[i]];
+    }
+  }
+  return melhor;
+}
+
+// Navega para uma tela e faz o item do menu piscar por 3 segundos
+function suporteGuiarParaTela(telaId) {
+  var modal = document.getElementById('suporte-modal');
+  if (modal) modal.style.display = 'none';
+
+  if (typeof navigate === 'function') navigate(telaId);
+
+  setTimeout(function() {
+    var itensMenu = document.querySelectorAll('.nav-item');
+    for (var i = 0; i < itensMenu.length; i++) {
+      var item = itensMenu[i];
+      var itemId = item.getAttribute('data-screen') || item.getAttribute('onclick') || '';
+      if (itemId.indexOf(telaId) >= 0) {
+        item.style.animation = 'supPiscar 0.6s ease-in-out 5';
+        item.style.animationFillMode = 'forwards';
+        setTimeout(function(el) { el.style.animation = ''; el.style.animationFillMode = ''; }.bind(null, item), 3200);
+        break;
+      }
+    }
+  }, 400);
+}
+
+// Variacoes de "posso te mostrar onde fica?"
+var SUP_OFERECER_MOSTRAR = [
+  'Quer que eu te leve direto ate essa tela?',
+  'Posso te mostrar onde fica -- so me dizer "sim"!',
+  'Que tal eu te guiar ate la? E so confirmar.',
+  'Posso abrir essa tela pra voce agora. Quer?',
+  'Se quiser, navego ate la pra voce. E so dizer sim!'
+];
+
+// Variacoes de "precisa de mais alguma coisa?"
+var SUP_PERGUNTAR_MAIS = [
+  'Ficou claro? Posso te ajudar com mais alguma coisa?',
+  'Conseguiu resolver? Se tiver mais alguma duvida, estou aqui!',
+  'Espero ter ajudado! Tem mais alguma coisa que posso fazer por voce?',
+  'Pronto! Se surgir outra duvida, e so perguntar.',
+  'Ficou mais claro? Pode perguntar o que mais precisar!',
+  'Foi util? Se quiser saber mais alguma coisa, estou a disposicao!',
+  'Conseguiu entender? Tem mais alguma duvida que eu possa resolver?',
+  'Certo! Precisa de mais alguma informacao?'
+];
+
+function _supRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 function suporteChatEnviar() {
   var input = document.getElementById('sup-chat-input');
   if (!input) return;
@@ -5643,6 +5780,54 @@ function suporteChatEnviar() {
   suporteAdicionarBolha('user', texto);
 
   suporteMostrarDigitando(function() {
+
+    // --- Fluxo: aguardando confirmacao de "posso te mostrar?" ---
+    if (_supAguardandoConfirmacao) {
+      _supAguardandoConfirmacao = false;
+      if (suporteDetectarSim(texto)) {
+        var tela = suporteIdentificarTelaResposta(_supUltimaResposta);
+        if (tela) {
+          suporteAdicionarBolha('bot', 'Vou te levar ate la agora!');
+          setTimeout(function() { suporteGuiarParaTela(tela); }, 800);
+        } else {
+          suporteAdicionarBolha('bot', 'Nao consegui identificar a tela exata. Tente usar o menu lateral e me fale se ainda nao encontrar!');
+          _supAguardandoMaisAlgo = true;
+        }
+        return;
+      } else {
+        // Pessoa nao quis a demonstracao -- continua normalmente
+        suporteAdicionarBolha('bot', 'Tudo bem! Se precisar de mais alguma coisa, e so perguntar.');
+        _supAguardandoMaisAlgo = true;
+        return;
+      }
+    }
+
+    // --- Fluxo: aguardando "precisa de mais algo?" ---
+    if (_supAguardandoMaisAlgo) {
+      _supAguardandoMaisAlgo = false;
+      if (suporteDetectarNao(texto)) {
+        var despedidas = [
+          'Que bom que ajudou! Fico feliz em ter contribuido. Ate a proxima!',
+          'Agradeço por ter usado o assistente! Qualquer duvida que surgir, estou por aqui.',
+          'Otimo! E sempre um prazer ajudar. Ate a proxima vez!',
+          'Fico feliz que tenha resolvido! Se precisar de mais alguma coisa, e so abrir o chat novamente.',
+          'Que bom! Foi um prazer te ajudar. Ate logo!',
+          'Maravilha! Obrigado por me perguntar. Qualquer duvida futura, estou aqui!',
+          'Entendido! Fico feliz que tenha dado certo. Ate a proxima!',
+          'Perfeito! Espero ter sido util. Ate mais!'
+        ];
+        var despedidaFinal = _supRandom(despedidas);
+        suporteAdicionarBolha('bot', despedidaFinal);
+        setTimeout(function() {
+          var modal = document.getElementById('suporte-modal');
+          if (modal) modal.style.display = 'none';
+        }, 1800);
+        return;
+      }
+      // Pessoa quer mais alguma coisa -- continua o fluxo normal abaixo
+    }
+
+    // --- Fluxo normal ---
     var saudacao = suporteDetectarSaudacao(texto);
     if (saudacao) {
       suporteAdicionarBolha('bot', saudacao);
@@ -5659,12 +5844,42 @@ function suporteChatEnviar() {
       return;
     }
 
+    // Detectar "nao entendi" -- oferecer mostrar na tela
+    if (suporteDetectarNaoEntendeu(texto)) {
+      var tela = suporteIdentificarTelaResposta(_supUltimaResposta);
+      if (tela && me) {
+        suporteAdicionarBolha('bot', 'Entendido, vou tentar de outro jeito!');
+        setTimeout(function() {
+          suporteMostrarDigitando(function() {
+            suporteAdicionarBolha('bot', _supRandom(SUP_OFERECER_MOSTRAR));
+            _supAguardandoConfirmacao = true;
+          });
+        }, 600);
+      } else {
+        suporteAdicionarBolha('bot', 'Sem problema! Tente me perguntar de outro jeito que eu tento explicar diferente. Ou, se preferir, posso te conectar com o suporte humano.');
+      }
+      return;
+    }
+
     var resposta = suporteBuscarResposta(texto);
     if (resposta) {
+      _supUltimaResposta = resposta;
+      _supAguardandoConfirmacao = false;
+
+      var onFim = function() {
+        setTimeout(function() {
+          suporteMostrarDigitando(function() {
+            suporteAdicionarBolha('bot', _supRandom(SUP_PERGUNTAR_MAIS));
+            _supAguardandoMaisAlgo = true;
+          });
+        }, 600);
+      };
+
       if (resposta.partes && resposta.partes.length > 1) {
-        suporteEnviarPartes(resposta.partes, 0, null);
+        suporteEnviarPartes(resposta.partes, 0, onFim);
       } else {
         suporteAdicionarBolha('bot', resposta.resposta);
+        onFim();
       }
     } else {
       var textoEscaped = texto.split("'").join("\\'");
