@@ -5499,6 +5499,105 @@ var SUP_FAQ = [
       partes.push(_supRandom(fechos));
       return partes;
     }
+  },
+
+  // ---- PEDIDOS DE DADOS VISUAIS (grafico, mapa, relatorio, ranking) -------
+
+  {
+    chaves: ['me mostra um grafico', 'quero ver um grafico', 'tem grafico', 'pode me dar um grafico',
+             'grafico de vendas', 'grafico de faturamento', 'grafico de metas', 'ver grafico',
+             'mostrar grafico', 'gerar grafico', 'visualizar grafico', 'dados graficos',
+             'quero grafico', 'me da um grafico', 'me manda um grafico'],
+    perfis: ['ger', 'adm'],
+    resposta: 'Nao consigo gerar graficos aqui no chat, mas posso te orientar onde encontrar!',
+    partes: [
+      _supRandom([
+        'Boa pergunta, mas infelizmente nao consigo gerar graficos aqui dentro do chat!',
+        'Queria poder te mostrar, mas o chat nao suporta conteudo visual como graficos.',
+        'Essa e uma limitacao minha -- nao consigo exibir graficos diretamente na conversa.'
+      ]),
+      'O que posso fazer e te guiar: va na aba Graficos pelo menu lateral. La voce encontra graficos completos de faturamento filtrados por dia, semana, mes ou ano.',
+      'Tem tambem o grafico de Meta vs Faturado por representante, e a opcao de comparar com o periodo anterior. Tudo interativo e bem visual!'
+    ]
+  },
+  {
+    chaves: ['me mostra um grafico', 'quero ver um grafico', 'tem grafico', 'pode me dar um grafico',
+             'grafico de vendas', 'grafico de faturamento', 'ver grafico', 'quero grafico'],
+    perfis: ['rep'],
+    resposta: 'Nao consigo gerar graficos no chat, mas seus dados ficam no Dashboard!',
+    partes: [
+      _supRandom([
+        'Infelizmente nao consigo exibir graficos aqui na conversa!',
+        'O chat nao suporta graficos, mas posso te dizer onde encontrar seus dados visuais.',
+        'Nao tenho como mostrar graficos por aqui, mas sei onde ficam!'
+      ]),
+      'No seu caso, o melhor lugar e o Dashboard -- ele mostra seu progresso de metas e faturamento do periodo de forma visual.',
+      'Se voce quiser dados mais detalhados em grafico, fale com o gerente para acessar a aba Graficos completa!'
+    ]
+  },
+  {
+    chaves: ['me mostra o mapa', 'quero ver o mapa', 'tem mapa', 'ver mapa', 'mapa de clientes',
+             'mapa de vendas', 'distribuicao geografica', 'onde estao os clientes no mapa',
+             'clientes por regiao', 'visualizar no mapa', 'mostrar mapa', 'abre o mapa'],
+    perfis: ['ger', 'adm'],
+    resposta: 'Nao consigo mostrar o mapa aqui no chat, mas sei onde fica!',
+    partes: [
+      _supRandom([
+        'Nao tenho como abrir o mapa aqui dentro do chat, mas e simples de encontrar!',
+        'O chat nao suporta mapas interativos, mas posso te guiar ate ele.',
+        'Infelizmente mapas nao aparecem aqui, mas sao faceis de acessar no sistema!'
+      ]),
+      'Va na aba Mapa pelo menu lateral. La voce ve a distribuicao geografica dos clientes e vendas plotados no mapa.',
+      'E util para identificar regioes com pouca cobertura e planejar rotas de visita da equipe!'
+    ]
+  },
+  {
+    chaves: ['me mostra o relatorio', 'quero ver o relatorio', 'gerar relatorio', 'ver relatorio',
+             'exportar relatorio', 'relatorio de vendas', 'relatorio de clientes',
+             'quero o relatorio', 'me da o relatorio', 'baixar relatorio', 'relatorio completo'],
+    perfis: ['ger', 'adm'],
+    resposta: 'Nao consigo gerar relatorios aqui no chat, mas a aba Relatorio faz isso!',
+    partes: [
+      _supRandom([
+        'Nao consigo gerar relatorios diretamente aqui na conversa.',
+        'O chat nao tem essa funcionalidade, mas o sistema sim!',
+        'Infelizmente relatorios precisam ser gerados no proprio sistema, nao aqui no chat.'
+      ]),
+      'Va na aba Relatorio pelo menu lateral. La voce filtra por periodo e exporta os dados da equipe de forma organizada.',
+      'E o lugar certo para preparar resumos para reunioes ou enviar para a diretoria!'
+    ]
+  },
+  {
+    chaves: ['ranking de vendas', 'ranking dos representantes', 'quem vendeu mais', 'top representantes',
+             'melhor representante', 'quem esta se saindo melhor', 'desempenho da equipe',
+             'comparar representantes', 'quem bateu a meta', 'ranking geral'],
+    perfis: ['ger', 'adm'],
+    resposta: 'Nao consigo montar rankings aqui no chat, mas o Comercial e os Graficos tem isso!',
+    partes: [
+      _supRandom([
+        'Rankings e comparativos nao aparecem aqui no chat, mas tenho boas noticias!',
+        'Nao consigo montar um ranking aqui, mas o sistema tem exatamente isso.',
+        'Essa informacao existe no sistema, so nao da pra exibir aqui na conversa!'
+      ]),
+      'Na aba Comercial voce ve todas as vendas por representante e consegue comparar o desempenho de cada um.',
+      'Na aba Graficos tem o comparativo de Meta vs Faturado -- ali voce ve claramente quem esta batendo a meta e quem esta abaixo. Tudo lado a lado!'
+    ]
+  },
+  {
+    chaves: ['tabela de vendas', 'tabela de clientes', 'tabela de retornos', 'ver em tabela',
+             'listar tudo', 'me mostra a lista completa', 'exportar dados', 'baixar dados',
+             'exportar para excel', 'exportar planilha', 'dados em planilha'],
+    perfis: ['ger', 'adm'],
+    resposta: 'Nao consigo exportar dados aqui no chat, mas o Relatorio faz isso!',
+    partes: [
+      _supRandom([
+        'Exportar dados diretamente aqui no chat nao e possivel, mas o sistema tem essa funcao!',
+        'Tabelas e exportacoes precisam ser feitas no proprio sistema, nao aqui na conversa.',
+        'Nao tenho como gerar arquivos ou tabelas aqui, mas sei onde voce encontra isso!'
+      ]),
+      'Va na aba Relatorio para exportar dados consolidados da equipe em formato organizado.',
+      'Se quiser dados brutos de vendas ou clientes, o Comercial e os filtros de cada aba tambem permitem visualizar tudo listado de forma detalhada.'
+    ]
   }
 ];
 
@@ -5525,6 +5624,8 @@ function suporteAbrir() {
   _supUltimaResposta = null;
   _supAguardandoConfirmacao = false;
   _supAguardandoMaisAlgo = false;
+  _supAguardandoOQueFaz = false;
+  _supRespondeuQuemSouEu = false;
   var log = document.getElementById('sup-chat-log');
   if (log) {
     log.innerHTML = '';
@@ -5745,6 +5846,8 @@ function suporteEnviarPartes(partes, idx, callback) {
 var _supUltimaResposta = null;
 var _supAguardandoConfirmacao = false; // true quando perguntou "posso te mostrar?"
 var _supAguardandoMaisAlgo = false;   // true quando perguntou "precisa de mais algo?"
+var _supAguardandoOQueFaz = false;    // true quando perguntou "assistente ou sistema?"
+var _supRespondeuQuemSouEu = false;   // true logo apos mostrar dados do usuario logado
 
 // Mapa de IDs de tela -> ID do item no menu lateral (para highlight)
 var SUP_TELA_MENU = {
@@ -5966,6 +6069,66 @@ function suporteChatEnviar() {
         return;
       }
       // Pessoa quer mais alguma coisa -- continua o fluxo normal abaixo
+
+    // --- Fluxo: aguardando escolha "assistente ou sistema?" ---
+    } else if (_supAguardandoOQueFaz) {
+      _supAguardandoOQueFaz = false;
+      var t2 = suporteNormalizar(texto);
+      var escolheuAssistente = t2.indexOf('assistente') >= 0 || t2.indexOf('voce') >= 0 ||
+        t2.indexOf('vc') >= 0 || t2 === 'eu' || t2.indexOf('sobre vc') >= 0 ||
+        t2.indexOf('sobre voce') >= 0 || t2.indexOf('de vc') >= 0 || t2.indexOf('de voce') >= 0;
+      var escolheuSistema = t2.indexOf('sistema') >= 0 || t2.indexOf('nexora') >= 0 ||
+        t2.indexOf('site') >= 0 || t2.indexOf('plataforma') >= 0 || t2.indexOf('app') >= 0;
+
+      if (escolheuAssistente) {
+        var partesAssistente = [
+          _supRandom([
+            'Sobre mim, o Assistente Nexora!',
+            'Claro, vou te contar o que sei fazer!',
+            'Sobre mim, com prazer!'
+          ]),
+          'Sou capaz de responder duvidas sobre qualquer parte do sistema: login, acesso, abas, funcionalidades, metas, vendas, retornos, alertas...',
+          'Tambem consigo te dizer informacoes do momento -- como quem esta logado, quantas vendas voce fez hoje, e se tem retornos agendados para o dia.',
+          'Se voce nao entender alguma explicacao, ofeco te guiar diretamente ate a tela que voce precisa. E se nao souber responder algo, te conecto com o suporte humano!'
+        ];
+        suporteEnviarPartes(partesAssistente, 0, function() {
+          setTimeout(function() {
+            suporteMostrarDigitando(function() {
+              suporteAdicionarBolha('bot', _supRandom(SUP_PERGUNTAR_MAIS));
+              _supAguardandoMaisAlgo = true;
+            });
+          }, 600);
+        });
+        return;
+      }
+
+      if (escolheuSistema) {
+        var partesSistema = [
+          _supRandom([
+            'Sobre o Nexora Connect!',
+            'Sobre o sistema, vou te explicar!',
+            'Claro, falando do Nexora!'
+          ]),
+          'O Nexora Connect e o sistema de gestao comercial da Alvorada Motocicletas. Ele centraliza clientes, vendas, retornos e metas da equipe em um so lugar.',
+          'Para o Representante: Dashboard, Captacao, Clientes, Retornos, Minhas Vendas, Consulta de Pecas e Consultas.',
+          'Para o Gerente e Administrador, tem ainda: Comercial, Metas, Graficos, Mapa, Relatorio, Usuarios, Auditoria, Saude do Sistema e Configuracoes.',
+          'Tudo sincronizado com uma planilha do Google, acessivel de qualquer dispositivo!'
+        ];
+        suporteEnviarPartes(partesSistema, 0, function() {
+          setTimeout(function() {
+            suporteMostrarDigitando(function() {
+              suporteAdicionarBolha('bot', _supRandom(SUP_PERGUNTAR_MAIS));
+              _supAguardandoMaisAlgo = true;
+            });
+          }, 600);
+        });
+        return;
+      }
+
+      // Nao reconheceu a escolha -- pergunta de novo
+      suporteAdicionarBolha('bot', 'Nao entendi bem! Voce quer saber sobre mim (o assistente) ou sobre o Nexora (o sistema)?');
+      _supAguardandoOQueFaz = true;
+      return;
     }
 
     // --- Fluxo normal ---
@@ -6002,6 +6165,53 @@ function suporteChatEnviar() {
       return;
     }
 
+    // --- Detectar "o que voce pode fazer?" ---
+    var tOqf = suporteNormalizar(texto);
+    var ehOQueFaz = tOqf.indexOf('o que voce pode fazer') >= 0 ||
+      tOqf.indexOf('o que vc pode fazer') >= 0 ||
+      tOqf.indexOf('o que voce faz') >= 0 || tOqf.indexOf('o que vc faz') >= 0 ||
+      tOqf.indexOf('quais sao suas capacidades') >= 0 ||
+      tOqf.indexOf('quais sao as suas capacidades') >= 0 ||
+      tOqf.indexOf('do que voce e capaz') >= 0 || tOqf.indexOf('do que vc e capaz') >= 0 ||
+      tOqf.indexOf('me conta o que voce pode') >= 0 || tOqf.indexOf('me conta o que vc pode') >= 0 ||
+      tOqf === 'o que voce pode' || tOqf === 'o que vc pode' || tOqf === 'suas capacidades';
+
+    if (ehOQueFaz) {
+      var perguntasOQueFaz = [
+        'Boa pergunta! Voce quer saber sobre mim (o assistente) ou sobre o Nexora (o sistema)?',
+        'Posso te responder sobre mim mesmo ou sobre o sistema! Qual das duas voce prefere?',
+        'Depende! Voce quer saber o que eu, assistente, consigo fazer -- ou o que o Nexora oferece como sistema?',
+        'Tenho duas respostas para isso! Quer saber sobre o assistente ou sobre o sistema Nexora?'
+      ];
+      suporteAdicionarBolha('bot', _supRandom(perguntasOQueFaz));
+      _supAguardandoOQueFaz = true;
+      return;
+    }
+
+    // --- Detectar "mas nao sou eu" apos mostrar dados do usuario logado ---
+    if (_supRespondeuQuemSouEu) {
+      var tNaoEuNorm = suporteNormalizar(texto);
+      var ehNaoEu = tNaoEuNorm.indexOf('nao sou eu') >= 0 || tNaoEuNorm.indexOf('esse nao sou eu') >= 0 ||
+        tNaoEuNorm.indexOf('nao e meu nome') >= 0 || tNaoEuNorm.indexOf('nao e meu usuario') >= 0 ||
+        tNaoEuNorm.indexOf('nao e meu perfil') >= 0 || tNaoEuNorm.indexOf('errou') >= 0 ||
+        tNaoEuNorm.indexOf('esta errado') >= 0 || tNaoEuNorm.indexOf('nao e minha conta') >= 0 ||
+        tNaoEuNorm.indexOf('conta errada') >= 0 || tNaoEuNorm.indexOf('usuario errado') >= 0 ||
+        tNaoEuNorm.indexOf('nao sou essa pessoa') >= 0 || tNaoEuNorm.indexOf('esse usuario nao sou eu') >= 0;
+
+      if (ehNaoEu) {
+        _supRespondeuQuemSouEu = false;
+        var respostasNaoEu = [
+          'Entendo! Infelizmente so consigo identificar quem esta logado no sistema -- nao tenho como saber quem esta usando o aparelho fisicamente. Se o usuario logado nao e voce, talvez alguem tenha esquecido de sair da conta. E so clicar em Sair no menu!',
+          'Ah, que situacao! Infelizmente minha visao se limita ao usuario que esta logado no Nexora agora. Nao tenho como identificar quem esta segurando o aparelho. Se precisar trocar de conta, e so sair e entrar com o seu proprio usuario.',
+          'Entendido! So consigo ver quem esta autenticado no sistema no momento -- nao tenho como saber quem esta do outro lado da tela. Se a conta nao for sua, o ideal e fazer logout e entrar com suas proprias credenciais.',
+          'Faz sentido! Minha limitacao e que so enxergo o login ativo no sistema. A pessoa fisica usando o aparelho eu nao consigo identificar. Se o usuario nao for o seu, e so sair da conta e entrar com o seu login!'
+        ];
+        suporteAdicionarBolha('bot', _supRandom(respostasNaoEu));
+        return;
+      }
+      _supRespondeuQuemSouEu = false;
+    }
+
     var resposta = suporteBuscarResposta(texto);
     if (resposta) {
       _supUltimaResposta = resposta;
@@ -6019,6 +6229,10 @@ function suporteChatEnviar() {
       // Resposta dinamica: executa funcao que gera partes em tempo real
       if (resposta.fn && typeof resposta.fn === 'function') {
         var partesdinamicas = resposta.fn();
+        // Marcar que acabamos de mostrar dados do usuario logado
+        if (resposta.chaves && resposta.chaves.indexOf('quem sou eu') >= 0) {
+          _supRespondeuQuemSouEu = true;
+        }
         if (partesdinamicas && partesdinamicas.length > 1) {
           suporteEnviarPartes(partesdinamicas, 0, onFim);
         } else {
