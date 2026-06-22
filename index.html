@@ -46,7 +46,7 @@ body{font-family:var(--ff);background:var(--bg);color:var(--txt);min-height:100v
 .moto-col{width:190px;flex-shrink:0;border-left:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px;pointer-events:none;user-select:none;background:linear-gradient(180deg,var(--s2) 0%,var(--s1) 100%)}
 @keyframes girar{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @keyframes supDigitando{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
-@keyframes supPiscar{0%,100%{background:var(--s2);color:var(--txt)}50%{background:var(--blue);color:#fff;box-shadow:0 0 12px rgba(37,99,235,.6)}}
+@keyframes supPiscar{0%,100%{color:var(--txt2);font-weight:400}50%{color:var(--blue-h);font-weight:700}}
 @keyframes sb{from{opacity:.25;transform:scaleY(.5)}to{opacity:1;transform:scaleY(1)}}
 .moto-spd{display:flex;gap:3px;align-items:flex-end}
 .moto-bar{width:5px;border-radius:3px;background:var(--blue);animation:sb .9s ease-in-out infinite alternate}
@@ -5723,23 +5723,37 @@ function suporteIdentificarTelaResposta(resposta) {
   return melhor;
 }
 
-// Navega para uma tela e faz o item do menu piscar 3 vezes
+// Navega para uma tela e faz o texto do item do menu piscar 3 vezes em azul
 function suporteGuiarParaTela(telaId) {
   var modal = document.getElementById('suporte-modal');
   if (modal) modal.style.display = 'none';
 
   if (typeof navigate === 'function') navigate(telaId);
 
+  // Aguarda o navigate terminar de setar a classe .on antes de animar
   setTimeout(function() {
     var item = document.getElementById('nav-' + telaId);
     if (!item) return;
-    item.style.animation = 'supPiscar 0.7s ease-in-out 3';
-    item.style.animationFillMode = 'forwards';
-    setTimeout(function() {
-      item.style.animation = '';
-      item.style.animationFillMode = '';
-    }, 2300);
-  }, 400);
+
+    // 3 piscadas: alterna cor azul/normal a cada 400ms
+    var piscadas = 0;
+    var intervalo = setInterval(function() {
+      if (piscadas >= 6) {
+        clearInterval(intervalo);
+        item.style.color = '';
+        item.style.fontWeight = '';
+        return;
+      }
+      if (piscadas % 2 === 0) {
+        item.style.color = 'var(--blue-h)';
+        item.style.fontWeight = '700';
+      } else {
+        item.style.color = '';
+        item.style.fontWeight = '';
+      }
+      piscadas++;
+    }, 400);
+  }, 300);
 }
 
 // Variacoes de "posso te mostrar onde fica?"
