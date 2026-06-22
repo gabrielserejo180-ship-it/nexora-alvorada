@@ -5723,7 +5723,7 @@ function suporteIdentificarTelaResposta(resposta) {
   return melhor;
 }
 
-// Navega para uma tela e faz o item do menu piscar por 3 segundos
+// Navega para uma tela e faz o item do menu piscar 3 vezes
 function suporteGuiarParaTela(telaId) {
   var modal = document.getElementById('suporte-modal');
   if (modal) modal.style.display = 'none';
@@ -5731,17 +5731,14 @@ function suporteGuiarParaTela(telaId) {
   if (typeof navigate === 'function') navigate(telaId);
 
   setTimeout(function() {
-    var itensMenu = document.querySelectorAll('.nav-item');
-    for (var i = 0; i < itensMenu.length; i++) {
-      var item = itensMenu[i];
-      var itemId = item.getAttribute('data-screen') || item.getAttribute('onclick') || '';
-      if (itemId.indexOf(telaId) >= 0) {
-        item.style.animation = 'supPiscar 0.6s ease-in-out 5';
-        item.style.animationFillMode = 'forwards';
-        setTimeout(function(el) { el.style.animation = ''; el.style.animationFillMode = ''; }.bind(null, item), 3200);
-        break;
-      }
-    }
+    var item = document.getElementById('nav-' + telaId);
+    if (!item) return;
+    item.style.animation = 'supPiscar 0.7s ease-in-out 3';
+    item.style.animationFillMode = 'forwards';
+    setTimeout(function() {
+      item.style.animation = '';
+      item.style.animationFillMode = '';
+    }, 2300);
   }, 400);
 }
 
