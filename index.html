@@ -5091,6 +5091,188 @@ var SUP_FAQ = [
     chaves: ['voce tem chefe', 'quem manda em voce', 'quem te controla', 'quem e o seu criador'],
     perfis: null,
     resposta: 'Meu criador e o Gabriel Serejo, que me programou e me ensinou tudo o que sei sobre o Nexora. Ele e tecnicamente meu "chefe", mas na pratica quem me da ordens sao as perguntas de quem usa o sistema -- incluindo voce!'
+  },
+
+  // ---- ABAS / TELAS -------------------------------------------------------
+
+  {
+    chaves: ['como funciona o dashboard', 'o que e o dashboard', 'aba dashboard', 'tela dashboard', 'tela inicial do sistema'],
+    perfis: ['rep'],
+    resposta: 'O Dashboard e a tela inicial do sistema.',
+    partes: [
+      'O Dashboard e a primeira tela que voce ve ao entrar no sistema!',
+      'Ele mostra um resumo do seu desempenho: progresso das suas metas (diaria, semanal e mensal), retornos pendentes ou atrasados, e um resumo do seu faturamento do periodo.',
+      'E uma visao geral rapida do seu dia -- sem precisar entrar em cada aba separadamente. Se tiver algum alerta importante, como um retorno atrasado ou meta proxima do vencimento, ele aparece ali tambem.'
+    ]
+  },
+  {
+    chaves: ['como funciona o dashboard', 'o que e o dashboard', 'aba dashboard', 'tela dashboard', 'tela inicial do sistema'],
+    perfis: ['ger', 'adm'],
+    resposta: 'O Dashboard e a tela inicial com visao geral da equipe.',
+    partes: [
+      'O Dashboard e a primeira tela ao entrar -- a sua central de comando!',
+      'Para o Gerente e Administrador, ele mostra uma visao consolidada da equipe: desempenho geral de faturamento, retornos pendentes de todos os representantes, e alertas configurados.',
+      'E de la que voce acompanha o pulso da operacao sem precisar entrar aba por aba. Qualquer alerta de meta baixa ou representante sem venda tambem aparece ali.'
+    ]
+  },
+  {
+    chaves: ['como funciona a captacao', 'o que e captacao', 'aba captacao', 'tela captacao', 'buscar empresa', 'buscar cliente novo', 'prospectar cliente'],
+    perfis: null,
+    resposta: 'A Captacao serve para buscar empresas e novos clientes.',
+    partes: [
+      'A aba Captacao e o ponto de partida para prospectar novos clientes!',
+      'Voce digita o CNPJ ou o nome de uma empresa e o sistema busca automaticamente as informacoes dela -- razao social, endereco, telefone, situacao cadastral -- usando uma base de dados integrada.',
+      'Se os dados vierem completos, voce pode cadastrar aquela empresa direto como cliente no Nexora, sem precisar digitar tudo manualmente. Agiliza bastante o processo de prospecção.'
+    ]
+  },
+  {
+    chaves: ['como funciona meus clientes', 'o que e meus clientes', 'aba meus clientes', 'tela clientes', 'carteira de clientes', 'lista de clientes'],
+    perfis: ['rep'],
+    resposta: 'Meus Clientes lista toda a sua carteira de clientes.',
+    partes: [
+      'A aba Meus Clientes e onde fica toda a sua carteira!',
+      'La voce ve a lista de todos os clientes vinculados ao seu nome, com filtros para buscar por nome, cidade ou status.',
+      'Ao tocar em um cliente, voce ve os dados completos dele e, la no final, o historico de todas as interacoes -- vendas realizadas e retornos agendados -- em ordem cronologica.',
+      'Voce tambem pode editar o cadastro ou registrar novas informacoes diretamente por ali.'
+    ]
+  },
+  {
+    chaves: ['como funciona todos os clientes', 'aba todos os clientes', 'tela clientes', 'ver todos os clientes', 'carteira da equipe'],
+    perfis: ['ger', 'adm'],
+    resposta: 'Todos os Clientes mostra a carteira completa da equipe.',
+    partes: [
+      'A aba Todos os Clientes da uma visao completa da carteira de toda a equipe!',
+      'Voce pode filtrar por representante, cidade, status ou buscar por nome. E util para acompanhar a distribuicao de clientes entre os representantes.',
+      'Ao clicar em um cliente, voce ve o historico completo de interacoes dele -- todas as vendas e retornos, de qualquer representante que tenha atendido aquela conta.'
+    ]
+  },
+  {
+    chaves: ['como funciona retornos', 'o que e retornos', 'aba retornos', 'tela retornos', 'como funciona agendamento'],
+    perfis: null,
+    resposta: 'Retornos e onde voce agenda e acompanha visitas e ligacoes.',
+    partes: [
+      'A aba Retornos e o seu organizador de visitas e acompanhamentos!',
+      'Voce agenda um retorno informando o cliente, a data prevista e o motivo -- pode ser uma visita, uma ligacao, uma demonstracao de produto ou qualquer outro tipo de acompanhamento.',
+      'Os retornos aparecem na lista com status (pendente, concluido ou atrasado). O sistema te avisa automaticamente no Dashboard quando um retorno estiver vencendo no dia ou ja atrasado.',
+      'Quando concluir um retorno, e so marcar como concluido. Simples assim!'
+    ]
+  },
+  {
+    chaves: ['como funciona minhas vendas', 'o que e minhas vendas', 'aba minhas vendas', 'tela vendas', 'onde registro venda'],
+    perfis: ['rep'],
+    resposta: 'Minhas Vendas e onde voce registra e acompanha suas vendas.',
+    partes: [
+      'A aba Minhas Vendas e o seu registro de tudo que voce vendeu!',
+      'Para registrar, toque no botao de nova venda e preencha: cliente, data, valor, forma de pagamento e outras informacoes relevantes.',
+      'Cada venda registrada entra automaticamente no seu faturamento, aparece nos graficos do sistema e contribui para o progresso das suas metas.',
+      'Voce tambem pode ver o historico de todas as vendas anteriores, filtrar por periodo e acompanhar o total acumulado.'
+    ]
+  },
+  {
+    chaves: ['como funciona o comercial', 'o que e comercial', 'aba comercial', 'tela comercial', 'vendas da equipe'],
+    perfis: ['ger', 'adm'],
+    resposta: 'Comercial mostra todas as vendas da equipe em um so lugar.',
+    partes: [
+      'A aba Comercial e o painel de vendas da equipe toda!',
+      'Voce ve todas as vendas registradas por todos os representantes, com filtros por data, representante, forma de pagamento e valor.',
+      'E de la que o gerente acompanha o desempenho individual e coletivo, identifica quem esta vendendo mais, e tem uma visao completa do faturamento da operacao.',
+      'As vendas registradas aqui sao as mesmas que alimentam os graficos, metas e o dashboard.'
+    ]
+  },
+  {
+    chaves: ['como funciona metas', 'o que e metas', 'aba metas', 'tela metas', 'como defino metas', 'como cadastro meta'],
+    perfis: ['ger', 'adm'],
+    resposta: 'Metas e onde voce define as metas de cada representante.',
+    partes: [
+      'A aba Metas e o painel de metas da equipe!',
+      'Voce define individualmente, para cada representante, tres valores: meta diaria, semanal e mensal.',
+      'Tambem e possivel importar metas em lote por planilha -- util quando a equipe e grande e voce ja tem os valores organizados em Excel.',
+      'Assim que uma meta e cadastrada, ela aparece automaticamente no Dashboard do representante, com o progresso em tempo real conforme as vendas sao registradas.'
+    ]
+  },
+  {
+    chaves: ['como funciona graficos', 'o que e graficos', 'aba graficos', 'tela graficos', 'ver graficos de venda'],
+    perfis: ['ger', 'adm'],
+    resposta: 'Graficos mostra o faturamento e desempenho da equipe visualmente.',
+    partes: [
+      'A aba Graficos e a visao analitica da operacao!',
+      'Voce encontra graficos de faturamento filtrados por dia, semana, mes ou ano, com detalhamento por representante mostrando quem contribuiu com quanto.',
+      'Tem tambem o grafico de Meta vs Faturado, que compara o que foi vendido com a meta definida -- por periodo e por representante.',
+      'Um recurso extra: voce pode ativar o modo "Comparar com periodo anterior" para ver lado a lado, por exemplo, junho de 2026 versus junho de 2025.'
+    ]
+  },
+  {
+    chaves: ['como funciona o mapa', 'o que e o mapa', 'aba mapa', 'tela mapa', 'mapa de clientes'],
+    perfis: ['ger', 'adm'],
+    resposta: 'O Mapa mostra a distribuicao geografica de clientes e vendas.',
+    partes: [
+      'A aba Mapa e a visao geografica da sua operacao!',
+      'Ela plota os clientes e as vendas no mapa, mostrando onde esta concentrada a carteira e onde estao acontecendo as vendas.',
+      'E util para identificar regioes com pouca penetracao, planejar rotas de visita e entender a distribuicao territorial da equipe.'
+    ]
+  },
+  {
+    chaves: ['como funciona o relatorio', 'o que e relatorio', 'aba relatorio', 'tela relatorio', 'gerar relatorio', 'exportar relatorio', 'como funciona relatorio'],
+    perfis: ['ger', 'adm'],
+    resposta: 'Relatorio gera resumos exportaveis do desempenho da equipe.',
+    partes: [
+      'A aba Relatorio e onde voce gera resumos formais da operacao!',
+      'Voce pode filtrar por periodo e exportar os dados -- util para apresentacoes, reunioes de equipe ou enviar para a diretoria.',
+      'O relatorio consolida as principais informacoes de vendas, clientes e metas num formato organizado.'
+    ]
+  },
+  {
+    chaves: ['como funciona consulta de pecas', 'o que e consulta de pecas', 'aba consulta de pecas', 'tela pecas', 'como busco uma peca', 'buscar peca', 'pesquisar peca', 'aba de pecas', 'consulta pecas', 'pecas como funciona'],
+    perfis: null,
+    resposta: 'Consulta de Pecas permite buscar pecas por codigo ou por nome.',
+    partes: [
+      'A aba Consulta de Pecas e para buscar informacoes sobre pecas Honda!',
+      'Voce pode buscar de duas formas: pelo codigo da peca -- que retorna um resultado preciso e unico -- ou pelo nome da peca.',
+      'Atencao: buscar por nome pode retornar varios resultados se o termo for muito generico. Por exemplo, buscar "filtro" pode trazer dezenas de opcoes. Quanto mais especifico o nome, mais preciso o resultado.',
+      'O ideal sempre que possivel e usar o codigo -- especialmente quando voce ja tem o numero de referencia da peca em maos.'
+    ]
+  },
+  {
+    chaves: ['como funciona consultas', 'o que e consultas', 'aba consultas', 'tela consultas'],
+    perfis: null,
+    resposta: 'Consultas reune ferramentas de busca e verificacao de informacoes.',
+    partes: [
+      'A aba Consultas e um espaco de ferramentas de verificacao!',
+      'La voce encontra recursos para checar informacoes rapidas -- como dados de clientes, situacao de documentos ou outras consultas de apoio ao trabalho comercial.',
+      'Se precisar de mais detalhes sobre uma funcao especifica dentro de Consultas, pode me perguntar!'
+    ]
+  },
+  {
+    chaves: ['como funciona usuarios', 'o que e usuarios', 'aba usuarios', 'tela usuarios', 'gerenciar usuarios'],
+    perfis: ['adm'],
+    resposta: 'Usuarios e onde voce gerencia todos os acessos ao sistema.',
+    partes: [
+      'A aba Usuarios e o painel de controle de acessos -- exclusivo do Administrador!',
+      'Voce pode cadastrar novos usuarios, editar nome, senha e perfil (Representante, Gerente ou Administrador), e ativar ou inativar contas.',
+      'Tem tambem a edicao em massa: selecione varios usuarios de uma vez e ative, inative ou exclua em lote com um clique. Toda acao fica registrada na Auditoria.'
+    ]
+  },
+  {
+    chaves: ['como funciona auditoria', 'o que e auditoria', 'aba auditoria', 'tela auditoria', 'log de acoes'],
+    perfis: ['ger', 'adm'],
+    resposta: 'Auditoria registra todas as acoes feitas no sistema.',
+    partes: [
+      'A aba Auditoria e o historico completo de tudo que acontece no sistema!',
+      'Ela registra automaticamente cada acao: login, cadastro de cliente, registro de venda, edicao de usuario, exclusao -- tudo com data, hora e quem fez.',
+      'Ha duas abas dentro da Auditoria: "Acoes" (o log normal) e "Erros do Sistema" -- onde aparecem em vermelho falhas de conexao ou erros tecnicos capturados automaticamente.',
+      'Util para rastrear o que foi feito, quando e por quem -- importante para gestao e segurança da informacao.'
+    ]
+  },
+  {
+    chaves: ['como funciona configuracoes', 'o que e configuracoes', 'aba configuracoes', 'tela configuracoes', 'onde fica configuracoes'],
+    perfis: ['adm'],
+    resposta: 'Configuracoes e onde voce ajusta as definicoes gerais do sistema.',
+    partes: [
+      'A aba Configuracoes e o painel de ajustes do sistema -- exclusivo do Administrador!',
+      'La voce encontra quatro secoes: a URL de conexao com o backend (Google Apps Script), o controle de manutencao (bloquear o acesso de todos os usuarios), os alertas automaticos configurados por horario e condicao...',
+      '...e o botao de exportar backup em JSON -- util para salvar uma copia dos dados locais do sistema.',
+      'E a tela mais tecnica do Nexora. Se precisar mexer em algo aqui e tiver duvida, pode me perguntar!'
+    ]
   }
 ];
 
