@@ -5397,6 +5397,108 @@ var SUP_FAQ = [
       'Se voce sentir que estou deixando alguma duvida sem resposta, e so usar o formulario de suporte e relatar -- isso ajuda o Gabriel a saber o que precisa ser ensinado para mim.',
       'Sou um assistente em constante crescimento!'
     ]
+  },
+
+  // ---- RESPOSTAS DINAMICAS (usam dados reais do sistema) ------------------
+
+  {
+    chaves: ['quem sou eu', 'quem e que esta acessando', 'qual e meu usuario', 'qual e o meu usuario',
+             'qual meu perfil', 'qual e meu perfil', 'quem esta logado', 'qual e minha conta',
+             'meus dados de acesso', 'qual meu login', 'qual e meu login'],
+    perfis: null,
+    resposta: 'Verificando seus dados de acesso...',
+    fn: function() {
+      if (!me) return ['Voce ainda nao esta logado no sistema. Faca o login para ver seus dados!'];
+      var perfis = { rep: 'Representante', ger: 'Gerente', adm: 'Administrador' };
+      var apresentacoes = [
+        'Claro! Aqui estao seus dados de acesso:',
+        'Deixa eu te apresentar!',
+        'Com certeza! Veja suas informacoes:'
+      ];
+      return [
+        _supRandom(apresentacoes),
+        'Nome: ' + (me.name || me.user) + '\nUsuario: ' + me.user + '\nPerfil: ' + (perfis[me.role] || me.role) + '\nStatus: ' + (me.status === 'active' ? 'Ativo' : 'Inativo'),
+        'Essas sao as informacoes da sua conta no Nexora. Se algo estiver errado, fale com o administrador!'
+      ];
+    }
+  },
+  {
+    chaves: ['fiz alguma venda', 'fiz venda', 'quantas vendas fiz', 'minhas vendas de hoje',
+             'minhas vendas desse mes', 'minhas vendas do mes', 'quantas vendas eu fiz',
+             'sabe me dizer se eu fiz venda', 'sabe me dizer se fiz alguma venda',
+             'quanto eu vendi', 'quanto vendi', 'minhas vendas'],
+    perfis: ['rep'],
+    resposta: 'Verificando suas vendas...',
+    fn: function() {
+      if (!me) return ['Voce precisa estar logado para eu verificar suas vendas.'];
+      var nomeRep = (me.name || me.user).toLowerCase();
+      var hoje = new Date();
+      var mesAtual = hoje.getMonth(), anoAtual = hoje.getFullYear();
+      var totalMes = 0, valorMes = 0, totalHoje = 0, valorHoje = 0;
+      for (var i = 0; i < VND_DB.length; i++) {
+        var v = VND_DB[i];
+        if (String(v.representante || '').toLowerCase().indexOf(nomeRep.split(' ')[0].toLowerCase()) < 0) continue;
+        var ts = dashParseData(v.data);
+        if (!ts) continue;
+        var dv = new Date(ts);
+        if (dv.getFullYear() === anoAtual && dv.getMonth() === mesAtual) {
+          totalMes++;
+          valorMes += Number(v.valor || 0);
+          if (dv.getDate() === hoje.getDate()) { totalHoje++; valorHoje += Number(v.valor || 0); }
+        }
+      }
+      var respostas = [
+        ['Pesquisei aqui pra voce!', 'Hoje voce tem ' + (totalHoje > 0 ? totalHoje + ' venda(s) registrada(s), totalizando R$ ' + valorHoje.toLocaleString('pt-BR', {minimumFractionDigits:2}) : 'nenhuma venda registrada ainda') + '.', 'No mes, o total e de ' + totalMes + ' venda(s) -- R$ ' + valorMes.toLocaleString('pt-BR', {minimumFractionDigits:2}) + ' acumulados.'],
+        ['Claro, ja verifico!', 'Hoje: ' + (totalHoje > 0 ? totalHoje + ' venda(s) | R$ ' + valorHoje.toLocaleString('pt-BR', {minimumFractionDigits:2}) : 'sem vendas registradas ainda') + '.', 'Esse mes voce acumulou ' + totalMes + ' venda(s) no total, somando R$ ' + valorMes.toLocaleString('pt-BR', {minimumFractionDigits:2}) + '.'],
+        ['Verificando suas vendas...', (totalMes === 0 ? 'Nao encontrei nenhuma venda sua registrada nesse mes ainda. Que tal comecar agora?' : 'Esse mes foram ' + totalMes + ' venda(s), totalizando R$ ' + valorMes.toLocaleString('pt-BR', {minimumFractionDigits:2}) + '. Hoje especificamente: ' + (totalHoje > 0 ? totalHoje + ' venda(s).' : 'nenhuma ainda.'))]
+      ];
+      return _supRandom(respostas);
+    }
+  },
+  {
+    chaves: ['tenho retorno hoje', 'tenho retorno pra hoje', 'tem retorno hoje', 'retornos de hoje',
+             'meus retornos de hoje', 'algum retorno hoje', 'retorno pra hoje',
+             'sabe me dizer se tenho retorno', 'tenho algum retorno', 'retornos pendentes hoje',
+             'que retornos tenho hoje'],
+    perfis: ['rep'],
+    resposta: 'Verificando seus retornos de hoje...',
+    fn: function() {
+      if (!me) return ['Voce precisa estar logado para eu verificar seus retornos.'];
+      var nomeRep = (me.name || me.user).toLowerCase().split(' ')[0];
+      var hoje = new Date(); hoje.setHours(0,0,0,0);
+      var pendentes = [], concluidos = [];
+      for (var i = 0; i < RET_DB.length; i++) {
+        var r = RET_DB[i];
+        if (String(r.representante || '').toLowerCase().indexOf(nomeRep) < 0) continue;
+        var ts = dashParseData(r.data);
+        if (!ts) continue;
+        var dr = new Date(ts); dr.setHours(0,0,0,0);
+        if (dr.getTime() !== hoje.getTime()) continue;
+        var status = String(r.status || '').toLowerCase();
+        var cliente = r.cliente || 'Cliente nao identificado';
+        if (status === 'concluido') concluidos.push(cliente);
+        else pendentes.push(cliente);
+      }
+      var total = pendentes.length + concluidos.length;
+      if (total === 0) {
+        var semRetorno = [
+          ['Pesquisei aqui para voce!', 'Voce nao tem nenhum retorno agendado para hoje. Dia tranquilo!'],
+          ['Verificado!', 'Nao ha retornos agendados para hoje no seu nome. Aproveite para prospectar!'],
+          ['Boa noticia!', 'Sua agenda de hoje esta livre -- nenhum retorno agendado.']
+        ];
+        return _supRandom(semRetorno);
+      }
+      var partes = ['Encontrei seus retornos de hoje!'];
+      if (pendentes.length > 0) partes.push('Pendente(s): ' + pendentes.join(', ') + '.');
+      if (concluidos.length > 0) partes.push('Ja concluido(s): ' + concluidos.join(', ') + '.');
+      var fechos = [
+        'Total: ' + total + ' retorno(s) hoje. Bora la!',
+        'Sao ' + total + ' retorno(s) no total. Boa sorte!',
+        total + ' retorno(s) agendados. Voce consegue!'
+      ];
+      partes.push(_supRandom(fechos));
+      return partes;
+    }
   }
 ];
 
@@ -5913,6 +6015,18 @@ function suporteChatEnviar() {
           });
         }, 600);
       };
+
+      // Resposta dinamica: executa funcao que gera partes em tempo real
+      if (resposta.fn && typeof resposta.fn === 'function') {
+        var partesdinamicas = resposta.fn();
+        if (partesdinamicas && partesdinamicas.length > 1) {
+          suporteEnviarPartes(partesdinamicas, 0, onFim);
+        } else {
+          suporteAdicionarBolha('bot', partesdinamicas ? partesdinamicas[0] : resposta.resposta);
+          onFim();
+        }
+        return;
+      }
 
       if (resposta.partes && resposta.partes.length > 1) {
         suporteEnviarPartes(resposta.partes, 0, onFim);
