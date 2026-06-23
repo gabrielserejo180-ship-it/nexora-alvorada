@@ -239,6 +239,93 @@ document.getElementById('js-status').style.display='none';
 
 <div id="toast"></div>
 
+<!-- Modal Saiba Mais (tela de login) -->
+<div id="home-info-modal" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--s1);border:1px solid var(--line);border-radius:20px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 40px 80px rgba(0,0,0,.6)">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--line)">
+      <div>
+        <div style="font-size:18px;font-weight:700;color:var(--txt)">Nexora Connect</div>
+        <div style="font-size:12px;color:var(--txt3);margin-top:2px">Gestao comercial da Alvorada Motocicletas</div>
+      </div>
+      <button onclick="homeInfoFechar()" style="width:32px;height:32px;background:var(--s3);border:1px solid var(--line2);color:var(--txt2);border-radius:8px;cursor:pointer;font-size:18px;font-family:var(--ff)">&times;</button>
+    </div>
+
+    <!-- Conteudo -->
+    <div style="padding:24px">
+
+      <!-- O que e -->
+      <div style="margin-bottom:24px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--blue-h);margin-bottom:10px">O que e o Nexora Connect?</div>
+        <div style="font-size:13px;color:var(--txt2);line-height:1.7">
+          O Nexora Connect e o sistema de gestao comercial desenvolvido especificamente para a <span style="color:var(--txt);font-weight:600">Alvorada Motocicletas</span>. Ele centraliza clientes, vendas, retornos e metas em um unico ambiente, acessivel de qualquer dispositivo -- celular ou computador.
+        </div>
+      </div>
+
+      <!-- Como funciona -->
+      <div style="margin-bottom:24px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--blue-h);margin-bottom:10px">Como funciona?</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--blue-h);flex-shrink:0">1</div>
+            <div style="font-size:13px;color:var(--txt2);line-height:1.6"><span style="color:var(--txt);font-weight:600">Selecione seu perfil</span> -- Representante, Gerente ou Administrador -- e faca login com seu usuario e senha de 6 digitos.</div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--blue-h);flex-shrink:0">2</div>
+            <div style="font-size:13px;color:var(--txt2);line-height:1.6"><span style="color:var(--txt);font-weight:600">Acesse seu Dashboard</span> -- a tela inicial com um resumo do seu dia: metas, retornos pendentes e faturamento.</div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--blue-h);flex-shrink:0">3</div>
+            <div style="font-size:13px;color:var(--txt2);line-height:1.6"><span style="color:var(--txt);font-weight:600">Use o menu lateral</span> para navegar entre Clientes, Vendas, Retornos, Graficos e mais. Tudo e salvo automaticamente na planilha.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recursos por perfil -->
+      <div style="margin-bottom:24px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--blue-h);margin-bottom:10px">O que cada perfil acessa?</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="background:var(--s2);border:1px solid var(--line2);border-radius:12px;padding:14px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+              <span style="font-size:16px">👔</span>
+              <span style="font-size:12px;font-weight:700;color:var(--txt)">Representante</span>
+            </div>
+            <div style="font-size:11px;color:var(--txt2);line-height:1.8">
+              Meus Clientes<br>Minhas Vendas<br>Retornos<br>Captacao<br>Consulta de Pecas
+            </div>
+          </div>
+          <div style="background:var(--s2);border:1px solid var(--line2);border-radius:12px;padding:14px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+              <span style="font-size:16px">📊</span>
+              <span style="font-size:12px;font-weight:700;color:var(--txt)">Gerente / Admin</span>
+            </div>
+            <div style="font-size:11px;color:var(--txt2);line-height:1.8">
+              Comercial da equipe<br>Metas e Graficos<br>Mapa de clientes<br>Auditoria e Usuarios<br>Configuracoes
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desenvolvedor -->
+      <div style="background:var(--s2);border:1px solid var(--line2);border-radius:12px;padding:14px;display:flex;align-items:center;gap:14px">
+        <div style="width:38px;height:38px;border-radius:50%;background:rgba(37,99,235,.2);border:1px solid rgba(37,99,235,.4);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">👨‍💻</div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--txt)">Gabriel Serejo</div>
+          <div style="font-size:11px;color:var(--txt2);line-height:1.6;margin-top:2px">Formado em Administracao, desenvolvedor web freelancer de Sao Luis -- MA. Criou o Nexora Connect em 2026 sob medida para a Alvorada Motocicletas.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer do modal -->
+    <div style="padding:16px 24px;border-top:1px solid var(--line);display:flex;justify-content:flex-end">
+      <button onclick="homeInfoFechar()" style="background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 24px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ff)">Entendido, fazer login</button>
+    </div>
+
+  </div>
+</div>
+
 <!-- Banner de alertas automaticos no Dashboard -->
 <div id="alerta-banner" style="display:none;position:fixed;top:56px;left:0;right:0;z-index:800;padding:12px 16px;background:var(--s1);border-bottom:2px solid var(--amber);box-shadow:0 8px 32px rgba(0,0,0,.5);animation:alertaBannerEntrar .35s cubic-bezier(.22,1,.36,1)">
   <div style="max-width:960px;margin:0 auto">
@@ -277,6 +364,29 @@ document.getElementById('js-status').style.display='none';
         <div class="home-div"></div>
         <div class="home-tagline">Gestao comercial centralizada</div>
         <div class="home-desc">Captacao de clientes, controle de representantes e relatorios em um unico ambiente seguro e acessivel pelo celular.</div>
+
+        <!-- Mini cards de recursos -->
+        <div style="margin-top:20px;display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--txt2)">
+            <span style="font-size:14px">👥</span> Gestao de clientes e carteiras
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--txt2)">
+            <span style="font-size:14px">📊</span> Graficos e metas em tempo real
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--txt2)">
+            <span style="font-size:14px">📅</span> Retornos e agendamentos
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--txt2)">
+            <span style="font-size:14px">🔔</span> Alertas e notificacoes
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--txt2)">
+            <span style="font-size:14px">🔗</span> Sincronizado com Google Sheets
+          </div>
+        </div>
+
+        <button onclick="homeInfoAbrir()" style="margin-top:18px;width:100%;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.3);color:var(--blue-h);border-radius:10px;padding:9px 14px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--ff);text-align:left;display:flex;align-items:center;gap:6px;transition:background .2s" onmouseover="this.style.background='rgba(37,99,235,.18)'" onmouseout="this.style.background='rgba(37,99,235,.1)'">
+          <span style="font-size:13px">ℹ️</span> Saiba mais sobre o sistema
+        </button>
       </div>
       <div class="home-footer">
         Sincronizado com <span>Google Sheets</span><br>
@@ -4757,6 +4867,16 @@ function alertaBannerFechar() {
   if (banner) banner.style.display = 'none';
 }
 
+// --- MODAL SAIBA MAIS (TELA DE LOGIN) ---
+function homeInfoAbrir() {
+  var m = document.getElementById('home-info-modal');
+  if (m) { m.style.display = 'flex'; }
+}
+function homeInfoFechar() {
+  var m = document.getElementById('home-info-modal');
+  if (m) { m.style.display = 'none'; }
+}
+
 // --- NOTIFICACOES --------------------------
 var _notifAberto = false;
 
@@ -5715,6 +5835,83 @@ var SUP_FAQ = [
       'Va na aba Relatorio para exportar dados consolidados da equipe em formato organizado.',
       'Se quiser dados brutos de vendas ou clientes, o Comercial e os filtros de cada aba tambem permitem visualizar tudo listado de forma detalhada.'
     ]
+  },
+
+  // ---- O QUE E ISSO / COMO FUNCIONA / PRA QUE SERVE ----------------------
+  {
+    chaves: ['o que e isso', 'o que e esse negocio', 'o que e esse sistema', 'o que e essa tela',
+             'nao entendo o que e isso', 'pra que serve isso', 'isso aqui e o que',
+             'mas o que e isso', 'que negocio e esse', 'esse sistema e o que'],
+    perfis: null,
+    resposta: 'Isso aqui e o Nexora Connect!',
+    partes: [
+      'Isso aqui e o Nexora Connect -- o sistema de gestao comercial da Alvorada Motocicletas!',
+      'Ele reune tudo num so lugar: clientes, vendas, retornos, metas, graficos e muito mais. Cada perfil ve o que precisa -- representante foca na propria carteira, gerente ve a equipe toda.',
+      'Se quiser saber mais sobre alguma parte especifica, e so perguntar!'
+    ]
+  },
+  {
+    chaves: ['como funciona isso', 'como funciona esse sistema', 'como funciona esse negocio',
+             'me explica como funciona', 'nao sei como funciona', 'como e que funciona',
+             'pode me explicar como funciona', 'como esse sistema funciona'],
+    perfis: ['rep'],
+    resposta: 'Vou te explicar como o Nexora funciona!',
+    partes: [
+      'O Nexora funciona de um jeito bem simples!',
+      'Voce entra com seu usuario e senha de 6 digitos, escolhe o perfil Representante, e cai direto no Dashboard -- que e um resumo do seu dia.',
+      'A partir dai voce pode registrar vendas, agendar retornos, ver seus clientes e consultar pecas. Tudo fica salvo numa planilha do Google automaticamente.',
+      'Cada vez que voce abre o sistema, os dados sao sincronizados. Quer entender alguma aba especifica?'
+    ]
+  },
+  {
+    chaves: ['como funciona isso', 'como funciona esse sistema', 'como funciona esse negocio',
+             'me explica como funciona', 'nao sei como funciona', 'como e que funciona',
+             'como esse sistema funciona'],
+    perfis: ['ger', 'adm'],
+    resposta: 'Vou te explicar como o Nexora funciona!',
+    partes: [
+      'O Nexora funciona de forma centralizada para toda a equipe!',
+      'Os representantes registram vendas, agendam retornos e gerenciam clientes. Voce, como gerente, ve tudo isso em tempo real -- Comercial, Graficos, Metas e muito mais.',
+      'Todos os dados ficam numa planilha do Google, sincronizada a cada acesso. Tem tambem alertas automaticos, painel de saude do sistema e configuracoes avancadas.',
+      'Quer entender melhor alguma parte especifica?'
+    ]
+  },
+  {
+    chaves: ['pra que serve', 'pra que serve isso', 'pra que e usado', 'qual a utilidade disso',
+             'qual e a utilidade', 'qual a funcao disso', 'pra que que serve',
+             'que utilidade tem', 'qual e o objetivo disso', 'pra que foi feito isso'],
+    perfis: ['rep'],
+    resposta: 'O Nexora serve pra organizar e registrar seu trabalho comercial!',
+    partes: [
+      'O Nexora foi feito pra te ajudar no dia a dia como representante!',
+      'Com ele voce registra suas vendas, agenda retornos com clientes, acompanha o progresso das suas metas e mantem a carteira organizada.',
+      'Em vez de anotar tudo em papel ou planilha separada, tudo fica num so sistema -- acessivel pelo celular ou computador, em qualquer lugar.'
+    ]
+  },
+  {
+    chaves: ['pra que serve', 'pra que serve isso', 'pra que e usado', 'qual a utilidade disso',
+             'qual e a utilidade', 'qual a funcao disso', 'que utilidade tem',
+             'qual e o objetivo disso', 'pra que foi feito isso'],
+    perfis: ['ger', 'adm'],
+    resposta: 'O Nexora serve pra centralizar a gestao comercial da equipe!',
+    partes: [
+      'O Nexora foi feito pra dar visibilidade total sobre a operacao comercial!',
+      'Voce acompanha vendas, metas, retornos e desempenho de cada representante em tempo real -- sem precisar cobrar informacao manualmente.',
+      'Alem disso, tem alertas automaticos, graficos comparativos, mapa de clientes e muito mais. Tudo pra voce tomar decisoes com dados, nao no chute.'
+    ]
+  },
+  {
+    chaves: ['nao entendi nada', 'nao entendo nada', 'nao sei nada', 'sou novo aqui',
+             'acabei de entrar', 'comecei agora', 'primeiro dia', 'nunca usei isso',
+             'como comeco', 'por onde comeco', 'onde começo'],
+    perfis: null,
+    resposta: 'Sem problema, vou te guiar!',
+    partes: [
+      'Sem problema, todo mundo comeca do zero!',
+      'O primeiro passo e simples: voce ja esta logado, entao ja passou da parte mais dificil. O Dashboard que voce ve e a tela inicial -- ela resume o seu dia.',
+      'Quer que eu te explique cada aba passo a passo? E so me perguntar "o que e o Dashboard", "como funciona Retornos", "como registro uma venda" e assim por diante.',
+      'Estou aqui pra te ajudar no seu ritmo!'
+    ]
   }
 ];
 
@@ -5905,10 +6102,23 @@ function suporteDetectarSaudacao(texto) {
 
   if (!ehSaudacao) return null;
 
-  if (t.indexOf('bom dia') >= 0) return 'Bom dia! O que posso te ajudar?';
-  if (t.indexOf('boa tarde') >= 0) return 'Boa tarde! O que posso te ajudar?';
-  if (t.indexOf('boa noite') >= 0) return 'Boa noite! O que posso te ajudar?';
-  return 'Tudo bem! O que posso te ajudar?';
+  // Personalizar com o primeiro nome de quem esta logado
+  var primeiroNome = (me && me.name) ? me.name.split(' ')[0] : '';
+  var sufixo = primeiroNome ? ', ' + primeiroNome + '!' : '!';
+
+  var variacoes = [
+    'O que posso te ajudar?',
+    'Como posso te ajudar hoje?',
+    'Em que posso ser util?',
+    'Pode me perguntar o que precisar!'
+  ];
+  var resp = variacoes[Math.floor(Math.random() * variacoes.length)];
+
+  if (t.indexOf('bom dia') >= 0)   return 'Bom dia' + sufixo + ' ' + resp;
+  if (t.indexOf('boa tarde') >= 0)  return 'Boa tarde' + sufixo + ' ' + resp;
+  if (t.indexOf('boa noite') >= 0)  return 'Boa noite' + sufixo + ' ' + resp;
+  if (t.indexOf('tudo bem') >= 0)   return 'Tudo bem' + sufixo + ' ' + resp;
+  return 'Oi' + sufixo + ' ' + resp;
 }
 
 // Reconhece quando a pessoa esta encerrando a conversa (agradecendo, dizendo
