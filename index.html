@@ -2,6 +2,10 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <!-- build: 20260624193944 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -378,93 +382,7 @@ document.getElementById('js-status').style.display='none';
         <div class="moto-tag">Pecas &amp; Acessorios<br><span style="font-size:9px;color:#2D3A58">Gestao inteligente</span></div>
       </div>
     </div>
-  
-<!-- Modal Saiba Mais (tela de login) -->
-<div id="home-info-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:900;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:16px">
-  <div style="background:var(--s1);border:1px solid var(--line);border-radius:20px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 40px 80px rgba(0,0,0,.6)">
-
-    <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--line)">
-      <div>
-        <div style="font-size:18px;font-weight:700;color:var(--txt)">Nexora Connect</div>
-        <div style="font-size:12px;color:var(--txt3);margin-top:2px">Gestao comercial da Alvorada Motocicletas</div>
-      </div>
-      <button onclick="homeInfoFechar()" style="width:32px;height:32px;background:var(--s3);border:1px solid var(--line2);color:var(--txt2);border-radius:8px;cursor:pointer;font-size:18px;font-family:var(--ff)">&times;</button>
-    </div>
-
-    <!-- Conteudo -->
-    <div style="padding:24px">
-
-      <!-- O que e -->
-      <div style="margin-bottom:24px">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--blue-h);margin-bottom:10px">O que e o Nexora Connect?</div>
-        <div style="font-size:13px;color:var(--txt2);line-height:1.7">
-          O Nexora Connect e o sistema de gestao comercial desenvolvido especificamente para a <span style="color:var(--txt);font-weight:600">Alvorada Motocicletas</span>. Ele centraliza clientes, vendas, retornos e metas em um unico ambiente, acessivel de qualquer dispositivo -- celular ou computador.
-        </div>
-      </div>
-
-      <!-- Como funciona -->
-      <div style="margin-bottom:24px">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--blue-h);margin-bottom:10px">Como funciona?</div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;gap:12px;align-items:flex-start">
-            <div style="width:28px;height:28px;border-radius:50%;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--blue-h);flex-shrink:0">1</div>
-            <div style="font-size:13px;color:var(--txt2);line-height:1.6"><span style="color:var(--txt);font-weight:600">Selecione seu perfil</span> -- Representante, Gerente ou Administrador -- e faca login com seu usuario e senha de 6 digitos.</div>
-          </div>
-          <div style="display:flex;gap:12px;align-items:flex-start">
-            <div style="width:28px;height:28px;border-radius:50%;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--blue-h);flex-shrink:0">2</div>
-            <div style="font-size:13px;color:var(--txt2);line-height:1.6"><span style="color:var(--txt);font-weight:600">Acesse seu Dashboard</span> -- a tela inicial com um resumo do seu dia: metas, retornos pendentes e faturamento.</div>
-          </div>
-          <div style="display:flex;gap:12px;align-items:flex-start">
-            <div style="width:28px;height:28px;border-radius:50%;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--blue-h);flex-shrink:0">3</div>
-            <div style="font-size:13px;color:var(--txt2);line-height:1.6"><span style="color:var(--txt);font-weight:600">Use o menu lateral</span> para navegar entre Clientes, Vendas, Retornos, Graficos e mais. Tudo e salvo automaticamente na planilha.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Recursos por perfil -->
-      <div style="margin-bottom:24px">
-        <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--blue-h);margin-bottom:10px">O que cada perfil acessa?</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div style="background:var(--s2);border:1px solid var(--line2);border-radius:12px;padding:14px">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
-              <span style="font-size:16px">👔</span>
-              <span style="font-size:12px;font-weight:700;color:var(--txt)">Representante</span>
-            </div>
-            <div style="font-size:11px;color:var(--txt2);line-height:1.8">
-              Meus Clientes<br>Minhas Vendas<br>Retornos<br>Captacao<br>Consulta de Pecas
-            </div>
-          </div>
-          <div style="background:var(--s2);border:1px solid var(--line2);border-radius:12px;padding:14px">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
-              <span style="font-size:16px">📊</span>
-              <span style="font-size:12px;font-weight:700;color:var(--txt)">Gerente / Admin</span>
-            </div>
-            <div style="font-size:11px;color:var(--txt2);line-height:1.8">
-              Comercial da equipe<br>Metas e Graficos<br>Mapa de clientes<br>Auditoria e Usuarios<br>Configuracoes
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Desenvolvedor -->
-      <div style="background:var(--s2);border:1px solid var(--line2);border-radius:12px;padding:14px;display:flex;align-items:center;gap:14px">
-        <div style="width:38px;height:38px;border-radius:50%;background:rgba(37,99,235,.2);border:1px solid rgba(37,99,235,.4);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">👨‍💻</div>
-        <div>
-          <div style="font-size:12px;font-weight:700;color:var(--txt)">Gabriel Serejo</div>
-          <div style="font-size:11px;color:var(--txt2);line-height:1.6;margin-top:2px">Formado em Administracao, desenvolvedor web freelancer de Sao Luis -- MA. Criou o Nexora Connect em 2026 sob medida para a Alvorada Motocicletas.</div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Footer do modal -->
-    <div style="padding:16px 24px;border-top:1px solid var(--line);display:flex;justify-content:flex-end">
-      <button onclick="homeInfoFechar()" style="background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 24px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ff)">Entendido, fazer login</button>
-    </div>
-
   </div>
-</div>
 </div>
 
 <!-- LOGIN -->
@@ -7230,5 +7148,93 @@ function relExportarCSV() {
 }
 
 </script>
+
+<!-- Modal Saiba Mais (tela de login) -->
+<div id="home-info-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:900;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--s1);border:1px solid var(--line);border-radius:20px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 40px 80px rgba(0,0,0,.6)">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--line)">
+      <div>
+        <div style="font-size:18px;font-weight:700;color:var(--txt)">Nexora Connect</div>
+        <div style="font-size:12px;color:var(--txt3);margin-top:2px">Gestao comercial da Alvorada Motocicletas</div>
+      </div>
+      <button onclick="homeInfoFechar()" style="width:32px;height:32px;background:var(--s3);border:1px solid var(--line2);color:var(--txt2);border-radius:8px;cursor:pointer;font-size:18px;font-family:var(--ff)">&times;</button>
+    </div>
+
+    <!-- Conteudo -->
+    <div style="padding:24px">
+
+      <!-- O que e -->
+      <div style="margin-bottom:24px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--blue-h);margin-bottom:10px">O que e o Nexora Connect?</div>
+        <div style="font-size:13px;color:var(--txt2);line-height:1.7">
+          O Nexora Connect e o sistema de gestao comercial desenvolvido especificamente para a <span style="color:var(--txt);font-weight:600">Alvorada Motocicletas</span>. Ele centraliza clientes, vendas, retornos e metas em um unico ambiente, acessivel de qualquer dispositivo -- celular ou computador.
+        </div>
+      </div>
+
+      <!-- Como funciona -->
+      <div style="margin-bottom:24px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--blue-h);margin-bottom:10px">Como funciona?</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--blue-h);flex-shrink:0">1</div>
+            <div style="font-size:13px;color:var(--txt2);line-height:1.6"><span style="color:var(--txt);font-weight:600">Selecione seu perfil</span> -- Representante, Gerente ou Administrador -- e faca login com seu usuario e senha de 6 digitos.</div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--blue-h);flex-shrink:0">2</div>
+            <div style="font-size:13px;color:var(--txt2);line-height:1.6"><span style="color:var(--txt);font-weight:600">Acesse seu Dashboard</span> -- a tela inicial com um resumo do seu dia: metas, retornos pendentes e faturamento.</div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div style="width:28px;height:28px;border-radius:50%;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--blue-h);flex-shrink:0">3</div>
+            <div style="font-size:13px;color:var(--txt2);line-height:1.6"><span style="color:var(--txt);font-weight:600">Use o menu lateral</span> para navegar entre Clientes, Vendas, Retornos, Graficos e mais. Tudo e salvo automaticamente na planilha.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recursos por perfil -->
+      <div style="margin-bottom:24px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--blue-h);margin-bottom:10px">O que cada perfil acessa?</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="background:var(--s2);border:1px solid var(--line2);border-radius:12px;padding:14px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+              <span style="font-size:16px">👔</span>
+              <span style="font-size:12px;font-weight:700;color:var(--txt)">Representante</span>
+            </div>
+            <div style="font-size:11px;color:var(--txt2);line-height:1.8">
+              Meus Clientes<br>Minhas Vendas<br>Retornos<br>Captacao<br>Consulta de Pecas
+            </div>
+          </div>
+          <div style="background:var(--s2);border:1px solid var(--line2);border-radius:12px;padding:14px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+              <span style="font-size:16px">📊</span>
+              <span style="font-size:12px;font-weight:700;color:var(--txt)">Gerente / Admin</span>
+            </div>
+            <div style="font-size:11px;color:var(--txt2);line-height:1.8">
+              Comercial da equipe<br>Metas e Graficos<br>Mapa de clientes<br>Auditoria e Usuarios<br>Configuracoes
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desenvolvedor -->
+      <div style="background:var(--s2);border:1px solid var(--line2);border-radius:12px;padding:14px;display:flex;align-items:center;gap:14px">
+        <div style="width:38px;height:38px;border-radius:50%;background:rgba(37,99,235,.2);border:1px solid rgba(37,99,235,.4);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">👨‍💻</div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--txt)">Gabriel Serejo</div>
+          <div style="font-size:11px;color:var(--txt2);line-height:1.6;margin-top:2px">Formado em Administracao, desenvolvedor web freelancer de Sao Luis -- MA. Criou o Nexora Connect em 2026 sob medida para a Alvorada Motocicletas.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer do modal -->
+    <div style="padding:16px 24px;border-top:1px solid var(--line);display:flex;justify-content:flex-end">
+      <button onclick="homeInfoFechar()" style="background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 24px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--ff)">Entendido, fazer login</button>
+    </div>
+
+  </div>
+
+
 </body>
 </html>
