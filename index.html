@@ -855,7 +855,9 @@ function sheetsGet(action, cb) {
     .then(function(d) {
       if (d && d.ok === false) {
         // Sessao invalida ou expirada: volta pro login
-        if (d.msg && (d.msg.indexOf('Sessao') >= 0 || d.msg.indexOf('login') >= 0)) {
+        // Disparar "sessao expirada" so se o usuario ja estava logado
+        // Evita falso positivo durante o carregamento inicial da tela de login
+        if (d.msg && (d.msg.indexOf('Sessao') >= 0 || d.msg.indexOf('login') >= 0) && me !== null) {
           _TOKEN = null;
           showToast('Sessao expirada. Faca login novamente.', 'warn');
           setTimeout(function() { goHome(); }, 1500);
@@ -1012,47 +1014,10 @@ function goLogin(p) {
   showScreen('screen-login');
   if (iu) setTimeout(function() { iu.focus(); }, 300);
 
-  // Carregar usuarios da planilha em background
-  sheetsGet('getUsuarios', function(d) {
-    if (d && d.ok && d.data && d.data.length > 0) {
-      var carregados = [];
-      for (var i = 0; i < d.data.length; i++) {
-        var u = d.data[i];
-        var st = String(u.status || '').toLowerCase().trim();
-        var pin = (u.pin === null || u.pin === undefined) ? '' : String(u.pin).trim();
-        carregados.push({
-          user: String(u.user || '').trim(),
-          pin: pin,
-          name: String(u.name || '').trim(),
-          role: String(u.role || 'rep').toLowerCase().trim(),
-          status: (st === 'active' || st === 'ativo') ? 'active' : 'inactive',
-          criado: String(u.criado || '').trim()
-        });
-      }
-      USR_DB = usrDedup(carregados);
-      lsSet('nxr_usr', JSON.stringify(USR_DB));
-    }
-  });
-
-  // Aviso antecipado de manutencao (Rep./Gerente) - antes mesmo de digitar a senha
-  if (p !== 'adm') {
-    sheetsGet('getConfig', function(d) {
-      var bloqueado = false, msg = SYS_MANUTENCAO_MSG;
-      if (d && d.ok && d.data) {
-        for (var k = 0; k < d.data.length; k++) {
-          if (String(d.data[k].chave || '').trim().toLowerCase() === 'manutencao') {
-            bloqueado = String(d.data[k].valor || '').trim().toLowerCase() === 'true';
-            if (d.data[k].mensagem) msg = String(d.data[k].mensagem).trim();
-          }
-        }
-      }
-      SYS_MANUTENCAO = bloqueado;
-      SYS_MANUTENCAO_MSG = msg;
-      if (bloqueado && profile === p) {
-        var al2 = document.getElementById('login-alert');
-        if (al2) { al2.innerHTML = '&#128274; ' + msg; al2.className = 'alert show'; }
-      }
-    });
+  // Aviso de manutencao usando estado local (config carregada apos login)
+  if (SYS_MANUTENCAO && p !== 'adm') {
+    var al2 = document.getElementById('login-alert');
+    if (al2) { al2.innerHTML = '&#128274; ' + SYS_MANUTENCAO_MSG; al2.className = 'alert show'; }
   }
 }
 
