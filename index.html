@@ -748,6 +748,8 @@ document.getElementById('js-status').style.display='none';
 // -------------------------------------------
 
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbx9Nj81qbR5aPrOk_5kl7iTZCfn7_PBbLBwwr27wsR-biKuUFDzxKSNM3EY91v2WFEn/exec';
+// Token de sessao gerado pelo servidor no login -- enviado em toda chamada
+var _TOKEN = null;
 var SYS_MANUTENCAO = false;
 var SYS_MANUTENCAO_MSG = 'Sistema em atualizacao. Tente novamente mais tarde.';
 var _CACHE_V = '4.4';
@@ -847,10 +849,18 @@ function errorLog(tipo, mensagem, contexto) {
 
 function sheetsGet(action, cb) {
   var url = APPS_URL + '?action=' + action;
+  if (_TOKEN) url += '&token=' + encodeURIComponent(_TOKEN);
   fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(d) {
       if (d && d.ok === false) {
+        // Sessao invalida ou expirada: volta pro login
+        if (d.msg && (d.msg.indexOf('Sessao') >= 0 || d.msg.indexOf('login') >= 0)) {
+          _TOKEN = null;
+          showToast('Sessao expirada. Faca login novamente.', 'warn');
+          setTimeout(function() { goHome(); }, 1500);
+          return;
+        }
         errorLog('sheetsGet', 'Acao "' + action + '" retornou erro', d.msg || '');
       }
       if (cb) cb(d);
@@ -898,6 +908,7 @@ function auditLog(acao, detalhe) {
 function sheetsSalvarLinha(sheet, obj, cb) {
   var encoded = encodeURIComponent(JSON.stringify(obj));
   var url = APPS_URL + '?action=inserirLinha&sheet=' + sheet + '&row=' + encoded;
+  if (_TOKEN) url += '&token=' + encodeURIComponent(_TOKEN);
   fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(d) {
@@ -914,7 +925,9 @@ function sheetsSalvarLinha(sheet, obj, cb) {
     });
 }
 function sheetsLimpar(sheet) {
-  return fetch(APPS_URL + '?action=limpar&sheet=' + sheet);
+  var url = APPS_URL + '?action=limpar&sheet=' + sheet;
+  if (_TOKEN) url += '&token=' + encodeURIComponent(_TOKEN);
+  return fetch(url);
 }
 function sheetsAtualizarLinha(sheet, chaveCol, chaveVal, obj, cb) {
   var encoded = encodeURIComponent(JSON.stringify(obj));
@@ -922,6 +935,7 @@ function sheetsAtualizarLinha(sheet, chaveCol, chaveVal, obj, cb) {
             '&chaveCol=' + encodeURIComponent(chaveCol) +
             '&chaveVal=' + encodeURIComponent(chaveVal) +
             '&row=' + encoded;
+  if (_TOKEN) url += '&token=' + encodeURIComponent(_TOKEN);
   fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(d) {
@@ -941,6 +955,7 @@ function sheetsExcluirLinha(sheet, chaveCol, chaveVal, cb) {
   var url = APPS_URL + '?action=excluirLinha&sheet=' + sheet +
             '&chaveCol=' + encodeURIComponent(chaveCol) +
             '&chaveVal=' + encodeURIComponent(chaveVal);
+  if (_TOKEN) url += '&token=' + encodeURIComponent(_TOKEN);
   fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(d) {
@@ -974,6 +989,11 @@ function showScreen(id) {
 }
 
 function goHome() {
+  // Invalidar sessao no servidor
+  if (_TOKEN) {
+    fetch(APPS_URL + '?action=logout&token=' + encodeURIComponent(_TOKEN)).catch(function(){});
+    _TOKEN = null;
+  }
   me = null; profile = null;
   showScreen('screen-home');
 }
@@ -1051,100 +1071,43 @@ function doLogin() {
 
   if (loadingEl0) loadingEl0.className = 'login-loading show';
 
-  sheetsGet('getUsuarios', function(d) {
-    if (loadingEl0) loadingEl0.className = 'login-loading';
-    if (!d || !d.ok || !d.data || d.data.length === 0) {
-      // fallback local
-      doLoginVerificar(user, pin, al, USR_DB);
-      return;
-    }
-    var db = [];
-    for (var i = 0; i < d.data.length; i++) {
-      var u = d.data[i];
-      var st = String(u.status || '').toLowerCase().trim();
-      var upin = (u.pin === null || u.pin === undefined) ? '' : String(u.pin).trim();
-      db.push({
-        user: String(u.user || '').trim(),
-        pin: upin,
-        name: String(u.name || '').trim(),
-        role: String(u.role || 'rep').toLowerCase().trim(),
-        status: (st === 'active' || st === 'ativo') ? 'active' : 'inactive'
-      });
-    }
-    USR_DB = usrDedup(db);
-    lsSet('nxr_usr', JSON.stringify(USR_DB));
-    doLoginVerificar(user, pin, al, USR_DB);
-  });
-}
-
-function doLoginVerificar(user, pin, al, db) {
-  var found = null;
-  for (var i = 0; i < db.length; i++) {
-    var u = db[i];
-    if (u.user !== user || u.role !== profile) continue;
-    var upin = String(u.pin).trim();
-    // aceita '000000' mesmo que sheets salve como '0'
-    var pinOk = (upin === pin) || (upin === '0' && pin === '000000') || (Number(u.pin) === Number(pin));
-    if (pinOk) { found = u; break; }
-  }
-  if (!found) {
-    // verifica se usuario existe com outro perfil
-    var existe = false;
-    for (var j = 0; j < db.length; j++) {
-      if (db[j].user === user) { existe = true; break; }
-    }
-    al.textContent = existe ? 'Usuario ou senha incorretos.' : 'Usuario "' + user + '" nao encontrado.';
-    al.className = 'alert show';
-    var ip = document.getElementById('inp-pin');
-    if (ip) ip.value = '';
-    return;
-  }
-  if (found.status === 'inactive') {
-    al.textContent = 'Usuario inativo. Contate o administrador.';
-    al.className = 'alert show';
-    return;
-  }
-
-  // Administrador nunca e bloqueado. Para Rep/Gerente, verifica
-  // o bloqueio de manutencao direto na planilha (sempre atualizado).
-  if (found.role === 'adm') {
-    me = found;
-    auditLog('Login', 'Acesso ao sistema');
-    lsLoad();
-    launchApp();
-    return;
-  }
-
-  var loadingEl = document.getElementById('login-loading');
-  al.className = 'alert';
-  if (loadingEl) loadingEl.className = 'login-loading show';
-  sheetsGet('getConfig', function(d) {
-    if (loadingEl) loadingEl.className = 'login-loading';
-    var bloqueado = false, msg = SYS_MANUTENCAO_MSG;
-    if (d && d.ok && d.data) {
-      for (var k = 0; k < d.data.length; k++) {
-        if (String(d.data[k].chave || '').trim().toLowerCase() === 'manutencao') {
-          bloqueado = String(d.data[k].valor || '').trim().toLowerCase() === 'true';
-          if (d.data[k].mensagem) msg = String(d.data[k].mensagem).trim();
-        }
+  // Login agora feito no servidor -- a senha nunca e comparada no front
+  var loginUrl = APPS_URL + '?action=login&user=' + encodeURIComponent(user) + '&pin=' + encodeURIComponent(pin);
+  fetch(loginUrl)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (loadingEl0) loadingEl0.className = 'login-loading';
+      if (!d || !d.ok) {
+        al.textContent = d ? (d.msg || 'Usuario ou senha incorretos.') : 'Erro de conexao. Tente novamente.';
+        al.className = 'alert show';
+        var ip = document.getElementById('inp-pin');
+        if (ip) ip.value = '';
+        return;
       }
-    }
-    SYS_MANUTENCAO = bloqueado;
-    SYS_MANUTENCAO_MSG = msg;
-    if (bloqueado) {
-      al.textContent = '&#128274; ' + msg;
-      al.innerHTML = '&#128274; ' + msg;
+      // Verificar se o perfil selecionado bate com o role do servidor
+      if (d.role !== profile) {
+        al.textContent = 'Usuario nao encontrado para este perfil.';
+        al.className = 'alert show';
+        var ip2 = document.getElementById('inp-pin');
+        if (ip2) ip2.value = '';
+        return;
+      }
+      // Guardar token de sessao
+      _TOKEN = d.token;
+      // Montar objeto me com os dados retornados pelo servidor (sem senha)
+      me = { user: d.user, name: d.name, role: d.role, status: d.status };
+      auditLog('login', 'Login bem-sucedido');
+      launchApp();
+    })
+    .catch(function(e) {
+      if (loadingEl0) loadingEl0.className = 'login-loading';
+      al.textContent = 'Falha de conexao. Verifique sua internet.';
       al.className = 'alert show';
-      var ip2 = document.getElementById('inp-pin');
-      if (ip2) ip2.value = '';
-      return;
-    }
-    me = found;
-    auditLog('Login', 'Acesso ao sistema');
-    lsLoad();
-    launchApp();
-  });
+    });
 }
+
+/* doLoginVerificar removida: autenticacao agora e feita no servidor via action=login. */
+
 
 // --- APP LAUNCH ----------------------------
 
