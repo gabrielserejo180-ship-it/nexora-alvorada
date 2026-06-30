@@ -858,9 +858,10 @@ function sheetsGet(action, cb) {
         // Disparar "sessao expirada" so se o usuario ja estava logado
         // Evita falso positivo durante o carregamento inicial da tela de login
         if (d.msg && (d.msg.indexOf('Sessao') >= 0 || d.msg.indexOf('login') >= 0) && me !== null) {
+          console.warn('[NEXORA] Sessao expirada. Action:', action, 'Token:', _TOKEN ? _TOKEN.substring(0,20) : 'null');
           _TOKEN = null;
-          showToast('Sessao expirada. Faca login novamente.', 'warn');
-          setTimeout(function() { goHome(); }, 1500);
+          showToast('Sessao expirada (' + action + '). Faca login novamente.', 'warn');
+          setTimeout(function() { goHome(); }, 2000);
           return;
         }
         errorLog('sheetsGet', 'Acao "' + action + '" retornou erro', d.msg || '');
